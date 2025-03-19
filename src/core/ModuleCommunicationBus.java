@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class ModuleCommunicationBus {
 	/** Initial capacity for the listener lists (instead of 10) */
-	private static int INIT_CAPACITY = 3;
+	private static final int INIT_CAPACITY = 3;
 	/** The values in the blackboard (or null if none)*/
 	private HashMap<String, Object> values;
 	/** Subscribed listeners (or null if none)*/

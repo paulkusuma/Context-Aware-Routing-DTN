@@ -200,17 +200,11 @@ public class DistributedBubbleRap implements RoutingDecisionEngine, CommunityDet
 		else if(peerInCommunity) // we're both in the local community of destination
 		{
 			// Forward to the one with the higher local centrality (in our community)
-			if(de.getLocalCentrality() > this.getLocalCentrality())
-				return true;
-			else
-				return false;
+            return de.getLocalCentrality() > this.getLocalCentrality();
 		}
 		// Neither in local community, forward to more globally central node
-		else if(de.getGlobalCentrality() > this.getGlobalCentrality())
-			return true;
-		
-		return false;
-	}
+		else return de.getGlobalCentrality() > this.getGlobalCentrality();
+    }
 
 	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost)
 	{

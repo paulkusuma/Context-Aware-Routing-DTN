@@ -196,11 +196,7 @@ public class SnFDecisionEngine implements RoutingDecisionEngine {
             return true;
         }
 
-        if (de.recentEncounters.get(dest) > this.recentEncounters.get(dest)) {
-            return true;
-        }
-
-        return false;
+        return de.recentEncounters.get(dest) > this.recentEncounters.get(dest);
     }
 
     private SnFDecisionEngine getOtherSnFDecisionEngine(DTNHost h) {

@@ -134,12 +134,12 @@ public class MessageChecker implements MessageListener {
 	}
 
 	private class MsgCheckerEvent {
-		private Message msg;
-		private DTNHost from;
-		private DTNHost to;
-		private Boolean dropped;
-		private Boolean delivered;
-		private String type;
+		private final Message msg;
+		private final DTNHost from;
+		private final DTNHost to;
+		private final Boolean dropped;
+		private final Boolean delivered;
+		private final String type;
 		
 		public MsgCheckerEvent(Message m, DTNHost from, DTNHost to,
 				String type, Boolean dropped, Boolean delivered) {

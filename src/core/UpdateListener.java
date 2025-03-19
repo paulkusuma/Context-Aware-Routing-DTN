@@ -19,6 +19,6 @@ public interface UpdateListener {
 	 * Method is called on every update cycle.
 	 * @param hosts A list of all hosts in the world
 	 */
-	public void updated(List<DTNHost> hosts);
+    void updated(List<DTNHost> hosts);
 	
 }

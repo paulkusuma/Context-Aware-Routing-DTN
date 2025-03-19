@@ -4,6 +4,7 @@
  */
 package report;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -42,9 +43,7 @@ public class MessageLocationReport extends Report implements UpdateListener {
 		this.granularity = settings.getInt(GRANULARITY);
 		
 		this.reportedMessages = new HashSet<String>();
-		for (String msgId : settings.getCsvSetting(REPORTED_MESSAGES)) {
-			this.reportedMessages.add(msgId);
-		}
+        Collections.addAll(this.reportedMessages, settings.getCsvSetting(REPORTED_MESSAGES));
 		
 		init();
 	}

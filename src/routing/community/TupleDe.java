@@ -12,7 +12,7 @@ package routing.community;
 public class TupleDe<A, B> {
 
     private A first;
-    private B second;
+    private final B second;
 
     public TupleDe(A first, B second) {
         this.first = first;

@@ -16,7 +16,7 @@ public interface MovementListener {
 	 * @param destination Coordinates of the destination
 	 * @param speed Speed towards that destination
 	 */
-	public void newDestination(DTNHost host, Coord destination, double speed);
+    void newDestination(DTNHost host, Coord destination, double speed);
 	
 	/**
 	 * Method is called when a host receives its initial location from 
@@ -24,6 +24,6 @@ public interface MovementListener {
 	 * @param host The host that got the location
 	 * @param location Coordinates of the location
 	 */
-	public void initialLocation(DTNHost host, Coord location);
+    void initialLocation(DTNHost host, Coord location);
 	
 }

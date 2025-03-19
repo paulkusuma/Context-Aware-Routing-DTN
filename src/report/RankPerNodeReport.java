@@ -22,7 +22,7 @@ import routing.RoutingDecisionEngine;
 public class RankPerNodeReport extends Report {
 
     private List<Integer> nodeListSelfish;
-    private Map<String, Integer> nodeRank;
+    private final Map<String, Integer> nodeRank;
 
     public RankPerNodeReport() {
         super();
@@ -39,10 +39,9 @@ public class RankPerNodeReport extends Report {
                 continue;
             }
             RoutingDecisionEngine de = ((DecisionEngineRouter) r).getDecisionEngine();
-            if (!(de instanceof NodeRankHelper)) {
+            if (!(de instanceof NodeRankHelper nr)) {
                 continue;
             }
-            NodeRankHelper nr = (NodeRankHelper) de;
 
             Map<String, Integer> nodeList = nr.getNodeRank();
             for (Map.Entry<String, Integer> entry : nodeList.entrySet()) {

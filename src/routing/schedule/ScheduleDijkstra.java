@@ -34,7 +34,7 @@ public class ScheduleDijkstra {
 	/** Map of previous schedule on the shortest path(s) */
 	private Map<Integer, ScheduleEntry> prevHops;
 	/** Oracle that know all schedules */
-	private ScheduleOracle oracle;
+	private final ScheduleOracle oracle;
 	
 	/**
 	 * Constructor.
@@ -165,7 +165,7 @@ public class ScheduleDijkstra {
 	}
 	
 	private class TimeMap {
-		private HashMap<Integer, Double> map;
+		private final HashMap<Integer, Double> map;
 		
 		/**
 		 * Constructor. Creates an empty map

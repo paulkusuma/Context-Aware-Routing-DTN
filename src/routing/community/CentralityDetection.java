@@ -15,6 +15,6 @@ package routing.community;
 
 public interface CentralityDetection {
 	
-	public double getCentrality(double[][] matrixEgoNetwork);
-	public CentralityDetection replicate();
+	double getCentrality(double[][] matrixEgoNetwork);
+	CentralityDetection replicate();
 }

@@ -41,10 +41,9 @@ public class PeopleRankDistributedReport extends Report {
                 continue;
             }
             RoutingDecisionEngine decisionEngine = ((DecisionEngineRouter) router).getDecisionEngine();
-            if (!(decisionEngine instanceof PeopleRankDistributed)) {
+            if (!(decisionEngine instanceof PeopleRankDistributed peopleRankDistributed)) {
                 continue;
             }
-            PeopleRankDistributed peopleRankDistributed = (PeopleRankDistributed) decisionEngine;
 
             double rank = getPeopleRank(host, peopleRankDistributed);
             nodeRanks.put(host, rank);

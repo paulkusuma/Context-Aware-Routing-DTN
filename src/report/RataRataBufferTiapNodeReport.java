@@ -39,7 +39,7 @@ public class RataRataBufferTiapNodeReport extends Report implements UpdateListen
     private double lastRecord = Double.MIN_VALUE;
     private int interval;
 
-    private Map<DTNHost, Double> bufferCounts = new HashMap<DTNHost, Double>();
+    private final Map<DTNHost, Double> bufferCounts = new HashMap<DTNHost, Double>();
     private int updateCounter = 0;  //new added
 
     public RataRataBufferTiapNodeReport() {
@@ -129,7 +129,7 @@ public class RataRataBufferTiapNodeReport extends Report implements UpdateListen
             DTNHost a = entry.getKey();
             Integer b = a.getAddress();
             Double avgBuffer = entry.getValue() / updateCounter;
-            write("" + b + "\t" + avgBuffer);
+            write(b + "\t" + avgBuffer);
 
             //write("" + b + ' ' + entry.getValue());
         }

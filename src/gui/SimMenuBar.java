@@ -53,7 +53,7 @@ public class SimMenuBar extends JMenuBar implements ActionListener {
 	private JCheckBoxMenuItem autoClearOverlay;
 	private JMenuItem clearOverlay;
 	private JMenuItem about;
-	private PlayField field;
+	private final PlayField field;
 	
 	/** The namespace where underlay image -related settings are found */
 	private static final String UNDERLAY_NS = "GUI.UnderlayImage";

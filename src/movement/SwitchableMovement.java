@@ -19,13 +19,13 @@ public interface SwitchableMovement {
 	 * Tell the movement model what its current location is
 	 * @param lastWaypoint
 	 */
-	public void setLocation(Coord lastWaypoint);
+    void setLocation(Coord lastWaypoint);
 	
 	/**
 	 * Get the last location the getPath() of this movement model has returned 
 	 * @return the last location
 	 */
-	public Coord getLastLocation();
+    Coord getLastLocation();
 	
 	/**
 	 * Checks if the movement model is finished doing its task and it's time to 
@@ -33,5 +33,5 @@ public interface SwitchableMovement {
 	 * getPath() calls.
 	 * @return true if ready
 	 */
-	public boolean isReady();
+    boolean isReady();
 }

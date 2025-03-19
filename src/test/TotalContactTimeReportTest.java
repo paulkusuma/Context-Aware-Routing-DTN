@@ -24,10 +24,10 @@ public class TotalContactTimeReportTest extends TestCase {
 	private TotalContactTimeReport ctr;
 	
 	private DTNHost h1, h2, h3;
-	private Coord c1 = new Coord(0,0);
-	private Coord c2 = new Coord(1,0);
-	private Coord c3 = new Coord(2,0);
-	private Coord away = new Coord(1000,1000);
+	private final Coord c1 = new Coord(0,0);
+	private final Coord c2 = new Coord(1,0);
+	private final Coord c3 = new Coord(2,0);
+	private final Coord away = new Coord(1000,1000);
 	
 	private final String SET_PREFIX = "TotalContactTimeReport.";
 	

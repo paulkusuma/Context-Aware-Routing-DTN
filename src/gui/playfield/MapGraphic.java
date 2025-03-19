@@ -16,7 +16,7 @@ import core.Coord;
  *
  */
 public class MapGraphic extends PlayFieldGraphic {
-	private SimMap simMap;
+	private final SimMap simMap;
 	private final Color PATH_COLOR = Color.LIGHT_GRAY;
 	private final Color BG_COLOR = Color.WHITE;
 		

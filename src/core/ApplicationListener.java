@@ -30,6 +30,6 @@ public interface ApplicationListener {
 	 * @param app		Application instance that generated the event.
 	 * @param host		The host this application instance is running on.
 	 */
-	public void gotEvent(String event, Object params, Application app,
-			DTNHost host);
+    void gotEvent(String event, Object params, Application app,
+                  DTNHost host);
 }

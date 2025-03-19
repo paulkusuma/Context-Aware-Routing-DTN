@@ -17,7 +17,7 @@ import core.Coord;
  */
 public class PathGraphic extends PlayFieldGraphic {
 	private final static Color PATH_COLOR = Color.RED;
-	private List<Coord> coords;
+	private final List<Coord> coords;
 	
 	public PathGraphic(Path path) {
 		if (path == null) {

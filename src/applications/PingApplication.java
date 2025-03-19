@@ -56,7 +56,7 @@ public class PingApplication extends Application {
 	private int		destMax=1;
 	private int		pingSize=1;
 	private int		pongSize=1;
-	private Random	rng;
+	private final Random	rng;
 	
 	/** 
 	 * Creates a new ping application with the given settings.

@@ -33,7 +33,7 @@ public class ProphetDecisionEngine implements RoutingDecisionEngine {
     /**
      * delivery predictabilities
      */
-    private Map<DTNHost, Double> preds;
+    private final Map<DTNHost, Double> preds;
 
     public ProphetDecisionEngine(Settings s) {
         if (s.contains(BETA_SETTING)) {

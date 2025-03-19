@@ -12,8 +12,8 @@ import core.World;
  * External event for creating a message.
  */
 public class MessageCreateEvent extends MessageEvent {
-	private int size;
-	private int responseSize;
+	private final int size;
+	private final int responseSize;
 	
 	/**
 	 * Creates a message creation event with a optional response request

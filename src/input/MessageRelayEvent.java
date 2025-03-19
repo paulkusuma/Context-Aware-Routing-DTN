@@ -12,7 +12,7 @@ import core.World;
  * hosts (start and possible abort or delivery).
  */
 public class MessageRelayEvent extends MessageEvent {
-	private int stage;
+	private final int stage;
 	
 	/** Message relay stage constant for start of sending */
 	public static final int SENDING = 1;

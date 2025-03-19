@@ -15,5 +15,5 @@ import java.util.Map;
  */
 public interface VarianceDecisionEngine {
 
-    public Map<DTNHost, List<Double>> getVariance();
+    Map<DTNHost, List<Double>> getVariance();
 }

@@ -48,6 +48,16 @@ public abstract class Connection {
 		return this.isUp;
 	}
 
+
+	/**
+	 * Returns true if the connections is trasnferring a message
+	 * @return true if the connections is trasnferring a message
+	 */
+	public boolean isTransferring() {
+		return this.msgOnFly != null;
+	}
+
+
 	/**
 	 * Returns true if the given node is the initiator of the connection, false
 	 * otherwise
@@ -82,9 +92,9 @@ public abstract class Connection {
 	 * Calculate the current transmission speed from the information
 	 * given by the interfaces, and calculate the missing data amount.
 	 */
-	public void update() {};
+	public void update() {}
 
-	/**
+    /**
      * Aborts the transfer of the currently transferred message.
      */
 	public void abortTransfer() {

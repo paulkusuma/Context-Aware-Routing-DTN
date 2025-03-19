@@ -27,7 +27,7 @@ public class ScheduleDijkstraTest extends TestCase {
 		oracle.addEntry(30, 1, 5, 10);		
 	}
 
-	private void comparePaths(int realPath[], List<ScheduleEntry> path) {
+	private void comparePaths(int[] realPath, List<ScheduleEntry> path) {
 		int i;
 		assertEquals(realPath.length, path.size() + 1);
 		

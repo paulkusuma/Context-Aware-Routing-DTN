@@ -49,7 +49,7 @@ public class EventQueueHandler  {
 	/** path of external events file -setting id ({@value})*/
 	public static final String PATH_SETTING = "filePath";
 	
-	private List<EventQueue> queues;
+	private final List<EventQueue> queues;
 	
 	/**
 	 * Creates a new EventQueueHandler which can be queried for 

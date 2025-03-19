@@ -138,12 +138,7 @@ public class WKTReader {
 		else if (type.equals(MULTILINESTRING)) {
 			return true;
 		}
-		else if (type.equals(POINT)) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		else return type.equals(POINT);
 	}
 	
 	/**

@@ -14,6 +14,6 @@ import java.util.Map;
  * @author Afra Rian
  */
 public interface NodeRankHelper {
-    public Map<String, Integer> getNodeRank();
-    public List<Integer> getNodeSelfish();
+    Map<String, Integer> getNodeRank();
+    List<Integer> getNodeSelfish();
 }

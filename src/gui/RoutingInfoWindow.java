@@ -23,9 +23,9 @@ import core.SimClock;
  * A window for displaying routing information
  */
 public class RoutingInfoWindow extends JFrame implements ActionListener {
-	private DTNHost host;
-	private JButton refreshButton;
-	private JScrollPane treePane;
+	private final DTNHost host;
+	private final JButton refreshButton;
+	private final JScrollPane treePane;
 	
 	public RoutingInfoWindow(DTNHost host) {
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

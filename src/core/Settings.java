@@ -63,7 +63,7 @@ public class Settings {
      * Stream where all read settings are written to
      */
     private static PrintStream out = null;
-    private static Set<String> writtenSettings = new HashSet<String>();
+    private static final Set<String> writtenSettings = new HashSet<String>();
 
     /**
      * run index for run-specific settings
@@ -71,8 +71,8 @@ public class Settings {
     private static int runIndex = 0;
     private String namespace = null; // namespace to look the settings from
     private String secondaryNamespace = null;
-    private Stack<String> oldNamespaces;
-    private Stack<String> secondaryNamespaces;
+    private final Stack<String> oldNamespaces;
+    private final Stack<String> secondaryNamespaces;
 
     /**
      * Creates a setting object with a namespace. Namespace is the prefix of the
@@ -123,7 +123,7 @@ public class Settings {
      * @param sname Name of the setting (for error messages)
      * @throws SettingsError If the given array didn't qualify as a range
      */
-    public void assertValidRange(int range[], String sname)
+    public void assertValidRange(int[] range, String sname)
             throws SettingsError {
         if (range.length != 2) {
             throw new SettingsError("Range setting "
@@ -685,7 +685,7 @@ public class Settings {
 
         try {
             if (argsClass != null) { // use a specific constructor
-                constructor = objClass.getConstructor((Class[]) argsClass);
+                constructor = objClass.getConstructor(argsClass);
                 o = constructor.newInstance(args);
             } else { // call empty constructor
                 o = objClass.newInstance();

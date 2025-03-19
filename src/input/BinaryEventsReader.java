@@ -23,7 +23,7 @@ public class BinaryEventsReader implements ExternalEventsReader {
 	/** Extension of binary external events file */
 	public static final String BINARY_EXT = ".binee";
 	
-	private ObjectInputStream in;
+	private final ObjectInputStream in;
 	private int eventsLeft;
 	
 	/**
@@ -115,7 +115,7 @@ public class BinaryEventsReader implements ExternalEventsReader {
 		out = new ObjectOutputStream(fos);
 
 		// store the number of events
-		out.writeObject(new Integer(events.size()));
+		out.writeObject(Integer.valueOf(events.size()));
 		
 		// store events
 		for (ExternalEvent ee : events) {

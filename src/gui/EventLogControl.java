@@ -12,8 +12,8 @@ import javax.swing.JCheckBox;
  *
  */
 public class EventLogControl {
-	private JCheckBox show;
-	private JCheckBox pause;
+	private final JCheckBox show;
+	private final JCheckBox pause;
 	
 	/**
 	 * Constructor.

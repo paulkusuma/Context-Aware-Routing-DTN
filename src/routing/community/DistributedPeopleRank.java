@@ -136,11 +136,8 @@ public class DistributedPeopleRank implements RoutingDecisionEngine {
                 Set<DTNHost> contactSet = iterator.next();
                 if (contactSet.contains(thisHost)) {
                     // Memeriksa apakah nilai PeopleRank host lainnya lebih besar atau sama dengan host ini
-                    if (perOtherHost >= perThisHost && perOtherHost >= threshold) {
-                        return true; // Kirim pesan ke host lainnya
-                    } else {
-                        return false; // Jangan kirim pesan ke host lainnya
-                    }
+                    // Jangan kirim pesan ke host lainnya
+                    return perOtherHost >= perThisHost && perOtherHost >= threshold; // Kirim pesan ke host lainnya
                 }
             }
         }

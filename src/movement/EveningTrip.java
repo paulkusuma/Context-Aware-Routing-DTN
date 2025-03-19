@@ -16,10 +16,10 @@ import core.Coord;
  * @author Frans Ekman
  */
 public class EveningTrip {
-	private EveningActivityMovement[] eveningActivityNodes;
+	private final EveningActivityMovement[] eveningActivityNodes;
 	private int eveningActivityNodesInBuffer;
 	private Path path;
-	private Coord location;
+	private final Coord location;
 	private Coord destination;
 	private double waitTimeAtEnd;
 	

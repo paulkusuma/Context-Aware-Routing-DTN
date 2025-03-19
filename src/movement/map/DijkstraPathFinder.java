@@ -32,7 +32,7 @@ public class DijkstraPathFinder {
 	/** Map of previous nodes on the shortest path(s) */
 	private Map<MapNode, MapNode> prevNodes;
 
-	private int [] okMapNodes;
+	private final int [] okMapNodes;
 	
 	/**
 	 * Constructor.
@@ -49,7 +49,7 @@ public class DijkstraPathFinder {
 	 * @param node The path's source node
 	 */
 	private void initWith(MapNode node) {
-		assert (okMapNodes != null ? node.isType(okMapNodes) : true);
+		assert (okMapNodes == null || node.isType(okMapNodes));
 		
 		// create needed data structures
 		this.unvisited = new PriorityQueue<MapNode>(PQ_INIT_SIZE, 
@@ -183,7 +183,7 @@ public class DijkstraPathFinder {
 	 * Simple Map implementation for storing distances. 
 	 */
 	private class DistanceMap {
-		private HashMap<MapNode, Double> map;
+		private final HashMap<MapNode, Double> map;
 		
 		/**
 		 * Constructor. Creates an empty distance map

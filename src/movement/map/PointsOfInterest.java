@@ -38,15 +38,15 @@ public class PointsOfInterest {
 	 */
 	public static final String POI_SELECT_S = "pois";
 	/** map whose points all POIs are */
-	private SimMap map;
+	private final SimMap map;
 	/** map node types that are OK to visit */
-	private int [] okMapNodeTypes;
+	private final int [] okMapNodeTypes;
 	/** list of all this POI instance's POI lists */
-	private ArrayList<List<MapNode>> poiLists;
+	private final ArrayList<List<MapNode>> poiLists;
 	/** list of probabilites of choosing a POI group */
-	private List<Tuple<Double, Integer>> poiProbs;
+	private final List<Tuple<Double, Integer>> poiProbs;
 	/** (pseudo) random number generator */
-	private Random rng;
+	private final Random rng;
 
 	/**
 	 * Constructor.

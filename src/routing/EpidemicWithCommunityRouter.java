@@ -35,10 +35,10 @@ public class EpidemicWithCommunityRouter implements RoutingDecisionEngine, NodeR
     private int numOfRnd = 0;
 
     private Scanner reader;
-    private int interval = 3600;
-    private Double lastRecord = Double.MIN_VALUE;
+    private final int interval = 3600;
+    private final Double lastRecord = Double.MIN_VALUE;
     private List<LinkedList<String>> communityGlobal;
-    private String eeFilePath;
+    private final String eeFilePath;
     private Map<String, Integer> nodeRank;
     private int[] nodeSelfish;
     private List<String> msgId;
@@ -213,7 +213,7 @@ public class EpidemicWithCommunityRouter implements RoutingDecisionEngine, NodeR
                                 break;
                             }
                         }
-                        if (note == true) {
+                        if (note) {
                             nodeRank.put(host1.toString(), !nodeRank.containsKey(host1.toString()) ? 1 : nodeRank.get(host1.toString()) + 1);
                             msgId.add(m.getId());
                         }

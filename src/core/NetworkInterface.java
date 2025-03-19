@@ -41,7 +41,7 @@ abstract public class NetworkInterface implements ModuleCommunicationListener {
 	protected String interfacetype;
 	protected List<Connection> connections; // connected hosts
 	private List<ConnectionListener> cListeners = null; // list of listeners
-	private int address; // network interface address
+	private final int address; // network interface address
 	protected double transmitRange;
 	protected int transmitSpeed;
 	protected ConnectivityOptimizer optimizer = null;
@@ -200,12 +200,24 @@ abstract public class NetworkInterface implements ModuleCommunicationListener {
 				lastScanTime = simTime; /* time to start the next scan round */
 				return true;
 			}
-			else if (simTime != lastScanTime ){
-				return false; /* not in the scan round */
-			}
+			else return simTime == lastScanTime; /* not in the scan round */
 		}
 		/* interval == 0 or still in the last scan round */
 		return true;
+	}
+
+	/**
+	 * Returns if one of the connections of this interface is transfering
+	 * data
+	 * @return true if the interface transfering
+	 */
+	public boolean isTransferring() {
+		for (Connection c : connections) {
+			if (c.isTransferring()){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

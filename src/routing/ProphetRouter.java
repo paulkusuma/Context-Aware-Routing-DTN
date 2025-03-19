@@ -47,9 +47,9 @@ public class ProphetRouter extends ActiveRouter {
 	public static final String BETA_S = "beta";
 
 	/** the value of nrof seconds in time unit -setting */
-	private int secondsInTimeUnit;
+	private final int secondsInTimeUnit;
 	/** value of beta setting */
-	private double beta;
+	private final double beta;
 
 	/** delivery predictabilities */
 	private Map<DTNHost, Double> preds;

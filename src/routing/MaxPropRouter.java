@@ -74,7 +74,7 @@ public class MaxPropRouter extends ActiveRouter {
 	public static final String ALPHA_S = "alpha";
 
 	/** The alpha variable, default = 1;*/
-	private double alpha;
+	private final double alpha;
 
 	/** The default value for alpha */
 	public static final double DEFAULT_ALPHA = 1.0;
@@ -428,9 +428,9 @@ public class MaxPropRouter extends ActiveRouter {
 	 * Other messages are ordered by their delivery cost.
 	 */
 	private class MaxPropComparator implements Comparator<Message> {
-		private int threshold;
-		private DTNHost from1;
-		private DTNHost from2;
+		private final int threshold;
+		private final DTNHost from1;
+		private final DTNHost from2;
 		
 		/**
 		 * Constructor. Assumes that the host where all the costs are calculated
@@ -524,7 +524,7 @@ public class MaxPropRouter extends ActiveRouter {
 	 */
 	private class MaxPropTupleComparator 
 			implements Comparator <Tuple<Message, Connection>>  {
-		private int threshold;
+		private final int threshold;
 		
 		public MaxPropTupleComparator(int threshold) {
 			this.threshold = threshold;

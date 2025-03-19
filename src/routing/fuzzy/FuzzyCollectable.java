@@ -20,5 +20,5 @@ public interface FuzzyCollectable {
      * for each node in the network
      * @return 
      */
-     public Map<DTNHost,Double> getFuzzyInfo();
+    Map<DTNHost,Double> getFuzzyInfo();
 }

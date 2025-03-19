@@ -28,8 +28,8 @@ public class MapRoute {
 	public static final int PINGPONG = 2;
 	
 	
-	private List<MapNode> stops;
-	private int type; // type of the route
+	private final List<MapNode> stops;
+	private final int type; // type of the route
 	private int index; // index of the previous returned map node
 	private boolean comingBack;
 	

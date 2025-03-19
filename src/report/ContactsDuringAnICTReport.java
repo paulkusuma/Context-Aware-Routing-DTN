@@ -54,8 +54,8 @@ public class ContactsDuringAnICTReport extends Report
 		if (areDisconnected[id1][id2]) {
 			areDisconnected[id1][id2] = false;
 			areDisconnected[id2][id1] = false;
-			contactsDuringIC.add(new Integer(contactCount[id1][id2]));
-			contactsDuringIC.add(new Integer(contactCount[id2][id1]));
+			contactsDuringIC.add(Integer.valueOf(contactCount[id1][id2]));
+			contactsDuringIC.add(Integer.valueOf(contactCount[id2][id1]));
 			contactCount[id1][id2] = 0;
 			contactCount[id2][id1] = 0;
 		} 
@@ -92,7 +92,7 @@ public class ContactsDuringAnICTReport extends Report
 	
 	@Override
 	public void done() {
-		Integer[] contacts = (Integer[])contactsDuringIC.toArray(new Integer[0]);
+		Integer[] contacts = contactsDuringIC.toArray(new Integer[0]);
 		Arrays.sort(contacts);
 				
 		int count = 0;

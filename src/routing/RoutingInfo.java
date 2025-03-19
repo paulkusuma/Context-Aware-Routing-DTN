@@ -12,7 +12,7 @@ import java.util.List;
  * user interface(s). 
  */
 public class RoutingInfo {
-	private String text;
+	private final String text;
 	private List<RoutingInfo> moreInfo = null;
 	
 	/**

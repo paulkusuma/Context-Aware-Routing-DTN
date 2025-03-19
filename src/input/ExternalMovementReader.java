@@ -38,15 +38,15 @@ import core.Tuple;
 public class ExternalMovementReader {
 	/* Prefix for comment lines (lines starting with this are ignored) */
 	public static final String COMMENT_PREFIX = "#";
-	private Scanner scanner;
+	private final Scanner scanner;
 	private double lastTimeStamp = -1;
 	private String lastLine;
-	private double minTime;
-	private double maxTime;
-	private double minX;
-	private double maxX;
-	private double minY;
-	private double maxY;
+	private final double minTime;
+	private final double maxTime;
+	private final double minX;
+	private final double maxX;
+	private final double minY;
+	private final double maxY;
 	private boolean normalize;
 
 		

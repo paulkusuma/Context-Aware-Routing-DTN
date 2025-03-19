@@ -15,8 +15,8 @@ import core.Settings;
 public class RandomWalk extends MovementModel implements SwitchableMovement {
 
 	private Coord lastWaypoint;
-	private double minDistance;
-	private double maxDistance;
+	private final double minDistance;
+	private final double maxDistance;
 	
 	public RandomWalk(Settings settings) {
 		super(settings);

@@ -11,10 +11,10 @@ import core.SimClock;
 public class ActivenessHandlerTest extends TestCase {
 	private ActivenessHandler ah;
 	private SimClock clock;
-	private double in = 3.0;
-	private double out = 7.0;
+	private final double in = 3.0;
+	private final double out = 7.0;
 	
-	private String moreTimes = ", 100,110, 210,220, 350,400";
+	private final String moreTimes = ", 100,110, 210,220, 350,400";
 	
 	protected void setUp() throws Exception {
 		super.setUp();

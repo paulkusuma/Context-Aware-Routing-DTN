@@ -35,11 +35,11 @@ import java.util.Random;
 public class QLearning{
     
     // amount of possible states
-    private int states;
+    private final int states;
     // amount of possible actions
-    private int actions;
+    private final int actions;
     // q-values
-    private double[][] qvalues;
+    private final double[][] qvalues;
     // exploration policy
     private IExplorationPolicy explorationPolicy;
 

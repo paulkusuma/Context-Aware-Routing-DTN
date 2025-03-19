@@ -15,7 +15,7 @@ import core.Message;
  */
 public class EpidemicRouterTest extends AbstractRouterTest {
 
-	private static int TTL = 300;
+	private static final int TTL = 300;
 	
 	@Override
 	public void setUp() throws Exception {
@@ -566,8 +566,8 @@ public class EpidemicRouterTest extends AbstractRouterTest {
 		newMessage("3", h1, dst);
 		clock.advance(2.0);
 		newMessage("4", h1, dst);		
-		clock.advance(2.5);;
-		newMessage("5", h1, dst);		
+		clock.advance(2.5);
+        newMessage("5", h1, dst);
 		
 		if (withDestination) {
 			h1.connect(dst);

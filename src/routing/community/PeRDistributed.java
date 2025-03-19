@@ -118,11 +118,7 @@ public class PeRDistributed implements RoutingDecisionEngine {
             while (iterator.hasNext()) {
                 Set<DTNHost> contactSet = iterator.next();
                 if (contactSet.contains(thisHost)) {
-                    if (perOtherHost >= perThisHost) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    return perOtherHost >= perThisHost;
                 }
             }
         }

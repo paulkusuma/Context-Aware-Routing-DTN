@@ -23,7 +23,7 @@ import core.SettingsError;
  * @see MessageEventGenerator
  */
 public class OneFromEachMessageGenerator extends MessageEventGenerator {
-	private List<Integer> fromIds;
+	private final List<Integer> fromIds;
 	
 	public OneFromEachMessageGenerator(Settings s) {
 		super(s);

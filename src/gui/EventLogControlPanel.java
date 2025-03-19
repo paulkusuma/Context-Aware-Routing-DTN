@@ -26,15 +26,15 @@ public class EventLogControlPanel extends JPanel implements ActionListener{
 	private static final String SHOW_TEXT = "show";
 	private static final String PAUSE_TEXT = "pause";
 	private static final int PADDING = 5;
-	private Font smallFont = new Font("sans",Font.PLAIN,11);
-	private Font headingFont = new Font("sans",Font.BOLD,11);
-	private Vector<EventLogControl> logControls;
+	private final Font smallFont = new Font("sans",Font.PLAIN,11);
+	private final Font headingFont = new Font("sans",Font.BOLD,11);
+	private final Vector<EventLogControl> logControls;
 
-	private JCheckBox showAllCheck;
-	private JCheckBox pauseAllCheck;
+	private final JCheckBox showAllCheck;
+	private final JCheckBox pauseAllCheck;
 	
-	private GridBagLayout layout;
-	private GridBagConstraints c;
+	private final GridBagLayout layout;
+	private final GridBagConstraints c;
 
 	/**
 	 * Constructor. Creates a new control panel.
@@ -52,7 +52,7 @@ public class EventLogControlPanel extends JPanel implements ActionListener{
 		
 		c.fill = GridBagConstraints.BOTH;
 		addLabel(" ");
-		addLabel(SHOW_TEXT + "");
+		addLabel(SHOW_TEXT);
 		c.gridwidth = GridBagConstraints.REMAINDER; //end row
 		addLabel(PAUSE_TEXT);
 

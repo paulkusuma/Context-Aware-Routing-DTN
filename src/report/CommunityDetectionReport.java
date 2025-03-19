@@ -41,10 +41,9 @@ public class CommunityDetectionReport extends Report {
                 continue;
             }
             RoutingDecisionEngine de = ((DecisionEngineRouter) r).getDecisionEngine();
-            if (!(de instanceof CommunityDetectionEngine)) {
+            if (!(de instanceof CommunityDetectionEngine cd)) {
                 continue;
             }
-            CommunityDetectionEngine cd = (CommunityDetectionEngine) de;
 
             boolean alreadyHaveCommunity = false;
             Set<DTNHost> nodeComm = cd.getLocalCommunity();
@@ -53,6 +52,7 @@ public class CommunityDetectionReport extends Report {
             for (Set<DTNHost> c : communities) {
                 if (c.containsAll(nodeComm) && nodeComm.containsAll(c)) {
                     alreadyHaveCommunity = true;
+                    break;
                 }
             }
 

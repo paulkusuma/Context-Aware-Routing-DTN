@@ -98,11 +98,7 @@ public class VBRConnection extends Connection {
 	 * @return True if the transfer is done, false if not
 	 */
 	public boolean isMessageTransferred() {
-		if (msgsent >= msgsize) {
-			return true;
-		} else {
-			return false;
-		}
+        return msgsent >= msgsize;
 	}
 	
 	/**

@@ -33,8 +33,8 @@ public interface CommunityDetection
 	 * @param peer Host that connected to this host
 	 * @param peerCD Instance of CommunityDetection residing at the new peer 
 	 */
-	public void newConnection(DTNHost myHost, DTNHost peer, 
-			CommunityDetection peerCD);
+    void newConnection(DTNHost myHost, DTNHost peer,
+                       CommunityDetection peerCD);
 	
 	/**
 	 * Called to inform the object that a connection was lost.
@@ -44,8 +44,8 @@ public interface CommunityDetection
 	 * @param peerCD Instance of CommunityDetection residing at the lost peer
 	 * @param connHistory Entire connection history between this host and the peer
 	 */
-	public void connectionLost(DTNHost myHost, DTNHost peer, 
-			CommunityDetection peerCD, List<Duration> connHistory);
+    void connectionLost(DTNHost myHost, DTNHost peer,
+                        CommunityDetection peerCD, List<Duration> connHistory);
 	
 	/**
 	 * Determines if the given host is a member of the local community of this 
@@ -54,7 +54,7 @@ public interface CommunityDetection
 	 * @param h Host to consider
 	 * @return true if h is a member of the community, false otherwise
 	 */
-	public boolean isHostInCommunity(DTNHost h);
+    boolean isHostInCommunity(DTNHost h);
 	
 	/**
 	 * Returns a set of hosts that are members of the local community of this 
@@ -63,12 +63,12 @@ public interface CommunityDetection
 	 * 
 	 * @return the Set representation of the local community
 	 */
-	public Set<DTNHost> getLocalCommunity();
+    Set<DTNHost> getLocalCommunity();
 	
 	/**
 	 * Duplicates this CommunityDetection object.
 	 * 
 	 * @return A semantically equal copy of this CommunityDetection object
 	 */
-	public CommunityDetection replicate();
+    CommunityDetection replicate();
 }

@@ -35,7 +35,7 @@ public class ContactsPerHourReport extends Report implements ConnectionListener 
 	public void hostsConnected(DTNHost host1, DTNHost host2) {
 		int time = SimClock.getIntTime() / 3600;
 		while (Math.floor(time) > currentHour) {
-			contactCounts.add(new Integer(currentHourCount));
+			contactCounts.add(Integer.valueOf(currentHourCount));
 			currentHourCount = 0;
 			currentHour++;
 		} 
@@ -51,7 +51,7 @@ public class ContactsPerHourReport extends Report implements ConnectionListener 
 		Iterator<Integer> iterator = contactCounts.iterator();
 		int hour = 0;
 		while (iterator.hasNext()) {
-			Integer count = (Integer)iterator.next();
+			Integer count = iterator.next();
 			write(hour + "\t" + count);
 			hour++;
 		}

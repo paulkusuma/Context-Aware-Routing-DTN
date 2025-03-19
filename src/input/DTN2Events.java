@@ -32,14 +32,14 @@ import core.SimClock;
  */
 public class DTN2Events implements EventQueue {
 	
-	private Queue<ExternalEvent>	events;
+	private final Queue<ExternalEvent>	events;
 	
 	/** 
 	  For keeping track of bundles we've seen in the past
 	  Due to the routing implementation in dtnd it's likely
 	  that dtnd will immediately return a bundle that is
 	  forwarded to it from the ONE. */
-	private Map<String, Bundle>			bundle_list;
+	private final Map<String, Bundle>			bundle_list;
 	
 	/**
 	 * Creates a new events object.
@@ -62,10 +62,10 @@ public class DTN2Events implements EventQueue {
 	 * @author teemuk
 	 */
 	public class ParserHandler implements CLAInterface {
-		private int						host_id;
-		private DTN2Events				events;
-		private String					c_host;
-		private int						c_port;
+		private final int						host_id;
+		private final DTN2Events				events;
+		private final String					c_host;
+		private final int						c_port;
 		private DTNConsoleConnection	console;
 		
 		/**

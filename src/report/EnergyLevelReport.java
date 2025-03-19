@@ -88,7 +88,7 @@ public class EnergyLevelReport extends Report implements UpdateListener {
 						" is not using an energy aware router");
 			}
 			
-			write(h.toString() + " " +  format(value));
+			write(h + " " +  format(value));
 		}
 	
 	}

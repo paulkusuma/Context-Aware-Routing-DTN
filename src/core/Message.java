@@ -16,18 +16,18 @@ import java.util.Set;
 public class Message implements Comparable<Message> {
 	/** Value for infinite TTL of message */
 	public static final int INFINITE_TTL = -1;
-	private DTNHost from;
-	private DTNHost to;
+	private final DTNHost from;
+	private final DTNHost to;
 	/** Identifier of the message */
-	private String id;
+	private final String id;
 	/** Size of the message (bytes) */
-	private int size;
+	private final int size;
 	/** List of nodes this message has passed */
 	private List<DTNHost> path; 
 	/** Next unique identifier to be given */
 	private static int nextUniqueId;
 	/** Unique ID of this message */
-	private int uniqueId;
+	private final int uniqueId;
 	/** The time this message was received */
 	private double timeReceived;
 	/** The time when this message was created */

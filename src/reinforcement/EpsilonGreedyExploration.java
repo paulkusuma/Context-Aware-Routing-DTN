@@ -38,7 +38,7 @@ import java.util.Random;
 public class EpsilonGreedyExploration implements IExplorationPolicy{
     private double epsilon;
     
-    private Random r = new Random();
+    private final Random r = new Random();
 
     /**
      * Initializes a new instance of the EpsilonGreedyExploration class.

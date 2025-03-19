@@ -132,16 +132,8 @@ public class BubbleRap implements RoutingDecisionEngine, CommunityDetectionEngin
         } else if (peerInCommunity) // We're both in dest'community
         {
             // Forward to the one with the higher local centrality (in dest'community)
-            if (de.getLocalCentrality() > this.getLocalCentrality()) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (de.getGlobalCentrality() > this.getGlobalCentrality()) {
-            return true;
-        }
-
-        return false;
+            return de.getLocalCentrality() > this.getLocalCentrality();
+        } else return de.getGlobalCentrality() > this.getGlobalCentrality();
     }
 
     @Override

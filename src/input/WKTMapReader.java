@@ -24,7 +24,7 @@ import core.Coord;
  * Other data causes IOException.
  */
 public class WKTMapReader extends WKTReader {
-	private Hashtable<Coord, MapNode> nodes;
+	private final Hashtable<Coord, MapNode> nodes;
 	/** are all paths bidirectional */
 	private boolean bidirectionalPaths = true;
 	private int nodeType = -1;

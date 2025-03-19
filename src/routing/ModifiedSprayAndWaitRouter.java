@@ -53,8 +53,8 @@ public class ModifiedSprayAndWaitRouter extends ActiveRouter {
 
     protected int initialNrofCopies;
     protected boolean isBinary;
-    private int secondsInTimeUnit;
-    private double beta;
+    private final int secondsInTimeUnit;
+    private final double beta;
     private Map<DTNHost, Double> preds;
     private double lastAgeUpdate;
 

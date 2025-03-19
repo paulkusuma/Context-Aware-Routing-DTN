@@ -25,11 +25,11 @@ import core.DTNHost;
  *
  */
 public class NodeChooser extends JPanel implements ActionListener {
-	private DTNSimGUI gui;
+	private final DTNSimGUI gui;
 	/** the maximum number of nodes to show in the list per page */
 	public static final int MAX_NODE_COUNT = 500;
 	private static final String HOST_KEY = "host";
-	private List<DTNHost> nodes;
+	private final List<DTNHost> nodes;
 	private JComboBox groupChooser;
 	private JPanel nodesPanel;
 	private JPanel chooserPanel;
@@ -104,9 +104,8 @@ public class NodeChooser extends JPanel implements ActionListener {
 	 * Action listener method for buttons and node set chooser
 	 */
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() instanceof JButton) {
-			JButton source = (JButton)e.getSource();
-			DTNHost host = (DTNHost)source.getClientProperty(HOST_KEY);
+		if (e.getSource() instanceof JButton source) {
+            DTNHost host = (DTNHost)source.getClientProperty(HOST_KEY);
 			gui.setFocus(host);
 		}
 		else if (e.getSource() == groupChooser) {

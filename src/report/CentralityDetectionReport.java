@@ -41,11 +41,10 @@ public class CentralityDetectionReport extends Report
 			if(!(r instanceof DecisionEngineRouter) )
 				continue;
 			RoutingDecisionEngine de = ((DecisionEngineRouter)r).getDecisionEngine();
-			if(!(de instanceof CentralityDetectionEngine))
+			if(!(de instanceof CentralityDetectionEngine cd))
 				continue;
-			CentralityDetectionEngine cd = (CentralityDetectionEngine)de;
-			
-			double nilaiGlobal = cd.getGlobalDegreeCentrality();
+
+            double nilaiGlobal = cd.getGlobalDegreeCentrality();
                         double nilaiLocal = cd.getLocalDegreeCentrality();
                         
                         write("Node "+h+" Nilai Global: "+nilaiGlobal+"\tNilai Local: "+nilaiLocal);

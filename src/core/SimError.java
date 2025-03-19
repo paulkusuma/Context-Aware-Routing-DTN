@@ -9,7 +9,7 @@ package core;
  *
  */
 public class SimError extends AssertionError {
-	private Exception e;
+	private final Exception e;
 
 	public SimError(String cause) {
 		super(cause);

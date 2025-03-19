@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public interface NilaiRankNode {
     
-    public Map<DTNHost, Double> getAllRankings();
+    Map<DTNHost, Double> getAllRankings();
 
-    public int getTotalTeman(DTNHost host);
+    int getTotalTeman(DTNHost host);
 }

@@ -26,15 +26,15 @@ public class DTNHost implements Comparable<DTNHost> {
     private Coord destination;	// where is it going
 
     private MessageRouter router;
-    private MovementModel movement;
+    private final MovementModel movement;
     private Path path;
     private double speed;
     private double nextTimeToMove;
     private String name;
-    private List<MessageListener> msgListeners;
-    private List<MovementListener> movListeners;
-    private List<NetworkInterface> net;
-    private ModuleCommunicationBus comBus;
+    private final List<MessageListener> msgListeners;
+    private final List<MovementListener> movListeners;
+    private final List<NetworkInterface> net;
+    private final ModuleCommunicationBus comBus;
 
     // tambahan testing
     public List<Duration> intervals;
@@ -300,7 +300,7 @@ public class DTNHost implements Comparable<DTNHost> {
     /**
      * Find the network interface based on the index
      */
-    protected NetworkInterface getInterface(int interfaceNo) {
+    public NetworkInterface getInterface(int interfaceNo) {
         NetworkInterface ni = null;
         try {
             ni = net.get(interfaceNo - 1);
@@ -576,7 +576,7 @@ public class DTNHost implements Comparable<DTNHost> {
     // public List<Duration> getNodeIntervals() {
     public String getNodeIntervals() {
         // return this.intervals;
-        StringBuilder cek = new StringBuilder("");
+        StringBuilder cek = new StringBuilder();
         for (Duration d : intervals) {
             // cek += "<" + d.start + ", " + d.end + "> ";
             cek.append("<" + d.start + ", " + d.end + "> ");

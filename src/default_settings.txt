@@ -20,7 +20,8 @@ Scenario.endTime = 43200
 btInterface.type = SimpleBroadcastInterface
 # Transmit speed of 2 Mbps = 250kBps
 btInterface.transmitSpeed = 250k
-btInterface.transmitRange = 10
+#btInterface.transmitRange = 10
+btInterface.transmitRange = 20
 
 # High speed, long range, interface for group 4
 highspeedInterface.type = SimpleBroadcastInterface
@@ -53,6 +54,7 @@ Scenario.nrofHostGroups = 6
 # Common settings for all groups
 Group.movementModel = ShortestPathMapBasedMovement
 Group.router = EpidemicRouter
+#Group.router = EnergyAwareRouter
 Group.bufferSize = 5M
 Group.waitTime = 0, 120
 # All nodes have the bluetooth interface
@@ -153,6 +155,8 @@ Report.reportDir = reports/
 # Report classes to load
 Report.report1 = MessageStatsReport
 Report.report2 = ContactTimesReport
+
+
 
 ## Default settings for some routers settings
 ProphetRouter.secondsInTimeUnit = 30

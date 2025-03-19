@@ -33,7 +33,7 @@ public class ExternalEventsQueueTest extends TestCase {
 "106202.613	R	MSG_10644_D_5	c70"
 };
 	
-	private final double msgTimes[] = {1000.000, 1533.405, 1542.000, 
+	private final double[] msgTimes = {1000.000, 1533.405, 1542.000,
 			2200.000, 3095.408, 3103.000, 8071.608, 8091.608,
 			100502.200,106202.613};
 	

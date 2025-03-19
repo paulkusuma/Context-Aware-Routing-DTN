@@ -30,8 +30,8 @@ public class MovementNs2Report extends Report implements MovementListener {
 	/** formatting string for coordinate values ({@value})*/
 	public static final String COORD_FORMAT = "%.5f";
 	
-	private String nodeArray;
-	private String nsCmd;
+	private final String nodeArray;
+	private final String nsCmd;
 	
 	/**
 	 * Constructor. Reads {@link #NODE_ARR_S} and {@link #NS_CMD_S} settings 

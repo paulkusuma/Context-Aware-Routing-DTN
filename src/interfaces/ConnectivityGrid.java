@@ -38,11 +38,11 @@ import core.Settings;
  * from zero to conserve memory. 
  */
 public class ConnectivityGrid extends ConnectivityOptimizer {
-	private GridCell[][] cells;
-	private HashMap<NetworkInterface,GridCell> ginterfaces;
-	private int cellSize;
-	private int rows;
-	private int cols;
+	private final GridCell[][] cells;
+	private final HashMap<NetworkInterface,GridCell> ginterfaces;
+	private final int cellSize;
+	private final int rows;
+	private final int cols;
 	private static int worldSizeX;
 	private static int worldSizeY;
 
@@ -92,12 +92,12 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 	 */
 	public static ConnectivityGrid ConnectivityGridFactory(int key, 
 			double cellSize) {
-		if (gridobjects.containsKey((Integer)key)) {
-			return (ConnectivityGrid)gridobjects.get((Integer)key);
+		if (gridobjects.containsKey(key)) {
+			return gridobjects.get(key);
 		} else {
 			ConnectivityGrid newgrid = 
 				new ConnectivityGrid((int)Math.ceil(cellSize));
-			gridobjects.put((Integer)key,newgrid);
+			gridobjects.put(key,newgrid);
 			return newgrid;
 		}
 	}
@@ -139,7 +139,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 	 * @param ni The interface to update
 	 */
 	public void updateLocation(NetworkInterface ni) {
-		GridCell oldCell = (GridCell)ginterfaces.get(ni);
+		GridCell oldCell = ginterfaces.get(ni);
 		GridCell newCell = cellFromCoord(ni.getLocation());
 
 		if (newCell != oldCell) {
@@ -195,7 +195,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 	 * Returns all interfaces that use the same technology and channel
 	 */
 	public Collection<NetworkInterface> getAllInterfaces() {
-		return (Collection<NetworkInterface>)ginterfaces.keySet();
+		return ginterfaces.keySet();
 	}
 
 	/**
@@ -207,7 +207,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 		ArrayList<NetworkInterface> ni = new ArrayList<NetworkInterface>();
 		ni.clear();
 
-		GridCell loc = (GridCell)ginterfaces.get(netinterf);
+		GridCell loc = ginterfaces.get(netinterf);
 		if (loc != null) {	
 			GridCell[] neighbors = 
 				getNeighborCellsByCoord(netinterf.getLocation());
@@ -235,7 +235,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 	public class GridCell {
 		// how large array is initially chosen
 		private static final int EXPECTED_INTERFACE_COUNT = 5;
-		private ArrayList<NetworkInterface> interfaces;
+		private final ArrayList<NetworkInterface> interfaces;
 
 		private GridCell() {
 			this.interfaces = new ArrayList<NetworkInterface>(
@@ -275,7 +275,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 			to.addInterface(ni);
 			boolean removeOk = this.interfaces.remove(ni); 
 			assert removeOk : "interface " + ni + 
-				" not found from cell with " + interfaces.toString();
+				" not found from cell with " + interfaces;
 		}
 
 		/**

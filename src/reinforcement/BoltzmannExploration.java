@@ -42,7 +42,7 @@ import java.util.Random;
  */
 public class BoltzmannExploration implements IExplorationPolicy{
     double temperature;
-    private Random r = new Random();
+    private final Random r = new Random();
 
     /**
      * Initializes a new instance of the BoltzmannExploration class.

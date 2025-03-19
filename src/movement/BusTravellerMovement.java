@@ -40,12 +40,12 @@ public class BusTravellerMovement extends MapBasedMovement implements
 	private Path nextPath;
 	private Coord location;
 	private Coord latestBusStop;
-	private BusControlSystem controlSystem;
-	private int id;
-	private ContinueBusTripDecider cbtd;
+	private final BusControlSystem controlSystem;
+	private final int id;
+	private final ContinueBusTripDecider cbtd;
 	private double[] probabilities;
 	private double probTakeOtherBus;
-	private DijkstraPathFinder pathFinder;
+	private final DijkstraPathFinder pathFinder;
 	
 	private Coord startBusStop;
 	private Coord endBusStop;
@@ -101,7 +101,7 @@ public class BusTravellerMovement extends MapBasedMovement implements
 	@Override
 	public Coord getInitialLocation() {
 		
-		MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+		MapNode[] mapNodes = getMap().getNodes().
 			toArray(new MapNode[0]);
 		int index = rng.nextInt(mapNodes.length - 1);
 		location = mapNodes[index].getLocation().clone();
@@ -231,9 +231,9 @@ public class BusTravellerMovement extends MapBasedMovement implements
 	 */
 	class ContinueBusTripDecider {
 		
-		private double[] probabilities; // Probability to travel with bus
+		private final double[] probabilities; // Probability to travel with bus
 		private int state;
-		private Random rng;
+		private final Random rng;
 		
 		public ContinueBusTripDecider(Random rng, double[] probabilities) {
 			this.rng = rng;
@@ -313,12 +313,8 @@ public class BusTravellerMovement extends MapBasedMovement implements
 		double directDistance = nodeLocation.distance(nodeDestination);
 		double busDistance = nodeLocation.distance(closestToNode) + 
 			nodeDestination.distance(closestToDestination);
-		
-		if (directDistance < busDistance) {
-			takeBus = false;
-		} else {
-			takeBus = true;
-		}
+
+        takeBus = !(directDistance < busDistance);
 		
 		this.startBusStop = closestToNode;
 		this.endBusStop = closestToDestination;
@@ -343,11 +339,7 @@ public class BusTravellerMovement extends MapBasedMovement implements
 	 * @see SwitchableMovement
 	 */
 	public boolean isReady() {
-		if (state == STATE_WALKING_ELSEWHERE) {
-			return true;
-		} else {
-			return false;
-		}
+        return state == STATE_WALKING_ELSEWHERE;
 	}
 	
 	public static void reset() {

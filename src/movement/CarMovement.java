@@ -22,7 +22,7 @@ public class CarMovement extends MapBasedMovement implements
 	private Coord from;
 	private Coord to;
 	
-	private DijkstraPathFinder pathFinder;
+	private final DijkstraPathFinder pathFinder;
 	
 	/**
 	 * Car movement constructor

@@ -31,10 +31,10 @@ public class SelfishWithCommunityRouter implements RoutingDecisionEngine {
     public static final String PATH_SETTING = "filePathKnowledge";
 
     private Scanner reader;
-    private int interval = 3600;
-    private Double lastRecord = Double.MIN_VALUE;
+    private final int interval = 3600;
+    private final Double lastRecord = Double.MIN_VALUE;
     private List<LinkedList<String>> communityGlobal;
-    private String eeFilePath;
+    private final String eeFilePath;
     private Map<DTNHost, Integer> nodeRank;
 
     public SelfishWithCommunityRouter(Settings s) {

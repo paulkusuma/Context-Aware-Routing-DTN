@@ -22,13 +22,13 @@ public class WorkingDayMovement extends ExtendedMovementModel {
 	public static final String PROBABILITY_TO_GO_SHOPPING_SETTING = 
 		"probGoShoppingAfterWork";
 	
-	private BusTravellerMovement busTravellerMM;
-	private OfficeActivityMovement workerMM;
-	private HomeActivityMovement homeMM;
-	private EveningActivityMovement eveningActivityMovement;
-	private CarMovement carMM;
+	private final BusTravellerMovement busTravellerMM;
+	private final OfficeActivityMovement workerMM;
+	private final HomeActivityMovement homeMM;
+	private final EveningActivityMovement eveningActivityMovement;
+	private final CarMovement carMM;
 	
-	private TransportMovement movementUsedForTransfers;
+	private final TransportMovement movementUsedForTransfers;
 	
 	private static final int BUS_TO_WORK_MODE = 0;
 	private static final int BUS_TO_HOME_MODE = 1;
@@ -40,8 +40,8 @@ public class WorkingDayMovement extends ExtendedMovementModel {
 	
 	private int mode;
 	
-	private double ownCarProb;
-	private double doEveningActivityProb;
+	private final double ownCarProb;
+	private final double doEveningActivityProb;
 	
 	/**
 	 * Creates a new instance of WorkingDayMovement

@@ -12,9 +12,9 @@ import core.SimClock;
  * Tests for the ScheduledUpdatesQueue
  */
 public class ScheduledUpdatesQueueTest extends TestCase {
-	private static double MAX = Double.MAX_VALUE;
+	private static final double MAX = Double.MAX_VALUE;
 	private ScheduledUpdatesQueue suq;
-	private SimClock sc = SimClock.getInstance();
+	private final SimClock sc = SimClock.getInstance();
 	
 	protected void setUp() throws Exception {
 		super.setUp();

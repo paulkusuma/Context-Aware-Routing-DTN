@@ -10,7 +10,7 @@ import routing.MessageRouter;
  * A constant bit-rate connection between two DTN nodes.
  */
 public class CBRConnection extends Connection {
-	private int speed;
+	private final int speed;
 	private double transferDoneTime;
 
 	/**

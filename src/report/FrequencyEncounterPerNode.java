@@ -32,10 +32,9 @@ public class FrequencyEncounterPerNode extends Report{
                 continue;
             }
             RoutingDecisionEngine de = ((DecisionEngineRouter)r).getDecisionEngine();
-            if(!(de instanceof FrequencyDecisionEngine)){
+            if(!(de instanceof FrequencyDecisionEngine cd)){
                 continue;
             }
-            FrequencyDecisionEngine cd =(FrequencyDecisionEngine)de;
             Map<DTNHost, List<Duration>> nodeComm = cd.getFrequency();
             write(h+" "+nodeComm);
         }

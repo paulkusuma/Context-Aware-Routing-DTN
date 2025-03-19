@@ -38,7 +38,7 @@ public class MapRouteMovement extends MapBasedMovement implements
 	public static final String ROUTE_FIRST_STOP_S = "routeFirstStop";
 	
 	/** the Dijkstra shortest path finder */
-	private DijkstraPathFinder pathFinder;
+	private final DijkstraPathFinder pathFinder;
 
 	/** Prototype's reference to all routes read for the group */
 	private List<MapRoute> allRoutes = null;
@@ -48,7 +48,7 @@ public class MapRouteMovement extends MapBasedMovement implements
 	private int firstStopIndex = -1;
 	
 	/** Route of the movement model's instance */
-	private MapRoute route;
+	private final MapRoute route;
 	
 	/**
 	 * Creates a new movement model based on a Settings object's settings.

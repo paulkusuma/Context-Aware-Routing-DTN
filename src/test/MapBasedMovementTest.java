@@ -37,11 +37,11 @@ public class MapBasedMovementTest extends TestCase {
 	"LINESTRING (2.0 1.0, 2.0 0.0, 3.0 0.0, 3.0 1.0)\n";
 	
 	private MapNode n1;
-	private Coord c1 = new Coord(1,1);
+	private final Coord c1 = new Coord(1,1);
 	private MapNode n2;
-	private Coord c2 = new Coord(2,1);
+	private final Coord c2 = new Coord(2,1);
 	private MapNode n6;
-	private Coord c6 = new Coord(3,1);
+	private final Coord c6 = new Coord(3,1);
 	
 	private MapBasedMovement mbm;
 	private SimMap map;

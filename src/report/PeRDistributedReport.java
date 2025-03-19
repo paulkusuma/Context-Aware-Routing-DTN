@@ -38,10 +38,9 @@ public class PeRDistributedReport extends Report {
                 continue;
             }
             RoutingDecisionEngine decisionEngine = ((DecisionEngineRouter) router).getDecisionEngine();
-            if (!(decisionEngine instanceof PeRDistributed)) {
+            if (!(decisionEngine instanceof PeRDistributed peRDistributed)) {
                 continue;
             }
-            PeRDistributed peRDistributed = (PeRDistributed) decisionEngine;
 
             double rank = peRDistributed.getPeopleRank(host);
             nodeRanks.put(host, rank);

@@ -13,7 +13,7 @@ import core.Coord;
  * purposes
  */
 public class StationaryMovement extends MovementModel {
-	private Coord loc;
+	private final Coord loc;
 	
 	public StationaryMovement(Coord location) {
 		if (location == null) {

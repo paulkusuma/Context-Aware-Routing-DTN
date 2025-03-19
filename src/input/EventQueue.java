@@ -18,13 +18,13 @@ public interface EventQueue {
 	 * double.MAX_VALUE if there are no events left.
 	 * @return The next event
 	 */
-	public ExternalEvent nextEvent();
+    ExternalEvent nextEvent();
 	
 	/**
 	 * Returns next event's time or Double.MAX_VALUE if there are no 
 	 * events left in the queue.
 	 * @return Next event's time
 	 */
-	public double nextEventsTime();
+    double nextEventsTime();
 
 }

@@ -83,7 +83,7 @@ public class TestingReport extends Report {
 			
 				ActiveRouter act = (ActiveRouter) d.getRouter();
 				CCRouting router = (CCRouting) act;
-				CongestionRate cr = (CongestionRate) router;
+				CongestionRate cr = router;
 				// NodeConn in = (NodeConn) router;
 			// if(d.toString().equals("p18")) {
 			// 	CCRouting router = (CCRouting) d.getRouter();

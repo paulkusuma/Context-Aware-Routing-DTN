@@ -43,7 +43,7 @@ public class ModuleCommunicationBusTest extends TestCase {
 		assertNull(b.getProperty("invalidValue"));
 		
 		b.addProperty("test2", "value2");
-		assertEquals("value2", b.getProperty("test2".toString()));
+		assertEquals("value2", b.getProperty("test2"));
 		assertEquals(TST_VAL, b.getProperty("test").toString());
 	}
 

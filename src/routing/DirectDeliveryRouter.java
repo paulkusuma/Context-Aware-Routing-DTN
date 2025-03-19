@@ -28,8 +28,8 @@ public class DirectDeliveryRouter extends ActiveRouter {
 		
 		// Try only the messages that can be delivered to final recipient
 		if (exchangeDeliverableMessages() != null) {
-			return; // started a transfer
-		}
+            // started a transfer
+        }
 	}
 	
 	@Override

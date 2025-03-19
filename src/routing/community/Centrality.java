@@ -41,7 +41,7 @@ public interface Centrality
 	 * @param connHistory Contact History on which to compute centrality
 	 * @return Value corresponding to the global centrality
 	 */
-	public double getGlobalCentrality(Map<DTNHost, List<Duration>> connHistory);
+    double getGlobalCentrality(Map<DTNHost, List<Duration>> connHistory);
 	
 	/**
 	 * Returns the computed local centrality based on the connection history and
@@ -51,8 +51,8 @@ public interface Centrality
 	 * @param cd CommunityDetection object that knows the local community
 	 * @return Value corresponding to the local centrality
 	 */
-	public double getLocalCentrality(Map<DTNHost, List<Duration>> connHistory, 
-			CommunityDetection cd);
+    double getLocalCentrality(Map<DTNHost, List<Duration>> connHistory,
+                              CommunityDetection cd);
 	
 	/**
 	 * Duplicates a Centrality object. This is a convention of the ONE to easily
@@ -60,7 +60,7 @@ public interface Centrality
 	 * 
 	 * @return A duplicate Centrality instance
 	 */
-	public Centrality replicate();
+    Centrality replicate();
 	
 	//Ini tambahanku sementara
 	//public int [] getGlobalArrayCentrality (Map<DTNHost, List<Duration>> connHistory);

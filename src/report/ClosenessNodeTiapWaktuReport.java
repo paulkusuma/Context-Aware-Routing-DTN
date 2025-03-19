@@ -39,10 +39,9 @@ public class ClosenessNodeTiapWaktuReport extends Report {
                 continue;
             }
             RoutingDecisionEngine de = ((DecisionEngineRouter) r).getDecisionEngine();
-            if (!(de instanceof ClosenessDecisionEngine)) {
+            if (!(de instanceof ClosenessDecisionEngine cd)) {
                 continue;
             }
-            ClosenessDecisionEngine cd = (ClosenessDecisionEngine) de;
             Map<DTNHost, List<Double>> closenessCounter = cd.getCloseness();
             
             for (Map.Entry<DTNHost, List<Double>> entry : closenessCounter.entrySet()) {

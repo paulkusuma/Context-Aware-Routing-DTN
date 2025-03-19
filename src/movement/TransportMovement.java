@@ -13,6 +13,6 @@ import core.Coord;
   */
 public interface TransportMovement extends SwitchableMovement {
 
-	public void setNextRoute(Coord nodeLocation, Coord nodeDestination);
+	void setNextRoute(Coord nodeLocation, Coord nodeDestination);
 	
 }

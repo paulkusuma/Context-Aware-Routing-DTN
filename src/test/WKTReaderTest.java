@@ -34,7 +34,7 @@ public class WKTReaderTest extends TestCase {
 	 *                  n11; from ADD_TOPOLOGY2 ) 
 	 */
 	//                           				  n1       n2       n7       n3
-	private String TST_TOPOLOGY = "LINESTRING (1.0 1.0, 2.0 1.0, 3.0 1.0, 8.0 1.0) \n\r" +
+	private final String TST_TOPOLOGY = "LINESTRING (1.0 1.0, 2.0 1.0, 3.0 1.0, 8.0 1.0) \n\r" +
 	//              n1       n4
 	"LINESTRING (1.0 1.0, 1.0 3.0)\n"+
 	//              n2      n6        n5        n7
@@ -44,17 +44,17 @@ public class WKTReaderTest extends TestCase {
 	"LINESTRING (1.0 3.0, 2.0 3.0) LINESTRING (2.0 3.0, 3.0 3.0)";
 	
 	//											  n9	 n10
-	private String ADD_TOPOLOGY = "LINESTRING (3.0 3.0, 5.0 3.0)";
+	private final String ADD_TOPOLOGY = "LINESTRING (3.0 3.0, 5.0 3.0)";
 	//											  n9	 n11
-	private String ADD_TOPOLOGY2 = "LINESTRING (3.0 3.0, 3.0 5.0)";
+	private final String ADD_TOPOLOGY2 = "LINESTRING (3.0 3.0, 3.0 5.0)";
 
 	
 	// coordinates of some map nodes
-	private Coord n1c = new Coord(1,1);
-	private Coord n2c = new Coord(2,1);
-	private Coord n9c = new Coord(3,3);
-	private Coord n10c = new Coord(5,3);
-	private Coord n11c = new Coord(3,5);
+	private final Coord n1c = new Coord(1,1);
+	private final Coord n2c = new Coord(2,1);
+	private final Coord n9c = new Coord(3,3);
+	private final Coord n10c = new Coord(5,3);
+	private final Coord n11c = new Coord(3,5);
 
 	
 	private WKTMapReader setUpWith(Reader input) {

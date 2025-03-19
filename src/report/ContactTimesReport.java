@@ -125,10 +125,10 @@ public class ContactTimesReport extends Report implements ConnectionListener {
 	 * Objects of this class store time information about contacts.
 	 */
 	protected class ConnectionInfo {
-		private double startTime;
+		private final double startTime;
 		private double endTime;
-		private DTNHost h1;
-		private DTNHost h2;
+		private final DTNHost h1;
+		private final DTNHost h2;
 		
 		public ConnectionInfo (DTNHost h1, DTNHost h2){
 			this.h1 = h1;
@@ -167,21 +167,16 @@ public class ContactTimesReport extends Report implements ConnectionListener {
 		 * Returns true if the other connection info contains the same hosts. 
 		 */
 		public boolean equals(Object other) {
-			if (!(other instanceof ConnectionInfo)) {
+			if (!(other instanceof ConnectionInfo ci)) {
 				return false;
 			}
-			
-			ConnectionInfo ci = (ConnectionInfo)other;
 
-			if ((h1 == ci.h1 && h2 == ci.h2)) {
+            // bidirectional connection the other way
+            if ((h1 == ci.h1 && h2 == ci.h2)) {
 				return true;
 			}
-			else if ((h1 == ci.h2 && h2 == ci.h1)) {
-				// bidirectional connection the other way
-				return true;
-			}
-			return false;
-		}
+			else return h1 == ci.h2 && h2 == ci.h1;
+        }
 		
 		/**
 		 * Returns the same hash for ConnectionInfos that have the
@@ -192,10 +187,10 @@ public class ContactTimesReport extends Report implements ConnectionListener {
 			String hostString;
 
 			if (this.h1.compareTo(this.h2) < 0) {
-				hostString = h1.toString() + "-" + h2.toString();
+				hostString = h1 + "-" + h2.toString();
 			}
 			else {
-				hostString = h2.toString() + "-" + h1.toString();
+				hostString = h2 + "-" + h1.toString();
 			}
 			
 			return hostString.hashCode();

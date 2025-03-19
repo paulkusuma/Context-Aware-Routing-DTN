@@ -86,6 +86,10 @@ public abstract class MessageRouter {
      */
     public static final int DENIED_TTL = -3;
     /**
+     * Recive return value for a node low on some resource(s)
+     */
+    public static final int DENIED_LOW_RESOURCES = -4;
+    /**
      * Receive return value for unspecified reason
      */
     public static final int DENIED_UNSPECIFIED = -999;
@@ -118,7 +122,7 @@ public abstract class MessageRouter {
     /**
      * Queue mode for sending messages
      */
-    private int sendQueueMode;
+    private final int sendQueueMode;
 
     /**
      * applications attached to the host

@@ -24,5 +24,5 @@ public interface CommunityDetectionEngine
 	 *  
 	 * @return Set of hosts in the local community
 	 */
-	public Set<DTNHost> getLocalCommunity();
+    Set<DTNHost> getLocalCommunity();
 }

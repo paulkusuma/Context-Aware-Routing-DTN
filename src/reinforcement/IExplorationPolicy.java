@@ -39,5 +39,5 @@ public interface IExplorationPolicy {
      * @param actionEstimates Action estimates.
      * @return Returns selected action.
      */
-    public int ChooseAction(double[] actionEstimates);
+    int ChooseAction(double[] actionEstimates);
 }

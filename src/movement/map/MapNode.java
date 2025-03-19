@@ -21,8 +21,8 @@ public class MapNode implements Comparable<MapNode> {
 	public static final int MAX_TYPE = 31;
 	
 	
-	private Coord location;
-	private Vector<MapNode> neighbors;
+	private final Coord location;
+	private final Vector<MapNode> neighbors;
 	// bit mask of map node's types or 0 if no type's are defined
 	private int type;
 	

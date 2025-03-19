@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
 	// log panel's initial weight in the split panel 
 	private static final double SPLIT_PANE_LOG_WEIGHT = 0.2;
 	
-	private JScrollPane playFieldScroll;
+	private final JScrollPane playFieldScroll;
 	
     public MainWindow(String scenName, World world, PlayField field,
     		GUIControls guiControls, InfoPanel infoPanel,

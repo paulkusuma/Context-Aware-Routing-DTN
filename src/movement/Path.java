@@ -14,7 +14,7 @@ import core.Coord;
  */
 public class Path  {
 	/** coordinates of the path */
-	private List<Coord> coords;
+	private final List<Coord> coords;
 	/** speeds in the path legs */
 	private List<Double> speeds;
 	private int nextWpIndex;
@@ -35,8 +35,8 @@ public class Path  {
 	 */
 	public Path(Path path) {
 		this.nextWpIndex = path.nextWpIndex;
-		this.coords = new ArrayList<Coord>((ArrayList<Coord>)path.coords);
-		this.speeds = new ArrayList<Double>((ArrayList<Double>)path.speeds);
+		this.coords = new ArrayList<Coord>(path.coords);
+		this.speeds = new ArrayList<Double>(path.speeds);
 	}
 	
 	/**

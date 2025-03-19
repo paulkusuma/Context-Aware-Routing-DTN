@@ -32,7 +32,7 @@ public class MaxPropDijkstra {
 	 * debugging purposes */
 	private Map<Integer, Integer> prevNodes;
 	/** Mapping of to other nodes' (whom this node has met) probability sets */
-	private Map<Integer, MeetingProbabilitySet> probs;
+	private final Map<Integer, MeetingProbabilitySet> probs;
 	
 	/**
 	 * Constructor.
@@ -179,7 +179,7 @@ public class MaxPropDijkstra {
 	 * Simple Map implementation for storing distances. 
 	 */
 	private class DistanceMap {
-		private HashMap<Integer, Double> map;
+		private final HashMap<Integer, Double> map;
 		
 		/**
 		 * Constructor. Creates an empty distance map

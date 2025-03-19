@@ -25,7 +25,7 @@ public class EpidemicDecisionRouter implements RoutingDecisionEngine{
     public static final String TOTAL_CONTACT_INTERVAL = "perTotalContact";
     public static final int DEFAULT_CONTACT_INTERVAL = 300;
     private Double lastRecord = Double.MIN_VALUE;
-    private int interval;
+    private final int interval;
 
     public EpidemicDecisionRouter(Settings s) {
         if (s.contains(TOTAL_CONTACT_INTERVAL)) {

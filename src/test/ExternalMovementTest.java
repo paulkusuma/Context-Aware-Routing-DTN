@@ -42,7 +42,7 @@ public class ExternalMovementTest extends TestCase {
 	};
 	
 	private static final double CLOCK_STEP = 10;
-	private Coord c0 = new Coord(0,0);
+	private final Coord c0 = new Coord(0,0);
 	private DTNHost h1;
 	private DTNHost h2;
 	private DTNHost h3;

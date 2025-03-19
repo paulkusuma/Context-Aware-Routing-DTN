@@ -17,7 +17,7 @@ public interface RoutingDecisionEngine
 	 * @param thisHost
 	 * @param peer
 	 */
-	public void connectionUp(DTNHost thisHost, DTNHost peer);
+    void connectionUp(DTNHost thisHost, DTNHost peer);
 	
 	/**
 	 * Called when a connection goes down between this host and a peer.
@@ -25,7 +25,7 @@ public interface RoutingDecisionEngine
 	 * @param thisHost
 	 * @param peer
 	 */
-	public void connectionDown(DTNHost thisHost, DTNHost peer);
+    void connectionDown(DTNHost thisHost, DTNHost peer);
 	
 	/**
 	 * Called once for each connection that comes up to give two decision engine
@@ -38,7 +38,7 @@ public interface RoutingDecisionEngine
 	 * @param con
 	 * @param peer
 	 */
-	public void doExchangeForNewConnection(Connection con, DTNHost peer);
+    void doExchangeForNewConnection(Connection con, DTNHost peer);
 	
 	/**
 	 * Allows the decision engine to gather information from the given message and
@@ -51,7 +51,7 @@ public interface RoutingDecisionEngine
 	 * @return True if the message should be forwarded on. False if the message 
 	 * should be discarded.  
 	 */
-	public boolean newMessage(Message m);
+    boolean newMessage(Message m);
 	
 	/**
 	 * Determines if the given host is an intended recipient of the given Message.
@@ -63,7 +63,7 @@ public interface RoutingDecisionEngine
 	 * @return true if the given host is a recipient of this given message. False
 	 * otherwise.
 	 */
-	public boolean isFinalDest(Message m, DTNHost aHost);
+    boolean isFinalDest(Message m, DTNHost aHost);
 	
 	/**
 	 * Called to determine if a new message received from a peer should be saved
@@ -74,7 +74,7 @@ public interface RoutingDecisionEngine
 	 * @return true if the message should be saved and further routed. 
 	 * False otherwise.
 	 */
-	public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost);
+    boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost);
 	
 	/**
 	 * Called to determine if the given Message should be sent to the given host.
@@ -86,7 +86,7 @@ public interface RoutingDecisionEngine
 	 * @param otherHost peer to potentially send the message to.
 	 * @return true if the message should be sent. False otherwise.
 	 */
-	public boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost);
+    boolean shouldSendMessageToHost(Message m, DTNHost otherHost, DTNHost thisHost);
 	
 	/**
 	 * Called after a message is sent to some other peer to ask if it should now
@@ -96,7 +96,7 @@ public interface RoutingDecisionEngine
 	 * @param otherHost Host who received the message
 	 * @return true if the message should be deleted. False otherwise.
 	 */
-	public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost);
+    boolean shouldDeleteSentMessage(Message m, DTNHost otherHost);
 	
 	/**
 	 * Called if an attempt was unsuccessfully made to transfer a message to a 
@@ -107,13 +107,13 @@ public interface RoutingDecisionEngine
 	 * @param hostReportingOld Peer claiming the message is old
 	 * @return true if the message should be deleted. False otherwise.
 	 */
-	public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld);
+    boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld);
 	
-        public void update(DTNHost thisHost);
+        void update(DTNHost thisHost);
 	/**
 	 * Duplicates this decision engine.
 	 * 
 	 * @return
 	 */
-	public RoutingDecisionEngine replicate();
+    RoutingDecisionEngine replicate();
 }

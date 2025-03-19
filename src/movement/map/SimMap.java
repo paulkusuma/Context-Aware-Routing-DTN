@@ -18,11 +18,11 @@ public class SimMap implements Serializable {
 	private Coord minBound;
 	private Coord maxBound;
 	/** list representation of the map for efficient list-returning */
-	private ArrayList<MapNode> nodes;
+	private final ArrayList<MapNode> nodes;
 	/** hash map presentation of the map for efficient finding node by coord */
-	private Map<Coord, MapNode> nodesMap;
+	private final Map<Coord, MapNode> nodesMap;
 	/** offset of map translations */
-	private Coord offset;
+	private final Coord offset;
 	/** is this map data mirrored after reading */
 	private boolean isMirrored;
 	

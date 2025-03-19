@@ -25,10 +25,10 @@ public class WorldTest extends TestCase {
 	/* for rounding errors with SimClock */
 	private static final double TIME_DELTA = 0.00001;
 	private World world;
-	private boolean simulateConnections = true;
-	private int worldSizeX = 100;
-	private int worldSizeY = 100;
-	private double upInterval = 0.1;
+	private final boolean simulateConnections = true;
+	private final int worldSizeX = 100;
+	private final int worldSizeY = 100;
+	private final double upInterval = 0.1;
 	private List<TestDTNHost> testHosts;
 	private List<EventQueue> eQueues;
 	

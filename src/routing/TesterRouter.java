@@ -17,7 +17,7 @@ import core.Settings;
 public class TesterRouter extends ActiveRouter {
 
     public static final String LABEL_PROPERTY = "label";
-    private String label;
+    private final String label;
 
     public TesterRouter(Settings s) {
         super(s);

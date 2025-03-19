@@ -26,10 +26,10 @@ public class TestUtils {
 	private List<ConnectionListener> conListeners;
 	private List<MessageListener> msgListeners;
 	private String groupId = "h";
-	private List<DTNHost> allHosts;
+	private final List<DTNHost> allHosts;
 	private MessageRouter mr;
 	
-	private ModuleCommunicationBus comBus;
+	private final ModuleCommunicationBus comBus;
 
 	/**
 	 * Creates a test utils object suitable for creating new hosts.

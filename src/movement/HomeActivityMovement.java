@@ -38,17 +38,17 @@ public class HomeActivityMovement extends MapBasedMovement
 	public static final String STD_FOR_TIME_DIFF_SETTING = "timeDiffSTD";
 	
 	private int mode;
-	private DijkstraPathFinder pathFinder;
+	private final DijkstraPathFinder pathFinder;
 	
-	private int distance;
+	private final int distance;
 	
 	private Coord lastWaypoint;
 	private Coord homeLocation;
 	
 	private List<Coord> allHomes;
 	
-	private int timeDiffSTD;
-	private int timeDifference;
+	private final int timeDiffSTD;
+	private final int timeDifference;
 	
 	/**
 	 * Creates a new instance of HomeActivityMovement
@@ -70,7 +70,7 @@ public class HomeActivityMovement extends MapBasedMovement
 		timeDiffSTD = settings.getInt(STD_FOR_TIME_DIFF_SETTING);
 		
 		if (homeLocationsFile == null) {
-			MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+			MapNode[] mapNodes = getMap().getNodes().
 				toArray(new MapNode[0]);
 			int homeIndex = rng.nextInt(mapNodes.length - 1);
 			homeLocation = mapNodes[homeIndex].getLocation().clone();
@@ -123,7 +123,7 @@ public class HomeActivityMovement extends MapBasedMovement
 		this.timeDiffSTD = proto.timeDiffSTD;
 		
 		if (proto.allHomes == null) {
-			MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+			MapNode[] mapNodes = getMap().getNodes().
 				toArray(new MapNode[0]);
 			int homeIndex = rng.nextInt(mapNodes.length - 1);
 			homeLocation = mapNodes[homeIndex].getLocation().clone();

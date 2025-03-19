@@ -19,8 +19,8 @@ import core.Settings;
  */
 public class BusMovement extends MapRouteMovement {
 	
-	private BusControlSystem controlSystem;
-	private int id;
+	private final BusControlSystem controlSystem;
+	private final int id;
 	private static int nextID = 0;
 	private boolean startMode;
 	private List<Coord> stops;

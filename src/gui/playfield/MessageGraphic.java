@@ -15,10 +15,10 @@ import core.DTNHost;
  *
  */
 public class MessageGraphic extends PlayFieldGraphic {
-	private Color msgColor = Color.RED;
+	private final Color msgColor = Color.RED;
 	
-	private DTNHost from;
-	private DTNHost to;
+	private final DTNHost from;
+	private final DTNHost to;
 	
 	public MessageGraphic(DTNHost from, DTNHost to) {
 		this.to = to;

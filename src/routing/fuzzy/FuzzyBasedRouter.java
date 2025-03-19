@@ -34,7 +34,7 @@ public class FuzzyBasedRouter implements RoutingDecisionEngine{
     public static final String VARIANCE = "variance";
     public static final String TRANSFER_OF_UTILITY = "su";
 
-    private FIS fclSimilarity;
+    private final FIS fclSimilarity;
     protected Map<DTNHost, Double> startTimestamps;
     protected Map<DTNHost, List<Duration>> connHistory;
         

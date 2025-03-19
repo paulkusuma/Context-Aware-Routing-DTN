@@ -14,7 +14,7 @@ import core.Settings;
 public class StationaryMovement extends MovementModel {
 	/** Per node group setting for setting the location ({@value}) */
 	public static final String LOCATION_S = "nodeLocation";
-	private Coord loc; /** The location of the nodes */
+	private final Coord loc; /** The location of the nodes */
 	
 	/**
 	 * Creates a new movement model based on a Settings object's settings.
@@ -22,7 +22,7 @@ public class StationaryMovement extends MovementModel {
 	 */
 	public StationaryMovement(Settings s) {
 		super(s);
-		int coords[];
+		int[] coords;
 		
 		coords = s.getCsvInts(LOCATION_S, 2);
 		this.loc = new Coord(coords[0],coords[1]);

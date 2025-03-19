@@ -28,7 +28,7 @@ public class InfoPanel extends JPanel implements ActionListener{
 	private JButton routingInfoButton;
 	private Message selectedMessage;
 	private DTNHost selectedHost;
-	private DTNSimGUI gui;
+	private final DTNSimGUI gui;
 	
 	public InfoPanel(DTNSimGUI gui) {
 		this.gui = gui;

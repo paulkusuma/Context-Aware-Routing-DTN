@@ -93,8 +93,8 @@ public class GUIControls extends JPanel implements ActionListener, ChangeListene
 	private double guiUpdateInterval;
 	private javax.swing.JSpinner zoomSelector;
 
-	private PlayField pf;
-	private DTNSimGUI gui;
+	private final PlayField pf;
+	private final DTNSimGUI gui;
 	
 	private long lastUpdate;
 	private double lastSimTime;

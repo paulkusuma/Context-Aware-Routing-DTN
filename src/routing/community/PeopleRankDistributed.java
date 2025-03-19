@@ -47,7 +47,7 @@ public class PeopleRankDistributed implements RoutingDecisionEngine {
     // Faktor damping yang digunakan dalam algoritma PeopleRank
     private double dampingFactor = 0.75;
     // Threshold untuk menentukan apakah dua host dianggap sebagai teman berdasarkan durasi waktu koneksi
-    private double connectionDurationThreshold = 3600; // Misalnya, gunakan nilai threshold 3600 detik (1 jam)
+    private final double connectionDurationThreshold = 3600; // Misalnya, gunakan nilai threshold 3600 detik (1 jam)
 
     /**
      * Konstruktor untuk menginisialisasi objek PeopleRankDistributed.
@@ -126,7 +126,7 @@ public class PeopleRankDistributed implements RoutingDecisionEngine {
      */
     public void addConnectionToHistory(DTNHost host, DTNHost peer, Duration duration) {
         List<Duration> hostHistory = connHistory.getOrDefault(host, new LinkedList<>());
-        hostHistory.add((Duration) (Set<DTNHost>) duration);
+        hostHistory.add((Duration) duration);
         connHistory.put(host, hostHistory);
     }
 

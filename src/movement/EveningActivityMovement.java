@@ -48,17 +48,17 @@ public class EveningActivityMovement extends MapBasedMovement
 	
 	private int mode;
 	private boolean ready;
-	private DijkstraPathFinder pathFinder;
+	private final DijkstraPathFinder pathFinder;
 	
 	private Coord lastWaypoint;
 	private Coord startAtLocation;
 	
-	private EveningActivityControlSystem scs;
+	private final EveningActivityControlSystem scs;
 	private EveningTrip trip;
 	
 	private boolean readyToShop;
 	
-	private int id;
+	private final int id;
 	
 	private static int nextID = 0;
 	
@@ -80,7 +80,7 @@ public class EveningActivityMovement extends MapBasedMovement
 		minGroupSize = settings.getInt(MIN_GROUP_SIZE_SETTING);
 		maxGroupSize = settings.getInt(MAX_GROUP_SIZE_SETTING);
 		
-		MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+		MapNode[] mapNodes = getMap().getNodes().
 			toArray(new MapNode[0]);
 		
 		String shoppingSpotsFile = null;
@@ -161,7 +161,7 @@ public class EveningActivityMovement extends MapBasedMovement
 	@Override
 	public Coord getInitialLocation() {
 		
-		MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+		MapNode[] mapNodes = getMap().getNodes().
 			toArray(new MapNode[0]);
 		int index = rng.nextInt(mapNodes.length - 1);
 		lastWaypoint = mapNodes[index].getLocation().clone();

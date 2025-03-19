@@ -54,7 +54,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
     protected double pinit;
     protected double lastAgeUpdate;
     protected int secondsInTimeUnit;
-    private Map<DTNHost, Double> preds;
+    private final Map<DTNHost, Double> preds;
     private Set<Message> msgStamp;
     private Map<DTNHost, Integer> relayed;
     private DTNHost meHost;
@@ -172,7 +172,7 @@ public class SprayAndWaitDecisionEngine implements RoutingDecisionEngine {
 
     @Override
     public boolean newMessage(Message m) {
-        m.addProperty(MSG_COUNT_PROPERTY, new Integer(initialNrofCopies));
+        m.addProperty(MSG_COUNT_PROPERTY, Integer.valueOf(initialNrofCopies));
         return true;
     }
 

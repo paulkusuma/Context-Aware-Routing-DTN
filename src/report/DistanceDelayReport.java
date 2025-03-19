@@ -110,9 +110,9 @@ public class DistanceDelayReport extends Report implements MessageListener {
 	 * Private class that encapsulates time and location related information
 	 */
 	private class InfoTuple {
-		private double time;
-		private Coord loc1;
-		private Coord loc2;
+		private final double time;
+		private final Coord loc1;
+		private final Coord loc2;
 
 		public InfoTuple(double time, Coord loc1, Coord loc2) {
 			this.time = time;

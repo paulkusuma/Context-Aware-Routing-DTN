@@ -26,8 +26,8 @@ import routing.community.VarianceDecisionEngine;
 public class VariansiTiapPeerReport extends Report{
     
     public static final String NODE_ID = "closenessToNodeID";
-    private int nodeAddress;
-    private Map<DTNHost, List<Double>> encounterData;
+    private final int nodeAddress;
+    private final Map<DTNHost, List<Double>> encounterData;
     private Map<DTNHost, Double> avgEncounter;
     
     public VariansiTiapPeerReport(){
@@ -51,11 +51,10 @@ public class VariansiTiapPeerReport extends Report{
                 continue;
             }
             RoutingDecisionEngine de = ((DecisionEngineRouter)r).getDecisionEngine();
-            if(!(de instanceof VarianceDecisionEngine)){
+            if(!(de instanceof VarianceDecisionEngine cd)){
                 continue;
             }
-            
-            VarianceDecisionEngine cd =(VarianceDecisionEngine)de;
+
             Map<DTNHost, List<Double>> nodeComm = cd.getVariance();
             
             if (h.getAddress() == nodeAddress) {

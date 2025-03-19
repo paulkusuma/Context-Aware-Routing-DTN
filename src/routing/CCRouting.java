@@ -9,23 +9,23 @@ public class CCRouting extends ActiveRouter implements CongestionRate {
 	private int msgTransferred = 0;
 
 	/** update interval diset dari settings */
-	private double updateInterval;
+	private final double updateInterval;
 
 	// Variable untuk Congestion Ratio
 	private int dataReceived = 0;
 	private int dataTransferred = 0;
 	private double lastUpdateTime = 0;
 	private double totalContactTime = 0;
-	private Map<DTNHost, List<Double>> dataInContact;
-	private Map<DTNHost, List<Double>> congestionRatio;
-	private Map<DTNHost, List<Double>> ema;
+	private final Map<DTNHost, List<Double>> dataInContact;
+	private final Map<DTNHost, List<Double>> congestionRatio;
+	private final Map<DTNHost, List<Double>> ema;
 	private static final double SMOOTHING_FACTOR = 0.5;
 
 	// Variable untuk learning
 	private QLearning ql;
 	private IExplorationPolicy explorationPolicy;
-	private int totalState;
-	private int totalAction;
+	private final int totalState;
+	private final int totalAction;
 	/** 
 	 * Integer sebagai address node, 
 	 * jika status masih <CODE>pending</CODE> 

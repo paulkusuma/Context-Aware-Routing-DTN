@@ -11,10 +11,10 @@ import java.util.Random;
  * @author Frans Ekman
  */
 public class ParetoRNG {
-	private Random rng;
-	private double xm; // min value (Xm)
-	private double k; // coefficient
-	private double maxValue;
+	private final Random rng;
+	private final double xm; // min value (Xm)
+	private final double k; // coefficient
+	private final double maxValue;
 	
 	/**
 	 * Creates a new Pareto random number generator that makes use of a normal

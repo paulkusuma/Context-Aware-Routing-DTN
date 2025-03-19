@@ -20,9 +20,9 @@ import java.util.Map;
  */
 public class TotalContactReport extends Report implements ConnectionListener {
 
-    private double lastRecord;
-    private int interval = 3600;
-    private Map<DTNHost, Integer> listHost;
+    private final double lastRecord;
+    private final int interval = 3600;
+    private final Map<DTNHost, Integer> listHost;
 
     public TotalContactReport() {
         super.init();

@@ -23,15 +23,15 @@ public class NodeGraphic extends PlayFieldGraphic {
 	private static boolean drawNodeName = true;
 	private static boolean drawConnections = true;
 
-	private static Color rangeColor = Color.GREEN;
-	private static Color conColor = Color.BLACK;
-	private static Color hostColor = Color.BLUE;
-	private static Color hostNameColor = Color.BLUE;
-	private static Color msgColor1 = Color.BLUE;
-	private static Color msgColor2 = Color.GREEN;
-	private static Color msgColor3 = Color.RED;
+	private static final Color rangeColor = Color.GREEN;
+	private static final Color conColor = Color.BLACK;
+	private static final Color hostColor = Color.BLUE;
+	private static final Color hostNameColor = Color.BLUE;
+	private static final Color msgColor1 = Color.BLUE;
+	private static final Color msgColor2 = Color.GREEN;
+	private static final Color msgColor3 = Color.RED;
 
-	private DTNHost node;
+	private final DTNHost node;
 
 	public NodeGraphic(DTNHost node) {	
 		this.node = node;

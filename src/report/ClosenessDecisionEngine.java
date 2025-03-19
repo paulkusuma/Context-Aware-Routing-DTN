@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public interface ClosenessDecisionEngine {
 
-    public Map<DTNHost, List<Double>> getCloseness();
+    Map<DTNHost, List<Double>> getCloseness();
 
 
 }

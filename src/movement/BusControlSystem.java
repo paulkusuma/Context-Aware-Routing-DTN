@@ -24,8 +24,8 @@ public class BusControlSystem {
 	
 	private static HashMap<Integer, BusControlSystem> systems;
 	
-	private HashMap<Integer, BusMovement> busses;
-	private HashMap<Integer, BusTravellerMovement> travellers;
+	private final HashMap<Integer, BusMovement> busses;
+	private final HashMap<Integer, BusTravellerMovement> travellers;
 	private List<Coord> busStops;
 	
 	private SimMap simMap;
@@ -61,7 +61,7 @@ public class BusControlSystem {
 		Iterator<BusTravellerMovement> iterator = travellers.values().
 			iterator();
 		while (iterator.hasNext()) {
-			BusTravellerMovement traveller = (BusTravellerMovement)iterator.
+			BusTravellerMovement traveller = iterator.
 				next();
 			if (traveller.getLocation() != null) {
 				if ((traveller.getLocation()).equals(busStop)) {
@@ -83,7 +83,7 @@ public class BusControlSystem {
 	 * @return The bus control system with the provided ID
 	 */
 	public static BusControlSystem getBusControlSystem(int systemID) {
-		Integer id = new Integer(systemID);
+		Integer id = Integer.valueOf(systemID);
 		
 		if (systems.containsKey(id)) {
 			return systems.get(id);

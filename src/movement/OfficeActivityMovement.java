@@ -49,23 +49,23 @@ public class OfficeActivityMovement extends MapBasedMovement implements
 	private static int nrOfOffices = 50;
 	
 	private int mode;
-	private int workDayLength;
+	private final int workDayLength;
 	private int startedWorkingTime;
-	private boolean ready;;
-	private DijkstraPathFinder pathFinder;
+	private boolean ready;
+    private final DijkstraPathFinder pathFinder;
 	
-	private ParetoRNG paretoRNG;
+	private final ParetoRNG paretoRNG;
 	
-	private int distance;
-	private double officeWaitTimeParetoCoeff;
-	private double officeMinWaitTime;
-	private double officeMaxWaitTime;
+	private final int distance;
+	private final double officeWaitTimeParetoCoeff;
+	private final double officeMinWaitTime;
+	private final double officeMaxWaitTime;
 	
 	private List<Coord> allOffices;
 	
 	private Coord lastWaypoint;
 	private Coord officeLocation;
-	private Coord deskLocation;
+	private final Coord deskLocation;
 	
 	private boolean sittingAtDesk;
 	
@@ -98,7 +98,7 @@ public class OfficeActivityMovement extends MapBasedMovement implements
 		}
 		
 		if (officeLocationsFile == null) {
-			MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+			MapNode[] mapNodes = getMap().getNodes().
 				toArray(new MapNode[0]);
 			int officeIndex = rng.nextInt(mapNodes.length - 1) /
 				(mapNodes.length/nrOfOffices);
@@ -143,7 +143,7 @@ public class OfficeActivityMovement extends MapBasedMovement implements
 		this.mode = proto.mode;
 		
 		if (proto.allOffices == null) {
-			MapNode[] mapNodes = (MapNode[])getMap().getNodes().
+			MapNode[] mapNodes = getMap().getNodes().
 				toArray(new MapNode[0]);
 			int officeIndex = rng.nextInt(mapNodes.length - 1) / 
 				(mapNodes.length/nrOfOffices);

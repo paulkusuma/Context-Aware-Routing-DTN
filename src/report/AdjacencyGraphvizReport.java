@@ -18,7 +18,7 @@ public class AdjacencyGraphvizReport extends Report implements ConnectionListene
 	/** Name of the graphviz report ({@value})*/
 	public static final String GRAPH_NAME = "adjgraph";
 	
-	private String HOST_DELIM = "<->"; // used in toString()
+	private final String HOST_DELIM = "<->"; // used in toString()
 	private HashMap<String, ConnectionInfo> cons;
 	private Collection<DTNHost> allHosts;
 	
@@ -90,8 +90,8 @@ public class AdjacencyGraphvizReport extends Report implements ConnectionListene
 	 * and nrof times they have connected.
 	 */
 	private class ConnectionInfo {
-		private DTNHost h1;
-		private DTNHost h2;
+		private final DTNHost h1;
+		private final DTNHost h2;
 		private int nrofConnections;
 		
 		public ConnectionInfo(DTNHost h1, DTNHost h2) {

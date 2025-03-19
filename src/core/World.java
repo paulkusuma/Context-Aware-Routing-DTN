@@ -43,24 +43,24 @@ public class World {
 	 * ({@value}) */
 	public static final boolean DEF_RANDOMIZE_UPDATES = true;
 
-	private int sizeX;
-	private int sizeY;
-	private List<EventQueue> eventQueues;
-	private double updateInterval;
-	private SimClock simClock;
+	private final int sizeX;
+	private final int sizeY;
+	private final List<EventQueue> eventQueues;
+	private final double updateInterval;
+	private final SimClock simClock;
 	private double nextQueueEventTime;
 	private EventQueue nextEventQueue;
 	/** list of nodes; nodes are indexed by their network address */
-	private List<DTNHost> hosts;
-	private boolean simulateConnections;
+	private final List<DTNHost> hosts;
+	private final boolean simulateConnections;
 	/** nodes in the order they should be updated (if the order should be 
 	 * randomized; null value means that the order should not be randomized) */
 	private ArrayList<DTNHost> updateOrder;
 	/** is cancellation of simulation requested from UI */
 	private boolean isCancelled;
-	private List<UpdateListener> updateListeners;
+	private final List<UpdateListener> updateListeners;
 	/** Queue of scheduled update requests */
-	private ScheduledUpdatesQueue scheduledUpdates;
+	private final ScheduledUpdatesQueue scheduledUpdates;
 
 	/** single ConnectivityCell's size is biggest radio range times this */
 	private int conCellSizeMult;

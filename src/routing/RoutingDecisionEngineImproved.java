@@ -13,25 +13,25 @@ import core.*;
  */
 public interface RoutingDecisionEngineImproved {
 
-    public void connectionUp(DTNHost thisHost, DTNHost peer);
+    void connectionUp(DTNHost thisHost, DTNHost peer);
 
-    public void connectionDown(DTNHost thisHost, DTNHost peer);
+    void connectionDown(DTNHost thisHost, DTNHost peer);
 
-    public void doExchangeForNewConnection(Connection con, DTNHost peer);
+    void doExchangeForNewConnection(Connection con, DTNHost peer);
 
-    public boolean newMessage(Message m);
+    boolean newMessage(Message m);
 
-    public boolean isFinalDest(Message m, DTNHost aHost);
+    boolean isFinalDest(Message m, DTNHost aHost);
 
-    public boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost);
+    boolean shouldSaveReceivedMessage(Message m, DTNHost thisHost);
 
-    public boolean shouldSendMessageToHost(Message m, DTNHost otherHost);
+    boolean shouldSendMessageToHost(Message m, DTNHost otherHost);
 
-    public boolean shouldDeleteSentMessage(Message m, DTNHost otherHost);
+    boolean shouldDeleteSentMessage(Message m, DTNHost otherHost);
 
-    public boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld);
+    boolean shouldDeleteOldMessage(Message m, DTNHost hostReportingOld);
     
-    public void update(DTNHost thisHost);
+    void update(DTNHost thisHost);
 
-    public RoutingDecisionEngineImproved replicate();
+    RoutingDecisionEngineImproved replicate();
 }

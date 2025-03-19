@@ -53,12 +53,12 @@ public class EventLogPanel extends JPanel
 	/** how many events to show in log (changed trough Settings) */
 	private int maxNrofEvents = 30;
 	
-	private Font font;	// font used in log entries
-	private DTNSimGUI gui;
-	private Vector<JPanel> eventPanes;
-	private GridLayout layout;
+	private final Font font;	// font used in log entries
+	private final DTNSimGUI gui;
+	private final Vector<JPanel> eventPanes;
+	private final GridLayout layout;
 	
-	private EventLogControlPanel controls;
+	private final EventLogControlPanel controls;
 	private EventLogControl conUpCheck;
 	private EventLogControl conDownCheck;
 	private EventLogControl msgCreateCheck;

@@ -18,8 +18,8 @@ import core.UpdateListener;
 public class EncountersVSUniqueEncountersReport extends Report 
 	implements ConnectionListener, UpdateListener {
 
-	private TotalEncountersReport totalEncountersReport;
-	private UniqueEncountersReport uniqueEncountersReport;
+	private final TotalEncountersReport totalEncountersReport;
+	private final UniqueEncountersReport uniqueEncountersReport;
 	
 	public EncountersVSUniqueEncountersReport() {
 		totalEncountersReport = new TotalEncountersReport();

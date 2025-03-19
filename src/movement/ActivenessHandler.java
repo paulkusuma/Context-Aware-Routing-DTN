@@ -24,7 +24,7 @@ public class ActivenessHandler {
 	 */
 	public static final String ACTIVE_TIMES_S = "activeTimes";
 	
-	private Queue<TimeRange> activeTimes;
+	private final Queue<TimeRange> activeTimes;
 	private TimeRange curRange = null;
 	
 	public ActivenessHandler(Settings s) {
@@ -98,8 +98,8 @@ public class ActivenessHandler {
 	 * Class for handling time ranges
 	 */
 	private class TimeRange {
-		private double start;
-		private double end;
+		private final double start;
+		private final double end;
 		
 		/**
 		 * Constructor.
@@ -118,11 +118,8 @@ public class ActivenessHandler {
 		 * @return true if the time is within limits
 		 */
 		public boolean isInRange(double time) {
-			if (time < start || time > end ) {
-				return false; // out of range
-			}
-			return true;			
-		}
+            return !(time < start) && !(time > end); // out of range
+        }
 		
 		/**
 		 * Returns true if given time is bigger than end the end time

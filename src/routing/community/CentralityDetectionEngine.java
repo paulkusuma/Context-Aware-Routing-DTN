@@ -17,10 +17,10 @@ package routing.community;
 public interface CentralityDetectionEngine {
 
 	//returns the global centrality of a node
-	public double getGlobalDegreeCentrality();
+    double getGlobalDegreeCentrality();
 	
 	//returns the local centrality of a node
-	public double getLocalDegreeCentrality ();	
+    double getLocalDegreeCentrality();
 	
 	//temporary inserted
 	//return the array of the global centrality of a node

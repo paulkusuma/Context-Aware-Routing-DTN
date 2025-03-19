@@ -155,7 +155,8 @@ public class EpidemicOracleRouter extends ActiveRouter {
 			this.deleteMessage(m.getId(), false);
 		}
 	}
-	
+
+
 	@Override
 	public void update() {
 		/* nothing to do; all transfers are started only when new connections

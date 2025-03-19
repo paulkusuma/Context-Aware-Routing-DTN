@@ -40,7 +40,7 @@ public class SettingsTest extends TestCase {
 		
 	};
 	
-	private String RS_S = "runSetting";
+	private final String RS_S = "runSetting";
 
 	
 	private Settings s;

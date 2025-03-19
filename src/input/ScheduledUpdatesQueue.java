@@ -15,7 +15,7 @@ import java.util.List;
 public class ScheduledUpdatesQueue implements EventQueue {
 	/** Time of the event (simulated seconds) */
 	private ExternalEvent nextEvent;
-	private List<ExternalEvent> updates;
+	private final List<ExternalEvent> updates;
 	
 	/**
 	 * Constructor. Creates an empty update queue.
@@ -60,8 +60,7 @@ public class ScheduledUpdatesQueue implements EventQueue {
 		ExternalEvent ee = new ExternalEvent(simTime);
 
 		if (ee.compareTo(nextEvent) == 0) { // this event is already next
-			return;
-		}
+        }
 		else if (this.nextEvent.getTime() > simTime) { // new nextEvent
 			putToQueue(this.nextEvent); // put the old nextEvent back to q
 			this.nextEvent = ee;

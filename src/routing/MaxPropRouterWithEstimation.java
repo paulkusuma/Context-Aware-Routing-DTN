@@ -83,7 +83,7 @@ public class MaxPropRouterWithEstimation extends ActiveRouter {
 	public static final double DEFAULT_ALPHA = 1.0;
 
 	/** value of time scale variable */
-	private int timescale;
+	private final int timescale;
 
 	/** last meeting time with a node */
 	private Map<DTNHost, Double> meetings;
@@ -270,12 +270,12 @@ public class MaxPropRouterWithEstimation extends ActiveRouter {
 		}
 			
 		if (meanIET == 0) {
-			System.out.printf("Mean IET == 0\n");
+			System.out.print("Mean IET == 0\n");
 			return;
 		}			
 		
 		if (meanENC == 0) {
-			System.out.printf("Mean ENC == 0\n");
+			System.out.print("Mean ENC == 0\n");
 			return;
 		}			
 		
@@ -568,9 +568,9 @@ public class MaxPropRouterWithEstimation extends ActiveRouter {
 	 * Other messages are ordered by their delivery cost.
 	 */
 	private class MaxPropComparator implements Comparator<Message> {
-		private int threshold;
-		private DTNHost from1;
-		private DTNHost from2;
+		private final int threshold;
+		private final DTNHost from1;
+		private final DTNHost from2;
 		
 		/**
 		 * Constructor. Assumes that the host where all the costs are calculated
@@ -664,7 +664,7 @@ public class MaxPropRouterWithEstimation extends ActiveRouter {
 	 */
 	private class MaxPropTupleComparator 
 			implements Comparator <Tuple<Message, Connection>>  {
-		private int threshold;
+		private final int threshold;
 		
 		public MaxPropTupleComparator(int threshold) {
 			this.threshold = threshold;
@@ -710,7 +710,7 @@ public class MaxPropRouterWithEstimation extends ActiveRouter {
 
 		return top;
 	}
-	
+
 	@Override
 	public MessageRouter replicate() {
 		MaxPropRouterWithEstimation r = new MaxPropRouterWithEstimation(this);

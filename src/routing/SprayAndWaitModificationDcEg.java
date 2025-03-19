@@ -10,6 +10,7 @@ import core.DTNHost;
 import core.Message;
 import core.Settings;
 import core.SimClock;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class SprayAndWaitModificationDcEg implements RoutingDecisionEngine {
     protected int secondsInTimeUnit;
 
     // Struktur data untuk menyimpan prediksi pertemuan, cap pesan, dan jumlah relay
-    private Map<DTNHost, Double> preds;
+    private final Map<DTNHost, Double> preds;
     private Set<Message> msgStamp;
     private Map<DTNHost, Integer> relayed;
     private DTNHost meHost;
@@ -229,9 +230,21 @@ public class SprayAndWaitModificationDcEg implements RoutingDecisionEngine {
         // Hapus pesan lama jika host ini adalah tujuan akhirnya
         return m.getTo() == hostReportingOld;
     }
+    
+//    private List<DTNHost> getNeighbors(DTNHost host) {
+//    List<DTNHost> neighbors = new ArrayList<>();
+//    for (Connection conn : host.getConnections()) {
+//        neighbors.add(conn.getOtherNode(host));
+//    }
+//    return neighbors;
+//}
+
 
     @Override
     public void update(DTNHost thisHost) {
+        
+//        List<DTNHost> neighbors = getNeighbors(thisHost);
+//        bufferCalculator.neighborBuffers(neighbors);
     }
 
     @Override

@@ -13,7 +13,7 @@ import core.Message;
  */
 public class ProphetRouterTest extends AbstractRouterTest {
 
-	private static int SECONDS_IN_TIME_UNIT = 60;
+	private static final int SECONDS_IN_TIME_UNIT = 60;
 	
 	@Override
 	public void setUp() throws Exception {

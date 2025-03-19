@@ -22,7 +22,7 @@ public class MeetingProbabilitySet {
 	private double lastUpdateTime;
 	/** the alpha parameter */
 	private double alpha;
-    private int maxSetSize;
+    private final int maxSetSize;
 	
 	/**
 	 * Constructor. Creates a probability set with empty node-probability

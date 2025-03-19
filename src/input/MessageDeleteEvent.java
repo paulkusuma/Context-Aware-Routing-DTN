@@ -17,7 +17,7 @@ import core.World;
 
 public class MessageDeleteEvent extends MessageEvent {
 	/** is the delete caused by a drop (not "normal" removing) */
-	private boolean drop; 
+	private final boolean drop;
 	
 	/**
 	 * Creates a message delete event

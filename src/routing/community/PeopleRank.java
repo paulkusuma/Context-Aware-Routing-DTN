@@ -162,11 +162,8 @@ public class PeopleRank implements RoutingDecisionEngine {
                 // Jika otherHost berhubungan dengan thisHost
                 if (contactSet.contains(thisHost)) {
                     // Periksa apakah nilai PeopleRank otherHost lebih besar atau sama dengan nilai PeopleRank thisHost
-                    if (perOtherHost >= perThisHost) {
-                        return true; // Kirim pesan ke otherHost
-                    } else {
-                        return false; // Jangan kirim pesan ke otherHost
-                    }
+                    // Jangan kirim pesan ke otherHost
+                    return perOtherHost >= perThisHost; // Kirim pesan ke otherHost
                 }
             }
         }

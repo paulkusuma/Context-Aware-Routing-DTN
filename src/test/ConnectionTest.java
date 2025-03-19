@@ -20,14 +20,14 @@ import core.SimClock;
  */
 public class ConnectionTest extends TestCase {
 	public static final double START_TIME = 10.0;
-	private TestDTNHost h[];
-	private CBRConnection c[];
-	private Message m[];
-	private int speed[] = {50, 50, 100, 200, 100};
-	private int size[] = {50, 75, 100, 200, 1000};
-	private int nrof = 5;
+	private TestDTNHost[] h;
+	private CBRConnection[] c;
+	private Message[] m;
+	private final int[] speed = {50, 50, 100, 200, 100};
+	private final int[] size = {50, 75, 100, 200, 1000};
+	private final int nrof = 5;
 	private int index;
-	private SimClock clock = SimClock.getInstance();
+	private final SimClock clock = SimClock.getInstance();
 	private int conCount;
 	
 	protected void setUp() throws Exception {

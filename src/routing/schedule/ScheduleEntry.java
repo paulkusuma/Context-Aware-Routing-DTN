@@ -9,12 +9,12 @@ import java.io.Serializable;
 public class ScheduleEntry implements Serializable {
 	private static final long serialVersionUID = 42L;
 	
-	private double time;
-	private int from;
-	private int to;
-	private int via;
+	private final double time;
+	private final int from;
+	private final int to;
+	private final int via;
 	private double delta;
-	private double duration;
+	private final double duration;
 	private int usageCount;
 	
 	/**

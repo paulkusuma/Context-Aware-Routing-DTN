@@ -36,7 +36,7 @@ public class BufferOccupancyReport extends Report implements UpdateListener {
 	private double lastRecord = Double.MIN_VALUE;
 	private int interval;
 	
-	private Map<DTNHost, Double> bufferCounts = new HashMap<DTNHost, Double>();
+	private final Map<DTNHost, Double> bufferCounts = new HashMap<DTNHost, Double>();
 	private int updateCounter = 0;  //new added
 	
 	

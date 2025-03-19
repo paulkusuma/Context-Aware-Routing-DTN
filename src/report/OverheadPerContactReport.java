@@ -22,7 +22,7 @@ public class OverheadPerContactReport extends Report implements MessageListener,
     public static final String TOTAL_CONTACT_INTERVAL = "perTotalContact";
     public static final int DEFAULT_CONTACT_COUNT = 500;
     private int lastRecord;
-    private int interval;
+    private final int interval;
     private int totalContact;
     private int nrofRelayed;
     private int nrofDelivered;

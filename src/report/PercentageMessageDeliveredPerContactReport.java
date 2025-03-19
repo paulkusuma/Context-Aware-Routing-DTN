@@ -22,7 +22,7 @@ public class PercentageMessageDeliveredPerContactReport extends Report implement
     public static final String TOTAL_CONTACT_INTERVAL = "perTotalContact";
     public static final int DEFAULT_CONTACT_COUNT = 500;
     private int lastRecord;
-    private int interval;
+    private final int interval;
     private int totalContact;
     private int nrofCreated;
     private int nrofDelivered;

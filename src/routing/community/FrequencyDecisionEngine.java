@@ -14,5 +14,5 @@ import java.util.Map;
  * @author jarkom
  */
 public interface FrequencyDecisionEngine {
-    public Map<DTNHost, List<Duration>>  getFrequency();
+    Map<DTNHost, List<Duration>>  getFrequency();
 }

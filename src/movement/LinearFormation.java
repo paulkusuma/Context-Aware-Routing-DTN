@@ -38,7 +38,7 @@ public class LinearFormation extends MovementModel {
 	 */
 	public LinearFormation(Settings s) {
 		super(s);
-		int coords[];
+		int[] coords;
 		
 		coords = s.getCsvInts(LINEAR_FORMATION_NS + START_LOCATION_S, 2);
 		this.startLoc = new Coord(coords[0], coords[1]);
