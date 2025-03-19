@@ -10,13 +10,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import core.Connection;
-import core.DTNHost;
-import core.Message;
-import core.MessageListener;
-import core.Settings;
-import core.SimClock;
-import core.Tuple;
+import core.*;
+import routing.util.EnergyModel;
 
 /**
  * Superclass of active routers. Contains convenience methods (e.g. 
@@ -40,7 +35,9 @@ public abstract class ActiveRouter extends MessageRouter {
 	protected ArrayList<Connection> sendingConnections;
 	/** sim time when the last TTL check was done */
 	private double lastTtlCheck;
-	
+
+	//Energy Model
+	private final EnergyModel energy;
 
 	/**
 	 * Constructor. Creates a new message router based on the settings in
@@ -56,6 +53,13 @@ public abstract class ActiveRouter extends MessageRouter {
 		else {
 			this.deleteDelivered = false;
 		}
+
+		//Energy Model
+		if (s.contains(EnergyModel.INIT_ENERGY_S)) {
+			this.energy = new EnergyModel(s);
+		}else{
+			this.energy = null;
+		}
 	}
 	
 	/**
@@ -65,7 +69,9 @@ public abstract class ActiveRouter extends MessageRouter {
 	protected ActiveRouter(ActiveRouter r) {
 		super(r);
 		this.deleteDelivered = r.deleteDelivered;
-	}
+		//Energy Model
+        this.energy = (r.energy != null ? r.energy.replicate() : null);
+    }
 	
 	@Override
 	public void init(DTNHost host, List<MessageListener> mListeners) {
@@ -77,9 +83,18 @@ public abstract class ActiveRouter extends MessageRouter {
 	/**
 	 * Called when a connection's state changes. This version doesn't do 
 	 * anything but subclasses may want to override this.
+	 * If Energy Modeling Enabled, and new Connection is created to this node, reduce the energy
+	 * for the device discovery (scan respons) amount
+	 * @param con The connection whose state changed
 	 */
+
 	@Override
-	public void changedConnection(Connection con) { }
+	public void changedConnection(Connection con) {
+		//Energy Model
+		if (this.energy != null && con.isUp() && !con.isInitiator(getHost())) {
+			this.energy.reduceDiscoveryEnergy();
+		}
+	}
 	
 	@Override
 	public boolean requestDeliverableMessages(Connection con) {
@@ -147,7 +162,8 @@ public abstract class ActiveRouter extends MessageRouter {
 	protected List<Connection> getConnections() {
 		return getHost().getConnections();
 	}
-	
+
+
 	/**
 	 * Tries to start a transfer of message using a connection. Is starting
 	 * succeeds, the connection is added to the watch list of active connections
@@ -185,12 +201,8 @@ public abstract class ActiveRouter extends MessageRouter {
 		if (this.getNrofMessages() == 0) {
 			return false;
 		}
-		if (this.getConnections().size() == 0) {
-			return false;
-		}
-		
-		return true;
-	}
+        return this.getConnections().size() != 0;
+    }
 	
 	/**
 	 * Checks if router "wants" to start receiving message (i.e. router 
@@ -216,6 +228,11 @@ public abstract class ActiveRouter extends MessageRouter {
 		if (m.getTtl() <= 0 && m.getTo() != getHost()) {
 			/* TTL has expired and this host is not the final recipient */
 			return DENIED_TTL; 
+		}
+
+		//Energy Model
+		if (energy != null && energy.getEnergy()<=0) {
+			return MessageRouter.DENIED_LOW_RESOURCES;
 		}
 
 		/* remove oldest messages but not the ones being sent */
@@ -530,7 +547,21 @@ public abstract class ActiveRouter extends MessageRouter {
 		}
 		return false;
 	}
-	
+
+	/**
+	 * Returns true if the node has energy left (i.e., energy medoling is
+	 * enabled OR (is enabled and model has energy left)
+	 * @return has the node energy
+	 */
+	public boolean hasEnergy(){return this.energy==null || this.energy.getEnergy()>0;}
+
+	/**
+	 * Megembalikan Energy karena model sudah di instace di activeRouter
+	 */
+	public EnergyModel getEnergyModel() {
+		return this.energy;
+	}
+
 	/**
 	 * Checks out all sending connections to finalize the ready ones 
 	 * and abort those whose connection went down. Also drops messages
@@ -557,6 +588,7 @@ public abstract class ActiveRouter extends MessageRouter {
 				removeCurrent = true;
 			}
 			/* remove connections that have gone down */
+			/* remove connections that have goneEnergy down*/
 			else if (!con.isUp()) {
 				if (con.getMessage() != null) {
 					transferAborted(con);
@@ -584,6 +616,12 @@ public abstract class ActiveRouter extends MessageRouter {
 			dropExpiredMessages();
 			lastTtlCheck = SimClock.getTime();
 		}
+		//Energy Model
+		if (energy != null) {
+			/* TODO: add support for other interfaces */
+			NetworkInterface iface = getHost().getInterface(1);
+			energy.update(iface, getHost().getComBus());
+		}
 	}
 	
 	/**
@@ -601,5 +639,15 @@ public abstract class ActiveRouter extends MessageRouter {
 	 * @param con The connection whose transfer was finalized
 	 */
 	protected void transferDone(Connection con) { }
-	
+
+	//Energy Model
+	public RoutingInfo getRoutingInfo() {
+		RoutingInfo top = super.getRoutingInfo();
+		if (energy != null) {
+			top.addMoreInfo(new RoutingInfo("Energy Level:" +
+			String.format("%.2f", energy.getEnergy())));
+		}
+		return top;
+	}
+
 }
