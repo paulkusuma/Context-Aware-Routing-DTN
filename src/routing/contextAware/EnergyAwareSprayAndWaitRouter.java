@@ -22,6 +22,7 @@ public class EnergyAwareSprayAndWaitRouter extends EnergyAwareRouter {
     public static final String TRANSMIT_ENERGY_S = "transmitEnergy";
     public static final String WARMUP_S = "energyWarmup";
     public static final  String ALPHA ="alpha";
+    public static final  String GAMMA ="gamma";
 
     protected int initialNrofCopies;
     protected boolean isBinary;

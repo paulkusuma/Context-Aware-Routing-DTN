@@ -1,4 +1,4 @@
-package routing.contextAware;
+package routing.contextAware.SocialCharcteristic;
 
 import java.util.HashMap;
 import java.util.Map;
