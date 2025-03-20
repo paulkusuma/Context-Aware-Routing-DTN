@@ -1,0 +1,28 @@
+Scenario.name = ContextAwareRLRouter
+
+Group.router = contextAware.ContextAwareRLRouter
+
+Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
+Group.nrofHosts = 30
+
+Group.initialEnergy = 100
+Group.scanEnergy = 0.1
+Group.transmitEnergy   = 5
+Group.scanResponseEnergy = 0.1
+Group.scanInterval = 10
+Group.warmupTime = 10
+
+Group.alphaPopularity=0.6
+
+
+Report.nrofReports = 2
+# length of the warm up period (simulated seconds)
+#Report.warmup = 0
+#Report.granularity = 1
+# default directory of reports (can be overridden per Report with output setting)
+Report.reportDir = reports/
+# Report classes to load
+Report.report1 = MessageStatsReport
+Report.report2 = ContactTimesReport
+
+
