@@ -2,7 +2,7 @@
  * Copyright 2010 Aalto University, ComNet
  * Released under GPLv3. See LICENSE.txt for details. 
  */
-package routing.contextAware;
+package routing.testContext;
 
 import core.Connection;
 import core.DTNHost;
@@ -10,6 +10,8 @@ import core.Message;
 import core.Settings;
 import routing.ActiveRouter;
 import routing.util.EnergyModel;
+import routing.contextAware.SocialCharcteristic.Popularity;
+import routing.contextAware.SocialCharcteristic.TieStrength;
 
 import net.sourceforge.jFuzzyLogic.FIS;
 
@@ -297,7 +299,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 		List<DTNHost> neighbors = getNeighbors(this.getHost(), this.popularity, this.tieStrength); // Menampilkan tetangga aktif
 
 		/// EvaluateNeighbor class
-		routing.contextAware.NeighborEvaluator.evaluateNeighbors(this.getHost(), this.popularity, this.tieStrength);
+//		routing.testContext.NeighborEvaluator.evaluateNeighbors(this.getHost(), this.popularity, this.tieStrength);
 
 
 		DTNHost relayNode =getRelayNode();
