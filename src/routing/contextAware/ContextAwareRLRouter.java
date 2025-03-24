@@ -138,19 +138,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public void update(){
         super.update();
 
-        // Looping untuk mencetak ConnectionDuration dari semua koneksi yang ada
-        for (Map.Entry<Connection, ConnectionDuration> entry : connectionDurations.entrySet()) {
-            Connection con = entry.getKey();
-            ConnectionDuration duration = entry.getValue();
-
-            // Pastikan koneksi aktif (isUp())
-            if (con.isUp()) {
-                System.out.println("Connection Duration from " + con.getOtherNode(getHost()).getAddress() + ": " + duration.getDuration());
-            } else {
-                System.out.println("Koneksi " + con.getOtherNode(getHost()).getAddress() + " tidak aktif");
-            }
-        }
-
 //        // Panggil metode untuk mencetak ENS dari host
 //        encounterManager.printENS(this.getHost());
         //routing.contextAware.ContextAwareNeighborEvaluator.tetagga(this.getHost(), this.popularity, this.tieStrength);
