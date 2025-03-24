@@ -52,16 +52,6 @@ public class ConnectionDuration {
         System.out.println("Duration: " + getDuration() + " seconds.");
     }
 
-    // Menambahkan metode untuk menampilkan seluruh riwayat koneksi
-    public static void printAllConnections() {
-        System.out.println("All Connection History:");
-        connectionHistory.forEach((fromNode, toMap) -> {
-            toMap.forEach((toNode, connection) -> {
-                System.out.println("From: " + fromNode.getAddress() + " to: " + toNode.getAddress());
-                connection.printConnectionInfo();
-            });
-        });
-    }
 
     public DTNHost getFromNode() {
         return fromNode;
