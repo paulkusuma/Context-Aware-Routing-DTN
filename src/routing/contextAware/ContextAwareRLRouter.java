@@ -139,7 +139,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         super.update();
 
 //        // Panggil metode untuk mencetak ENS dari host
-//        encounterManager.printENS(this.getHost());
+        encounterManager.printENS(this.getHost());
         //routing.contextAware.ContextAwareNeighborEvaluator.tetagga(this.getHost(), this.popularity, this.tieStrength);
     }
 
