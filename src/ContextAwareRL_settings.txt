@@ -3,9 +3,9 @@ Scenario.name = ContextAwareRLRouter
 Group.router = contextAware.ContextAwareRLRouter
 
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
-Group.nrofHosts = 30
 
-Group.initialEnergy = 100
+Group.bufferSize = 1M
+Group.initialEnergy = 10
 Group.scanEnergy = 0.1
 Group.transmitEnergy   = 5
 Group.scanResponseEnergy = 0.1

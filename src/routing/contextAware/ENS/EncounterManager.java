@@ -1,5 +1,9 @@
 package routing.contextAware.ENS;
 
+import core.DTNHost;
+import routing.contextAware.ContextAwareRLRouter;
+import core.Connection;  // Asumsikan ada class Connection untuk mengelola status koneksi
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,33 +29,76 @@ public class EncounterManager {
         return !encounteredNodeSet.getEncounters().containsKey(nodeId) ||
                 meetingTime > encounteredNodeSet.getEncounters().get(nodeId).MeetingTime;
     }
-
-    //agar thread-safe jika sistem berjalan secara paralel.
-    private synchronized void mergeEncounterData(EncounterManager neighborManager) {
-        if (neighborManager == null) return;
+    // Fungsi untuk menukar ENS antara node N1 dan node C
+    public void exchangeENS(EncounterManager neighborManager) {
+        // 1. Terima ENS dari node tetangga
         for (Map.Entry<Integer, EncounterInfo> entry : neighborManager.getEncounteredNodeSet().getEncounters().entrySet()) {
             int nodeId = entry.getKey();
             EncounterInfo info = entry.getValue();
 
-            // Cek apakah informasi lebih baru sebelum menambahkan
+            // 2. Periksa apakah encounter ini lebih baru dan tambahkan ke ENS N1
             if (isNewerEncounter(nodeId, info.MeetingTime)) {
                 this.addEncounterToENS(nodeId, info.MeetingTime, info.RemainingBuffer, info.RemainingEnergy, info.connDuration);
             }
         }
+
+        // 3. Kirim ENS N1 ke node tetangga
+        for (Map.Entry<Integer, EncounterInfo> entry : encounteredNodeSet.getEncounters().entrySet()) {
+            int nodeId = entry.getKey();
+            EncounterInfo info = entry.getValue();
+
+            // 4. Kirim informasi ENS N1 ke node tetangga (neighbor)
+            neighborManager.addEncounterToENS(nodeId, info.MeetingTime, info.RemainingBuffer, info.RemainingEnergy, info.connDuration);
+        }
     }
 
-    // Bertukar ENS dengan EncounterManager lain
-    public void exchangeENS(EncounterManager neighborENS) {
-        mergeEncounterData(neighborENS);
+    // Fungsi untuk menghapus encounter pada saat koneksi terputus
+    public void updateENSOnConnectionDown(int nodeId) {
+        // Menghapus encounter yang terputus (misalnya Node C)
+        removeEncounterFromENS(nodeId);
     }
 
-    // Menambahkan informasi terbaru dari tetangga ke ENS
-    public void updateENSWithNeighborInfo(EncounterManager neighborManager) {
-        mergeEncounterData(neighborManager);
+    // Menghapus encounter terkait dengan node tertentu
+    public void removeEncounterFromENS(int nodeId) {
+        if (encounteredNodeSet.getEncounters().containsKey(nodeId)) {
+            encounteredNodeSet.removeEncounter(nodeId);  // Menghapus encounter berdasarkan nodeId
+        } else {
+            System.out.println("Node ID " + nodeId + " tidak ditemukan saat menghapus dari ENS.");
+        }
     }
+
 
     // Mendapatkan jumlah encounter yang tersimpan
     public int getEncounterCount() {
-        return encounteredNodeSet.getSize();
+        return encounteredNodeSet.getEncounterCount();
+    }
+
+    // Metode untuk mencetak ENS
+    public void printENS(DTNHost host) {
+        // Mendapatkan router untuk host
+        ContextAwareRLRouter router = (ContextAwareRLRouter) host.getRouter();
+
+        // Mendapatkan EncounterManager dari router
+        EncounterManager encounterManager = router.getEncounterManage();
+
+        // Mendapatkan EncounteredNodeSet
+        EncounteredNodeSet encounteredNodeSet = encounterManager.getEncounteredNodeSet();
+
+
+        // Mencetak jumlah encounter yang ada
+        System.out.println("Node " + host.getAddress() + " memiliki " + encounteredNodeSet.getEncounterCount() + " encounter(s):");
+
+        // Mencetak setiap encounter
+        for (Map.Entry<Integer, EncounterInfo> entry : encounteredNodeSet.getEncounters().entrySet()) {
+            int nodeId = entry.getKey();
+            EncounterInfo encounterInfo = entry.getValue();
+
+            // Mencetak informasi untuk setiap encounter
+            System.out.println("Node ID: " + nodeId + ", Meeting Time: " + encounterInfo.MeetingTime +
+                    ", Remaining Buffer: " + encounterInfo.RemainingBuffer +
+                    ", Remaining Energy: " + encounterInfo.RemainingEnergy +
+                    ", Connection Duration: " + encounterInfo.connDuration);
+        }
+        System.out.println("====================");
     }
 }
