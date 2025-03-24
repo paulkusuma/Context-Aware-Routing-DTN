@@ -13,11 +13,20 @@ public class EncounteredNodeSet {
         EncounteredNodes.put(nodeId, new EncounterInfo(meetingTime, remainingBuffer, remainingEnergy, connectionDuration));
     }
 
+   // Menghapus encounter berdasarkan nodeId
+    public void removeEncounter(int nodeId) {
+        if (EncounteredNodes.containsKey(nodeId)) {
+            EncounteredNodes.remove(nodeId);  // Menghapus encounter untuk node yang terputus
+        } else {
+            System.out.println("Node ID " + nodeId + " tidak ditemukan dalam ENS.");
+        }
+    }
+
     public Map<Integer, EncounterInfo> getEncounters() {
         return EncounteredNodes;
     }
 
-    public int getSize(){
+    public int getEncounterCount(){
         return EncounteredNodes.size();
     }
 
