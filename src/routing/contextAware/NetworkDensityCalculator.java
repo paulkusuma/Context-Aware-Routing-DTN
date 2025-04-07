@@ -1,6 +1,6 @@
 package routing.contextAware;
 
-import routing.contextAware.ENS.EncounterManager;
+import routing.testContext.EncounterManager;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -19,24 +19,12 @@ public class NetworkDensityCalculator {
      * @return Node density sebagai rasio
      */
     public static double CalculateNodeDensity(int totalNodes, EncounterManager encounterManagerI, EncounterManager encounterManagerJ) {
+        // Menggabungkan ENS dari dua node tanpa duplikasi
+        Set<Integer> uniqueNodes = new HashSet<>(encounterManagerI.getEncounteredNodeSet().getEncounters().keySet());
+        uniqueNodes.addAll(encounterManagerJ.getEncounteredNodeSet().getEncounters().keySet());
 
-        //Ambil semua node dari nodeI
-        Set<Integer> encounterNodesI = encounterManagerI.getEncounteredNodeSet().getEncounters().keySet();
-
-        //Ambil semua nodde dari nodeJ
-        Set<Integer> encounterNodesJ = encounterManagerJ.getEncounteredNodeSet().getEncounters().keySet();
-
-        // Set untuk menyimpan node unik dari ENSI
-        Set<Integer>uniqueNodes = new HashSet<>();
-
-        // Menambahkan semua node dari encounterNodesI dan encounterNodesJ
-        // Dengan addAll() kita menggabungkan dua set tersebut
-        uniqueNodes.addAll(encounterNodesI);
-        uniqueNodes.addAll(encounterNodesJ);
-
-        // Menghitung kepadatan node dan memastikan tidak ada duplikasi
-        return (double) uniqueNodes.size() / totalNodes;
-
+         double density = totalNodes == 0 ? 0 : (double) uniqueNodes.size() / totalNodes;
+        return density;
     }
 
     /**
