@@ -10,7 +10,7 @@ public class EncounteredNode {
     int bufferSize;  // Kapasitas buffer node dalam MB
     long connectionDuration;  // Durasi koneksi dalam detik
 
-    private static final double TTL = 360.0;  // Waktu kadaluarsa ENS dalam detik
+    private static final double TTL = 700.0;  // Waktu kadaluarsa ENS dalam detik
 
 
     public EncounteredNode(String nodeId, long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration) {

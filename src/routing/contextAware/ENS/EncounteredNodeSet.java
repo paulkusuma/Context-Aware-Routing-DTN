@@ -103,6 +103,16 @@ public class EncounteredNodeSet {
         return cloned;
     }
 
+    public void exchangeWith(EncounteredNodeSet otherENS, DTNHost self, DTNHost peer, long currentTime) {
+        // Clone ENS lawan agar tidak mengubah aslinya
+        EncounteredNodeSet otherClone = otherENS.clone();
+
+        // Hapus ID si pemilik ENS (peer) dari salinan, supaya gak nyisipin data diri sendiri
+        otherClone.removeEncounter(String.valueOf(peer.getAddress()));
+
+        // Gabungkan ENS hasil filter ke ENS kita
+        this.mergeENS(self, otherClone, currentTime, peer);
+    }
 
     // Menghapus ENS berdasarkan NodeID jika koneksi terputus
     public void removeEncounter(String nodeId) {

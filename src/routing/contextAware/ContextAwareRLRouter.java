@@ -140,17 +140,22 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
-            // Clone ENS dan bersihkan ID pengirim sebelum ditambahkan
-            EncounteredNodeSet clonedNeighborENS = neighborENS.clone();
-            EncounteredNodeSet clonedMyENS = this.encounteredNodeSet.clone();
+            // Saling tukar ENS dengan filtering otomatis
+            this.encounteredNodeSet.exchangeWith(neighborENS, this.getHost(), neighbor, currentTime);
+            neighborENS.exchangeWith(this.encounteredNodeSet, neighbor, this.getHost(), currentTime);
 
+            System.out.println("[DEBUG] ENS setelah saling tukar di " + getHost().getAddress() + ":");
+            this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
 
-            // Tukar data
-            this.encounteredNodeSet.mergeENS(this.getHost(), clonedNeighborENS, currentTime, neighbor);
-            neighborENS.mergeENS(neighbor, clonedMyENS, currentTime, this.getHost());
+//            // Clone ENS dan bersihkan ID pengirim sebelum ditambahkan
+//            EncounteredNodeSet clonedNeighborENS = neighborENS.clone();
+//            EncounteredNodeSet clonedMyENS = this.encounteredNodeSet.clone();
+//            // Tukar data
+//            this.encounteredNodeSet.mergeENS(this.getHost(), clonedNeighborENS, currentTime, neighbor);
+//            neighborENS.mergeENS(neighbor, clonedMyENS, currentTime, this.getHost());
 
-            System.out.println("[DEBUG] ENS setelah merge di " + getHost().getAddress() + ":");
-            this.encounteredNodeSet.printEncounterLog(getHost(), neighborId, neighborENS);
+//            System.out.println("[DEBUG] ENS setelah merge di " + getHost().getAddress() + ":");
+//            this.encounteredNodeSet.printEncounterLog(getHost(), neighborId, neighborENS);
 
 //            clonedNeighborENS.removeEncounter(neighborId); // Hapus ID neighbor dari ENS-nya
 //            clonedMyENS.removeEncounter(myId); // Hapus ID host dari ENS-nya
