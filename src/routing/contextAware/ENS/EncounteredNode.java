@@ -3,6 +3,10 @@ package routing.contextAware.ENS;
 
 import core.SimClock;
 
+/**
+ * Representasi dari sebuah node yang pernah ditemui dalam jaringan opportunistic.
+ * Menyimpan informasi relevan seperti waktu encounter, energi sisa, buffer, dan durasi koneksi.
+ */
 public class EncounteredNode {
     String nodeId;
     long encounterTime;  // Waktu saat node ditemukan
@@ -10,14 +14,31 @@ public class EncounteredNode {
     int bufferSize;  // Kapasitas buffer node dalam MB
     long connectionDuration;  // Durasi koneksi dalam detik
 
-    private static final double TTL = 700.0;  // Waktu kadaluarsa ENS dalam detik
+    private static final double TTL = 900.0;  // Waktu kadaluarsa ENS dalam detik
 
 
+    /**
+     * Konstruktor untuk EncounteredNode.
+     *
+     * @param nodeId            ID dari node yang ditemui
+     * @param encounterTime     Waktu saat encounter terjadi
+     * @param remainingEnergy   Persentase energi sisa pada saat encounter (0-100)
+     * @param bufferSize        Ukuran buffer node (dalam MB)
+     * @param connectionDuration Durasi koneksi saat encounter (dalam detik)
+     */
     public EncounteredNode(String nodeId, long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration) {
         this.nodeId = nodeId;
         update(encounterTime, remainingEnergy, bufferSize, connectionDuration);
     }
 
+    /**
+     * Memperbarui nilai encounter node dengan informasi terbaru.
+     *
+     * @param encounterTime     Waktu saat encounter terjadi
+     * @param remainingEnergy   Energi sisa
+     * @param bufferSize        Kapasitas buffer
+     * @param connectionDuration Durasi koneksi
+     */
     public void update(long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration) {
         this.encounterTime = encounterTime;
         this.remainingEnergy = remainingEnergy;
@@ -25,44 +46,51 @@ public class EncounteredNode {
         this.connectionDuration = connectionDuration;
     }
 
-    public boolean isMoreRelevant(EncounteredNode other) {
-        // Jika encounterTime saat ini masih 0, maka data baru pasti lebih relevan
-        if (this.encounterTime == 0) {
-            return false;
-        }
-
-        // Jika encounterTime baru lebih besar atau sama, maka update
-        if (other.encounterTime >= this.encounterTime) {
-            // Jika encounterTime sama, cek connectionDuration
-            if (other.encounterTime == this.encounterTime) {
-                if (other.connectionDuration > this.connectionDuration) {
-                    return false; // Durasi lebih lama, newInfo lebih relevan
-                } else if (other.connectionDuration == this.connectionDuration) {
-                    if (other.remainingEnergy > this.remainingEnergy) {
-                        return false; // Baterai lebih besar, newInfo lebih relevan
-                    } else if (other.remainingEnergy == this.remainingEnergy) {
-                        if (other.bufferSize > this.bufferSize) {
-                            return false; // Buffer lebih besar, newInfo lebih relevan
-                        }
-                    }
+    /**
+     * Menentukan apakah informasi dari node ini lebih relevan dibandingkan node lain.
+     * Relevansi dihitung berdasarkan urutan prioritas:
+     * 1. Waktu encounter lebih baru
+     * 2. Durasi koneksi lebih lama
+     * 3. Energi sisa lebih besar
+     * 4. Buffer lebih besar
+     *
+     * @param other Node lain yang akan dibandingkan
+     * @return true jika informasi dari node ini lebih relevan
+     */
+    public boolean isMoreRelevantThan(EncounteredNode other) {
+        if (this.encounterTime > other.encounterTime) return true;
+        if (this.encounterTime == other.encounterTime) {
+            if (this.connectionDuration > other.connectionDuration) return true;
+            if (this.connectionDuration == other.connectionDuration) {
+                if (this.remainingEnergy > other.remainingEnergy) return true;
+                if (this.remainingEnergy == other.remainingEnergy) {
+                    return this.bufferSize > other.bufferSize;
                 }
             }
-            return false; // Jika encounterTime lebih besar, update
         }
-
-        return true; // Data lama lebih relevan
+        return false;
     }
 
+    /**
+     * Membuat salinan dari objek EncounteredNode ini.
+     *
+     * @return Objek EncounteredNode baru dengan nilai yang sama
+     */
     public EncounteredNode clone() {
         return  new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
 
     }
 
-    // Mengecek apakah ENS sudah kadaluarsa
+    /**
+     * Mengecek apakah informasi node ini sudah kadaluarsa berdasarkan TTL.
+     *
+     * @return true jika sudah kadaluarsa
+     */
     public boolean isExpired() {
         return (SimClock.getTime() - this.encounterTime) > TTL;
     }
 
+    // ===================== Getter ===================== //
     public String getNodeId() {
         return nodeId;
     }
