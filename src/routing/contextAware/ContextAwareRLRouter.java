@@ -4,8 +4,7 @@ import core.Settings;
 import net.sourceforge.jFuzzyLogic.FIS;
 import routing.ActiveRouter;
 import core.*;
-import routing.contextAware.ENS.ConnectionDuration;
-import routing.contextAware.ENS.EncounterManager;
+import routing.contextAware.ENS.*;
 import routing.contextAware.SocialCharcteristic.Popularity;
 import routing.contextAware.SocialCharcteristic.TieStrength;
 
@@ -13,7 +12,6 @@ import routing.contextAware.SocialCharcteristic.TieStrength;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ContextAwareRLRouter extends ActiveRouter {
 
@@ -24,7 +22,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
     public static final String FCL_Context = "fcl"; //FuzzyLogicController
 
-
 //    protected int nrofHosts;
     protected int bufferSize;
     protected int initialEnergy;
@@ -32,21 +29,18 @@ public class ContextAwareRLRouter extends ActiveRouter {
     protected FIS fclcontextaware; //FLC
     private Popularity popularity; //Instance class popularity
     private TieStrength tieStrength; //Instance class TieStrength
-    private EncounterManager encounterManager;
-
-    private Map<Connection, ConnectionDuration> connectionDurations = new HashMap<>();
+    private EncounteredNodeSet encounteredNodeSet;
 
     public ContextAwareRLRouter(Settings s) {
         super(s);
 
-        this.popularity = new Popularity(alphaPopularity = s.getDouble(ALPHA_POPULARITY));  //Object Popularity
+        this.encounteredNodeSet = new EncounteredNodeSet();
+        this.alphaPopularity = s.getDouble(ALPHA_POPULARITY);
         this.tieStrength = new TieStrength(); //Object TieStrength
-        this.encounterManager = new EncounterManager();
         //Read FCL file
         String FLCfromString = s.getSetting(FCL_Context);
         fclcontextaware = FIS.load(FLCfromString);
 
-//        nrofHosts = s.getInt(NROF_HOSTS);
         bufferSize = s.getInt(BUFFER_SIZE);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
 
@@ -54,15 +48,16 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
     protected ContextAwareRLRouter(ContextAwareRLRouter r) {
         super(r);
+
+        this.encounteredNodeSet = r.encounteredNodeSet.clone();
         this.alphaPopularity = r.alphaPopularity;
         this.popularity = r.popularity;
         this.tieStrength = r.tieStrength;
-        this.encounterManager = r.encounterManager;
         this.fclcontextaware = r.fclcontextaware;
-//        this.nrofHosts = r.nrofHosts;
         this.bufferSize = r.bufferSize;
         this.initialEnergy = r.initialEnergy;
     }
+
 
     //Getter FLC
     protected FIS getFIS() {
@@ -83,63 +78,121 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return neighbors;
     }
 
-    //Getter EncounterManager
-    public EncounterManager getEncounterManage() {
-        return encounterManager;
+    // Getter ENS untuk bisa diakses oleh node lain
+    public EncounteredNodeSet getEncounteredNodeSet() {
+        return this.encounteredNodeSet;
     }
 
-
+    /**
+     * Metode ini dipanggil ketika ada perubahan status koneksi antara dua node dalam jaringan.
+     * Jika koneksi baru terbentuk, informasi pertemuan akan ditambahkan ke Encountered Node Set (ENS),
+     * dan pertukaran ENS dilakukan antara kedua node. Jika koneksi terputus, durasi koneksi dicatat
+     * dan informasi encounter dari ENS dihapus untuk node yang terputus.
+     *
+     * @param con Objek Connection yang merepresentasikan koneksi antara dua node.
+     */
     public void changedConnection(Connection con) {
         super.changedConnection(con);
 
+        DTNHost host = getHost();
         DTNHost neighbor = con.getOtherNode(getHost());
         ContextAwareRLRouter neighborRouter = (ContextAwareRLRouter) neighbor.getRouter();
+        EncounteredNodeSet neighborENS = neighborRouter.getEncounteredNodeSet();
 
-        // Mendapatkan informasi yang dibutuhkan
-        double meetingTime = SimClock.getTime();  // Waktu pertemuan berdasarkan jam simulasi
-        int remainingBuffer = neighborRouter.getFreeBufferSize();  // Mendapatkan sisa buffer dari router
-        double remainingEnergy = neighborRouter.getEnergyModel().getEnergy();  // Mendapatkan energi yang tersisa dari router
-
-
-        // Cek apakah koneksi baru terbentuk
         if (con.isUp()) {
-            connectionDurations.put(con, new ConnectionDuration(getHost(), neighbor));
-            // Ambil connection duration dari ConnectionDuration yang telah disimpan
-            double connectionDuration = connectionDurations.get(con).getDuration();
-
-            // Menyimpan encounter baru dalam ENS dengan data yang diperlukan
-            this.encounterManager.addEncounterToENS(neighbor.getAddress(), meetingTime, remainingBuffer, remainingEnergy, connectionDuration);
-
-            // Lakukan pertukaran ENS jika koneksi aktif
-            this.encounterManager.exchangeENS(neighborRouter.getEncounterManage());  // Pertukaran ENS dengan node C
-            neighborRouter.getEncounterManage().exchangeENS(this.encounterManager); // Node C mengirimkan ENS ke node N1
-
-        } else{
-            // Jika koneksi terputus, update ENS
-
-            if (connectionDurations.containsKey(con)) {
-                ConnectionDuration duration =connectionDurations.get(con);
-                duration.endConnection();
-            }
-
-            // Menghapus encounter untuk node yang sudah tidak terhubung di ENS
-            // Hapus encounter untuk node C di Node N1
-            this.encounterManager.updateENSOnConnectionDown(neighbor.getAddress());
-            // Hapus encounter untuk Node N1 di Node C
-            neighborRouter.getEncounterManage().removeEncounterFromENS(this.getHost().getAddress());
-
-            // Update ENS
-            this.encounterManager.updateENSOnConnectionDown(neighbor.getAddress());
-            neighborRouter.getEncounterManage().updateENSOnConnectionDown(this.getHost().getAddress());  // Hanya update, tidak perlu pertukaran lagi
+            handleConnectionUp(host, neighbor, neighborRouter, neighborENS);
+        } else {
+            handleConnectionDown(neighbor, neighborENS);
         }
-        connectionDurations.remove(con);
+
+        // Bersihkan ENS yang sudah kadaluarsa
+        this.encounteredNodeSet.removeOldEncounters();
+        neighborENS.removeOldEncounters();
+    }
+
+    private void handleConnectionUp(DTNHost host, DTNHost neighbor, ContextAwareRLRouter neighborRouter, EncounteredNodeSet neighborENS) {
+        long currentTime = (long) SimClock.getTime();
+        String myId = String.valueOf(this.getHost().getAddress());
+        String neighborId = String.valueOf(neighbor.getAddress());
+
+        double neighborEnergy = neighborRouter.getEnergyModel().getEnergy();
+        int neighborBuffer = neighborRouter.getFreeBufferSize();
+
+        // Mulai pencatatan durasi koneksi
+        ConnectionDuration connectionDuration = ConnectionDuration.startConnection(this.getHost(), neighbor);
+        long duration = (long) connectionDuration.getDuration();
+
+        // Debug log sebelum update ENS
+        System.out.println("[INFO] Sebelum update ENS:");
+        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
+
+        // Update ENS kedua node
+        // Tambahkan ke ENS jika bukan diri sendiri
+        if (!myId.equals(neighborId)) {
+            this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, neighborEnergy, neighborBuffer, duration);
+            neighborENS.updateENS(neighbor, host, myId, currentTime, neighborEnergy, neighborBuffer, duration);
+        }
+
+        // Debug log sebelum merge ENS
+        System.out.println("[INFO] Sebelum merge ENS:");
+        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
+
+
+        // Pastikan ENS keduanya tidak kosong
+        if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
+            // Saling tukar ENS dengan filtering otomatis
+            this.encounteredNodeSet.exchangeWith(neighborENS, this.getHost(), neighbor, currentTime);
+            neighborENS.exchangeWith(this.encounteredNodeSet, neighbor, this.getHost(), currentTime);
+
+            System.out.println("[DEBUG] ENS setelah saling tukar di " + getHost().getAddress() + ":");
+            this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
+
+//            // Clone ENS dan bersihkan ID pengirim sebelum ditambahkan
+//            EncounteredNodeSet clonedNeighborENS = neighborENS.clone();
+//            EncounteredNodeSet clonedMyENS = this.encounteredNodeSet.clone();
+//            // Tukar data
+//            this.encounteredNodeSet.mergeENS(this.getHost(), clonedNeighborENS, currentTime, neighbor);
+//            neighborENS.mergeENS(neighbor, clonedMyENS, currentTime, this.getHost());
+
+//            System.out.println("[DEBUG] ENS setelah merge di " + getHost().getAddress() + ":");
+//            this.encounteredNodeSet.printEncounterLog(getHost(), neighborId, neighborENS);
+
+//            clonedNeighborENS.removeEncounter(neighborId); // Hapus ID neighbor dari ENS-nya
+//            clonedMyENS.removeEncounter(myId); // Hapus ID host dari ENS-nya
+//
+//
+//            // Bersihkan self dari hasil merge, opsional kalau mergeENS sudah handle ini
+//            this.encounteredNodeSet.cleanSelfFromENS(this.getHost());
+//            neighborENS.cleanSelfFromENS(neighbor);
+        }
+
+        // Debug log setelah merge ENS
+//        System.out.println("[INFO] Setelah merge ENS:");
+//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
+    }
+
+    private void handleConnectionDown(DTNHost neighbor, EncounteredNodeSet neighborENS) {
+        try {
+            // Akhiri pencatatan durasi koneksi
+            ConnectionDuration connDuration = ConnectionDuration.getConnection(this.getHost(), neighbor);
+            if (connDuration != null) {
+                connDuration.endConnection();
+            }
+        } finally {
+            // Hapus ENS untuk node yang terputus
+            String myId = String.valueOf(this.getHost().getAddress());
+            String neighborId = String.valueOf(neighbor.getAddress());
+
+            this.encounteredNodeSet.removeEncounter(neighborId);
+            neighborENS.removeEncounter(myId);
+        }
+
     }
 
     public void update(){
         super.update();
 
-//        // Panggil metode untuk mencetak ENS dari host
-//        encounterManager.printENS(this.getHost());
+//        this.encounteredNodeSet.debugENS(getHost());
         //routing.contextAware.ContextAwareNeighborEvaluator.tetagga(this.getHost(), this.popularity, this.tieStrength);
     }
 
@@ -148,3 +201,54 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return new ContextAwareRLRouter(this);
     }
 }
+
+
+//long encounterTime = (long) SimClock.getTime();
+//        int remainingBuffer = neighborRouter.getFreeBufferSize();
+//        double remainingEnergy = neighborRouter.getEnergyModel().getEnergy();
+//
+//        // Mulai pencatatan durasi koneksi
+//        ConnectionDuration connectionDuration = ConnectionDuration.startConnection(this.getHost(), neighbor);
+//        long connectionDurationValue = (long) connectionDuration.getDuration();
+//
+//        // Tambahkan ENS baru jika node bukan dirinya sendiri
+//        String myID = String.valueOf(this.getHost().getAddress());
+//        String neighborId = String.valueOf(neighbor.getAddress());
+//
+//        // Debugging
+//        System.out.println("[INFO] Sebelum Updateeeeeee:");
+//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId ,neighborENS);
+//
+//
+//            // Jika ID berbeda, lakukan pembaruan ENS
+//        this.encounteredNodeSet.updateENS(host,neighbor, neighborId, encounterTime, remainingEnergy, remainingBuffer, connectionDurationValue);
+//        this.encounteredNodeSet.updateENS(neighbor, host, myID, encounterTime, remainingEnergy, remainingBuffer, connectionDurationValue);
+////        this.encounteredNodeSet.updateENS(host, neighborId, encounterTime, remainingEnergy, remainingBuffer, connectionDurationValue);
+////        neighborENS.updateENS(neighbor, myID, encounterTime, remainingEnergy, remainingBuffer, connectionDurationValue);
+//
+//        // Debugging
+//        System.out.println("[INFO] Sebelum ENS digabungkannnnnnnnnnnnnnnnnnnnnn:");
+//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId ,neighborENS);
+//
+//
+//
+////        // Menggabungkan ENS antar node
+////        this.encounteredNodeSet.mergeENS(this.getHost(), neighborENS, (long) SimClock.getTime(), neighbor);
+////        neighborENS.mergeENS(neighbor,this.encounteredNodeSet, (long) SimClock.getTime(), this.getHost());
+//
+//        // Menggabungkan ENS antar node
+//        // Pastikan kedua ENS tidak kosong sebelum pertukaran
+//        if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
+//            // Node A menerima ENS dari Node B
+//            this.encounteredNodeSet.mergeENS(this.getHost(), neighborENS, (long) SimClock.getTime(), neighbor);
+//
+//            // Node B menerima ENS dari Node A
+//            neighborENS.mergeENS(neighbor, this.encounteredNodeSet, (long) SimClock.getTime(), this.getHost());
+//        }
+//        // Pastikan ENS setelah pertukaran tidak menyimpan ID diri sendiri
+////        this.encounteredNodeSet.cleanSelfFromENS(this.getHost());
+////        neighborENS.cleanSelfFromENS(neighbor);
+//
+//        System.out.println("[INFO] Setelah ENS digabungkan:");
+//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId ,neighborENS);
+////        this.encounteredNodeSet.debugENS(getHost());

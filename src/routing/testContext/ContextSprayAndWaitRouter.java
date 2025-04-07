@@ -59,7 +59,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 //		Settings testSPWAWARE = new Settings(SPRAYANDWAIT_NS);
 		//Popularity
 		alphaPopularity = s.getDouble(ALPHA_POPULARITY);
-		this.popularity = new Popularity(alphaPopularity);
+//		this.popularity = new Popularity(alphaPopularity);
 		//TieStregth
 		this.tieStrength = new TieStrength();
 
@@ -142,7 +142,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 		energy.reduceDiscoveryEnergy();
 
 		//Popularity
-		popularity.recordEncounter(this.getHost(), from);
+//		popularity.recordEncounter(this.getHost(), from);
 		popularity.updatePopularity();
 
 		//TieStrength
