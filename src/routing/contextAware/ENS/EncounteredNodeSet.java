@@ -1,111 +1,286 @@
 package routing.contextAware.ENS;
 
+import core.DTNHost;
 import core.SimClock;
+import routing.contextAware.ContextAwareRLRouter;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * Kelas EncounteredNodeSet digunakan untuk menyimpan informasi tentang node-node
- * yang telah bertemu dalam jaringan. Data encounter ini digunakan dalam routing
- * berbasis konteks.
- */
 public class EncounteredNodeSet {
 
-    private Map<Integer, EncounterInfo> EncounteredNodes = new HashMap<>();
-    private static final double EXPIRATION_TIME = 60.0; // 60 detik dalam unit waktu simulasi
+    private Map<String, EncounteredNode> ensTable = new HashMap<>();
 
-    /**
-     * Konstruktor untuk inisialisasi EncounteredNodeSet dengan data encounter yang diberikan.
-     * @param encounteredNodes Map yang berisi data encounter awal.
-     */
-    public EncounteredNodeSet(Map<Integer, EncounterInfo> encounteredNodes) {
-        EncounteredNodes = encounteredNodes;
+    // Menambahkan atau memperbarui informasi ENS
+    public void updateENS(DTNHost host, DTNHost neighbor, String nodeId, long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration) {
+        String myId = String.valueOf(host.getAddress()); // ID host
+        String neighborId = String.valueOf(neighbor.getAddress()); // ID neighbor
+
+        // Logging untuk debugging
+        System.out.println("[TRACE] updateENS dipanggil oleh " + myId + " untuk nodeId: " + nodeId);
+
+        // Cegah node menyisipkan dirinya sendiri (baik eksplisit maupun implisit)
+        if (!nodeId.equals(myId)) {
+            EncounteredNode newNode = new EncounteredNode(nodeId, encounterTime, remainingEnergy, bufferSize, connectionDuration);
+            updateOrInsert(nodeId, newNode, myId);
+        }
+
+
+//
+//        EncounteredNode newNode = new EncounteredNode(nodeId, encounterTime, remainingEnergy, bufferSize, connectionDuration);
+//
+//        // Update ENS milik host (tentang neighbor)
+//        updateOrInsert(neighborId, newNode);
+//
+//        // Update ENS milik neighbor (tentang host)
+//        EncounteredNode selfNode = new EncounteredNode(myId, encounterTime, remainingEnergy, bufferSize, connectionDuration);
+//        updateOrInsert(myId, selfNode);
+
     }
 
-    /**
-     * Menambahkan encounter baru ke dalam ENS.
-     * @param nodeId ID node yang ditemui.
-     * @param encounterInfo Informasi encounter yang mencakup waktu pertemuan, buffer, energi, dan durasi koneksi.
-     */
-    public void addEncounter(int nodeId, EncounterInfo encounterInfo ) {
-        if (EncounteredNodes.containsKey(nodeId)) {
-            System.out.println("⚠ Node " + nodeId + " sudah ada dalam ENS! Memperbarui info.");
+    private void updateOrInsert(String nodeId, EncounteredNode newNode, String myId) {
+
+
+        if (nodeId.equals(myId)) {
+            System.out.println("[BUG DETECTED] Node " + myId + " menyisipkan dirinya sendiri sebagai EncounteredNode!");
+        }
+
+        if (ensTable.containsKey(nodeId)) {
+            System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
         } else {
-            System.out.println("➕ Menambahkan node " + nodeId + " ke ENS.");
+            System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
         }
 
-        EncounteredNodes.put(nodeId, encounterInfo);
+        if (nodeId.equals("your node id here")) {
+            System.out.println("[WARNING] Node menyisipkan dirinya sendiri ke ENS!");
+        }
 
-//        System.out.println("Node " + nodeId + " ditambahkan ke ENS.");
+
+
+        ensTable.compute(nodeId, (key, existingNode) -> {
+            if (existingNode == null || newNode.isMoreRelevant(existingNode)) {
+                return newNode;
+            }
+            return existingNode;
+        });
     }
 
     /**
-     * Memperbarui durasi koneksi untuk node yang sudah ada dalam ENS.
-     * @param nodeId ID node yang ingin diperbarui.
-     * @param newDuration Durasi koneksi baru dalam satuan waktu simulasi.
+     * Menggabungkan ENS dari node lain
      */
-    public void updateEncounterDuration(int nodeId, double newDuration) {
-        if (EncounteredNodes.containsKey(nodeId)) {
-            EncounterInfo encounter = EncounteredNodes.get(nodeId);
-            encounter.connDuration = newDuration;
-            encounter.lastSeenTime = SimClock.getTime(); // Perbarui waktu terakhir terlihat dengan waktu simulasi
+    public void mergeENS(DTNHost host, EncounteredNodeSet otherENS, long currentTime, DTNHost neighbor) {
+        if (otherENS == null || otherENS.ensTable.isEmpty()) return;
+
+        String myId = String.valueOf(host.getAddress());
+        String neighborId = String.valueOf(neighbor.getAddress());
+
+//        if (!neighborId.equals(myId)) {
+//            ensTable.putIfAbsent(neighborId, new EncounteredNode(neighborId, currentTime, 0, 0, 0));
+//        }
+        // Gabungkan ENS lain (kecuali ID sendiri)
+        otherENS.ensTable.forEach((key, newNode) -> {
+            if (!key.equals(myId)) {
+                ensTable.compute(key, (k, existingNode) -> {
+                    if (existingNode == null || newNode.isMoreRelevant(existingNode)) {
+                        return newNode.clone(); // pakai clone untuk safety
+                    }
+                    return existingNode;
+                });
+            } else{
+                System.out.println("[WARNING] Merge ENS diabaikan karena key == myId: " + myId);
+            }
+        });
+
+//        cleanSelfFromENS(host);
+    }
+
+    public EncounteredNodeSet clone() {
+        EncounteredNodeSet cloned = new EncounteredNodeSet();
+        for (Map.Entry<String, EncounteredNode> entry : this.ensTable.entrySet()) {
+            cloned.ensTable.put(entry.getKey(), entry.getValue().clone());
+        }
+        return cloned;
+    }
+
+
+    // Menghapus ENS berdasarkan NodeID jika koneksi terputus
+    public void removeEncounter(String nodeId) {
+        if (ensTable.remove(nodeId) != null) {
+            System.out.println("[INFO] ENS dihapus untuk NodeID: " + nodeId);
         }
     }
 
-    /**
-     * Menghapus encounter berdasarkan nodeId dari ENS.
-     * @param nodeId ID node yang ingin dihapus dari ENS.
-     */
-    public void removeEncounter(int nodeId) {
-        System.out.println("ENS Saat Ini: " + EncounteredNodes.keySet());
-        if (EncounteredNodes.containsKey(nodeId)) {
-            EncounteredNodes.remove(nodeId);  // Menghapus encounter untuk node yang terputus
-            System.out.println("Node " + nodeId + " berhasil dihapus dari ENS.");
+    // Menghapus ENS yang sudah lebih dari TTL
+    public void removeOldEncounters() {
+        ensTable.entrySet().removeIf(entry -> entry.getValue().isExpired());
+    }
+
+
+    public void cleanSelfFromENS(DTNHost host) {
+        String myID = String.valueOf(host.getAddress()); // ID dari node yang memproses
+
+        EncounteredNode removed = ensTable.remove(myID);
+        // Hapus ID sendiri dari tabel ENS jika ada
+        if (removed != null) {
+            System.out.println("[INFO] ENS (self) dihapus untuk NodeID: " + myID);
+        }
+    }
+
+    public boolean isEmpty() {
+        return ensTable.isEmpty();
+    }
+
+
+    // Mendapatkan informasi ENS berdasarkan NodeID
+    public EncounteredNode getENS(String nodeId) {
+        return ensTable.get(nodeId);
+    }
+
+    public void printENS(String hostId) {
+        if (this.ensTable.isEmpty()) {
+            System.out.println("  (ENS KOSONG)");
         } else {
-            System.out.println("Node ID " + nodeId + " tidak ditemukan dalam ENS.");
-        }
-        System.out.println("Setelah penghapusan: " + EncounteredNodes.keySet());
-    }
-
-    /**
-     * Membersihkan encounter yang sudah lebih dari 60 detik dalam waktu simulasi.
-     * Encounter yang kadaluwarsa akan dihapus dari ENS.
-     */
-    public void cleanOldEncounters() {
-        double currentTime = SimClock.getTime(); // Ambil waktu simulasi saat ini
-        System.out.println("Waktu simulasi saat ini: " + currentTime);
-
-        Iterator<Map.Entry<Integer, EncounterInfo>> iterator = EncounteredNodes.entrySet().iterator();
-
-        while (iterator.hasNext()) {
-            Map.Entry<Integer, EncounterInfo> entry = iterator.next();
-
-            double age = currentTime - entry.getValue().lastSeenTime;
-            System.out.println("Node " + entry.getKey() + " terakhir terlihat " + entry.getValue().lastSeenTime + " detik lalu (Usia: " + age + " detik)");
-
-            if (currentTime - entry.getValue().lastSeenTime >= EXPIRATION_TIME) {
-                iterator.remove(); // Hapus encounter yang sudah lebih dari 60 detik
-                System.out.println("Node ID " + entry.getKey() + " dihapus karena sudah lebih dari 60 detik dalam simulasi.");
+            for (Map.Entry<String, EncounteredNode> entry : ensTable.entrySet()) {
+                EncounteredNode node = entry.getValue();
+                System.out.printf("  NodeID: %-5s | Encounter Time: %-5d | Duration: %-5ds\n",
+                        node.getNodeId(),
+                        node.getEncounterTime(),
+                        node.getConnectionDuration());
             }
         }
-        System.out.println("ENS setelah pembersihan: " + EncounteredNodes.keySet());
+        System.out.println("============================================");
     }
 
-     /**
-      * Mengembalikan daftar encounter yang tersimpan dalam ENS.
-      * @return Map yang berisi informasi encounter dengan key sebagai nodeId.
-     */
-    public Map<Integer, EncounterInfo> getEncounters() {
-        return EncounteredNodes;
+    public void printEncounterLog(DTNHost host, String neighborId, EncounteredNodeSet neighborENS) {
+        System.out.println("============================================");
+        System.out.printf("Node %s bertemu dengan Node %s\n", host.getAddress(), neighborId);
+        System.out.println("\nISI ENS NODE " + host.getAddress());
+        this.printENS(String.valueOf(host.getAddress()));
+        System.out.println("\nISI ENS NODE " + neighborId);
+        neighborENS.printENS(neighborId);
+        System.out.println("============================================\n");
     }
 
-    /**
-     * Mengembalikan jumlah node yang terdapat dalam ENS.
-     * @return Jumlah encounter yang tersimpan dalam ENS.
-     */
-    public int getEncounterCount(){
-        return EncounteredNodes.size();
+    public void debugENS(DTNHost host) {
+        System.out.println("[DEBUG] ENS milik Node:" + host.getAddress());
+        if (ensTable.isEmpty()) {
+            System.out.println("ENS kosong");
+        } else {
+            System.out.println("isi ENS :");
+            for (Map.Entry<String, EncounteredNode> entry : ensTable.entrySet()) {
+                System.out.println("NodeID: " + entry.getKey() + " -> " + entry.getValue());
+            }
+        }
     }
-
 }
+
+    //    }
+//
+////    // Menggabungkan ENS dari node lain
+////    public void mergeENS(DTNHost host, EncounteredNodeSet otherENS, long currentTime, DTNHost neighbor) {
+////        if (otherENS == null || otherENS.ensTable.isEmpty()) {
+////            return; // Jika otherENS kosong, tidak perlu diproses
+////        }
+////
+////        String myID = String.valueOf(host.getAddress()); // Ambil ID host saat ini
+////        String neighborId = String.valueOf(neighbor.getAddress());
+////
+////
+////        // Proses ENS dari neighbor ke host
+////        otherENS.ensTable.forEach((key, newNode) -> {
+////            if (!key.equals(myID) && !key.equals(neighborId)) { // Hindari menambahkan ID sendiri & neighbor
+////                EncounteredNode existingNode = ensTable.get(key);
+////                if (existingNode == null || newNode.isMoreRelevant(existingNode)) {
+////                    ensTable.put(key, newNode);
+////                }
+////            }
+////        });
+////
+////        // Proses ENS dari host ke neighbor
+////        this.ensTable.forEach((key, existingNode) -> {
+////            if (!key.equals(myID) && !key.equals(neighborId)) { // Hindari menambahkan ID sendiri & neighbor
+////                EncounteredNode neighborExistingNode = otherENS.ensTable.get(key);
+////                if (neighborExistingNode == null || existingNode.isMoreRelevant(neighborExistingNode)) {
+////                    otherENS.ensTable.put(key, existingNode);
+////                }
+////            }
+////        });
+////
+////        // Pastikan hanya ID Neighbor yang ada di ENS Host
+////        if (!ensTable.containsKey(neighborId)) {
+////            ensTable.put(neighborId, new EncounteredNode(neighborId, currentTime, 0, 0, 0));
+////            System.out.println("[INFO] Menambahkan Node " + neighborId + " ke ENS Node " + myID);
+////        }
+////
+////        // Pastikan hanya ID Host yang ada di ENS Neighbor
+////        if (!otherENS.ensTable.containsKey(myID)) {
+////            otherENS.ensTable.put(myID, new EncounteredNode(myID, currentTime, 0, 0, 0));
+////            System.out.println("[INFO] Menambahkan Node " + myID + " ke ENS Node " + neighborId);
+////        }
+////
+//////        this.cleanSelfFromENS(host);
+//////        otherENS.cleanSelfFromENS(neighbor);
+////    }
+//
+////    // Menggabungkan ENS dari node lain
+//    public void mergeENS(DTNHost host, EncounteredNodeSet otherENS, long currentTime, DTNHost neighbor) {
+//        if (otherENS == null || otherENS.ensTable.isEmpty()) {
+//            return; // Jika otherENS kosong, tidak perlu diproses
+//        }
+//
+//
+//        String myID = String.valueOf(host.getAddress()); // Ambil ID host saat ini
+//        String neigborId = String.valueOf(neighbor.getAddress());
+////
+////        // Pastikan node yang bertemu langsung masuk ke ENS masing-masing
+////       otherENS.ensTable.putIfAbsent(myID, new EncounteredNode(myID, currentTime, 0,0,0));
+////       ensTable.putIfAbsent(neigborId, new EncounteredNode(neigborId, currentTime, 0,0,0));
+//
+//        // Hanya tambahkan node tetangga, bukan dirinya sendiri
+//        if (!ensTable.containsKey(neigborId)) {
+//            ensTable.put(neigborId, new EncounteredNode(neigborId, currentTime, 0,0,0));
+//        }
+////        ensTable.computeIfAbsent(neigborId, id -> new EncounteredNode(id, currentTime, 0,0,0));
+//
+//        otherENS.ensTable.forEach((key, newNode) -> {
+//            if (!key.equals(myID)) { // Pastikan tidak menambahkan ID sendiri
+//                ensTable.compute(key, (existingKey, existingNode) -> {
+//                    // Jika tidak ada data sebelumnya, langsung pakai newNode
+//                    if (existingNode == null) {
+//                        // Jika node baru, tambahkan dengan waktu saat ini
+//                        return new EncounteredNode(key, currentTime, 0, 0, 0);
+//                    }
+//                    // Jika newNode lebih relevan, gunakan newNode
+//                    return existingNode.isMoreRelevant(newNode) ? existingNode : newNode;
+//                });
+//            }
+//        });
+//        cleanSelfFromENS(host);
+//
+//    }
+//    // Menggabungkan ENS dari node lain
+////    public void mergeENS(DTNHost host, EncounteredNodeSet otherENS) {
+////
+////        String myID = String.valueOf(host.getAddress()); // Ambil ID host saat ini
+////        otherENS.ensTable.forEach((key, newNode) -> {
+////                    if (!key.equals(myID)) {
+////                        ensTable.merge(key, newNode, (existing, newInfo) ->
+////                                existing.isMoreRelevant(newInfo) ? existing : newInfo
+////                        );
+////                    }
+////        });
+////        cleanSelfFromENS(host);
+////
+////    }
+//
+////    // Menggabungkan ENS dari node lain
+////    public void mergeENS(EncounteredNodeSet otherENS) {
+////        otherENS.ensTable.forEach((key, newNode) ->
+////
+////                ensTable.merge(key, newNode, (existing, newInfo) ->
+////                        existing.isMoreRelevant(newInfo) ? existing : newInfo
+////                )
+////        );
+////    }
+

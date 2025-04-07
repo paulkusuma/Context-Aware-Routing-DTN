@@ -1,6 +1,6 @@
 package routing.contextAware;
 
-import routing.contextAware.ENS.EncounterManager;
+import routing.testContext.EncounterManager;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;

@@ -1,10 +1,11 @@
-package routing.contextAware.ENS;
+package routing.testContext;
 
 import core.DTNHost;
 import core.SimClock;
 import routing.contextAware.ContextAwareRLRouter;
+import routing.contextAware.ENS.ConnectionDuration;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -20,7 +21,7 @@ public class EncounterManager {
      * Konstruktor untuk EncounterManager yang menginisialisasi EncounteredNodeSet baru.
      */
     public EncounterManager() {
-        encounteredNodeSet = new EncounteredNodeSet(new HashMap<>());
+        encounteredNodeSet = new EncounteredNodeSet(Collections.emptyMap());
     }
 
     /**
@@ -60,39 +61,42 @@ public class EncounterManager {
     /**
      * Mengecek apakah encounter dengan node tertentu lebih baru dibandingkan data yang ada.
      * @param nodeId ID node yang ingin diperiksa.
-     * @param meetingTime Waktu pertemuan node yang baru.
+     * @param encounterInfo Informasi encounter terbaru dari node tersebut.
      * @return True jika encounter baru lebih baru dari data yang ada, false jika tidak.
      */
-    private boolean isNewerEncounter(int nodeId, double meetingTime) {
-        return !encounteredNodeSet.getEncounters().containsKey(nodeId) ||
-                meetingTime > encounteredNodeSet.getEncounters().get(nodeId).MeetingTime;
+    private boolean isNewerEncounter(int nodeId, EncounterInfo encounterInfo) {
+        EncounterInfo existingInfo = encounteredNodeSet.getEncounters().get(nodeId);
+        return existingInfo == null || encounterInfo.MeetingTime > existingInfo.MeetingTime
+                || encounterInfo.RemainingBuffer < existingInfo.RemainingBuffer
+                || encounterInfo.RemainingEnergy < existingInfo.RemainingEnergy;
     }
+
 
     /**
      * Menukar ENS antara dua node untuk berbagi informasi tentang encounter yang mereka miliki.
      * @param neighborManager EncounterManager milik node tetangga.
      */
     public void exchangeENS(EncounterManager neighborManager) {
-        // 1. Terima ENS dari node tetangga
-        for (Map.Entry<Integer, EncounterInfo> entry : neighborManager.getEncounteredNodeSet().getEncounters().entrySet()) {
-            int nodeId = entry.getKey();
-            EncounterInfo info = entry.getValue();
+        if (this.encounteredNodeSet != null && neighborManager.getEncounteredNodeSet() != null) {
+            // Ambil ENS Map
+            Map<Integer, EncounterInfo> myENSMap = this.encounteredNodeSet.getEncounters();
+            Map<Integer, EncounterInfo> neighborENSMap = neighborManager.getEncounteredNodeSet().getEncounters();
 
-            // 2. Periksa apakah encounter ini lebih baru dan tambahkan ke ENS N1
-            if (isNewerEncounter(nodeId, info.MeetingTime)) {
-                this.addEncounterToENS(nodeId, info.MeetingTime, info.RemainingBuffer, info.RemainingEnergy, info.connDuration);
+            // Lakukan merge ENS dari node tetangga
+            for (Map.Entry<Integer, EncounterInfo> entry : neighborENSMap.entrySet()) {
+                if (!myENSMap.containsKey(entry.getKey())) {
+                    myENSMap.put(entry.getKey(), entry.getValue());  // Menambah ENS dari tetangga
+                } else {
+                    //Cek apakah encounter dari tetangga lebih baru
+                    EncounterInfo myInfo = myENSMap.get(entry.getKey());
+                    EncounterInfo neighborInfo = entry.getValue();
+
+                    if (neighborInfo.MeetingTime > myInfo.MeetingTime) {
+                        myENSMap.put(entry.getKey(), neighborInfo);  // Update ENS jika encounter lebih baru
+                    }
+                }
             }
-        }
 
-        // 3. Kirim ENS N1 ke node tetangga
-        for (Map.Entry<Integer, EncounterInfo> entry : encounteredNodeSet.getEncounters().entrySet()) {
-            int nodeId = entry.getKey();
-            EncounterInfo info = entry.getValue();
-
-            // Kirim informasi ENS ke node tetangga jika lebih baru
-            if (neighborManager.isNewerEncounter(nodeId, info.MeetingTime)) {
-                neighborManager.addEncounterToENS(nodeId, info.MeetingTime, info.RemainingBuffer, info.RemainingEnergy, info.connDuration);
-            }
         }
     }
 
@@ -102,18 +106,29 @@ public class EncounterManager {
      */
     public void updateENSOnConnectionDown(int nodeId) {
         // Menghapus encounter yang terputus (misalnya Node C)
-        removeEncounterFromENS(nodeId);
+//        removeEncounterFromENS(nodeId);
+
+        if (encounteredNodeSet.getEncounters().containsKey(nodeId)) {
+//            System.out.println("updateENSOnConnectionDown: Menghapus node " + nodeId);
+            removeEncounterFromENS(nodeId);
+        } else {
+//            System.out.println("updateENSOnConnectionDown: Node " + nodeId + " sudah tidak ada di ENS.");
+        }
     }
 
     /**
      * Menghapus encounter dari ENS berdasarkan ID node.
      * @param nodeId ID node yang akan dihapus dari ENS.
      */
-    public void removeEncounterFromENS(int nodeId) {
+    public synchronized void removeEncounterFromENS(int nodeId) {
         if (encounteredNodeSet.getEncounters().containsKey(nodeId)) {
+//            System.out.println("Menghapus node " + nodeId + " dari ENS...");
             encounteredNodeSet.removeEncounter(nodeId);  // Menghapus encounter berdasarkan nodeId
-        } else {
-            System.out.println("Node ID " + nodeId + " tidak ditemukan saat menghapus dari ENS.");
+
+            // Pastikan node benar-benar terhapus
+            if (!encounteredNodeSet.getEncounters().containsKey(nodeId)) {
+//                System.out.println("Node " + nodeId + " berhasil dihapus dari ENS.");
+            }
         }
     }
 
@@ -146,14 +161,14 @@ public class EncounterManager {
         ContextAwareRLRouter router = (ContextAwareRLRouter) host.getRouter();
 
         // Mendapatkan EncounterManager dari router
-        EncounterManager encounterManager = router.getEncounterManage();
+//        EncounterManager encounterManager = router.getEncounterManage();
 
         // Mendapatkan EncounteredNodeSet
-        EncounteredNodeSet encounteredNodeSet = encounterManager.getEncounteredNodeSet();
+//        EncounteredNodeSet encounteredNodeSet = encounterManager.getEncounteredNodeSet();
 
 
         // Mencetak jumlah encounter yang ada
-        System.out.println("Node " + host.getAddress() + " memiliki " + encounteredNodeSet.getEncounterCount() + " encounter(s):");
+//        System.out.println("Node " + host.getAddress() + " memiliki " + encounteredNodeSet.getEncounterCount() + " encounter(s):");
 
         // Mencetak setiap encounter
         for (Map.Entry<Integer, EncounterInfo> entry : encounteredNodeSet.getEncounters().entrySet()) {
