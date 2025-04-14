@@ -143,7 +143,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 
 		//Popularity
 //		popularity.recordEncounter(this.getHost(), from);
-		popularity.updatePopularity();
+//		popularity.updatePopularity();
 
 		//TieStrength
 		tieStrength.recordEncounter(this.getHost(), from);

@@ -5,10 +5,10 @@ Group.router = contextAware.ContextAwareRLRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
 
 Group.bufferSize = 1M
-Group.initialEnergy = 10
-Group.scanEnergy = 0.1
-Group.transmitEnergy   = 5
-Group.scanResponseEnergy = 0.1
+Group.initialEnergy = 100
+Group.scanEnergy = 0.01
+Group.transmitEnergy   = 0.2
+Group.scanResponseEnergy = 0.01
 Group.scanInterval = 10
 Group.warmupTime = 10
 

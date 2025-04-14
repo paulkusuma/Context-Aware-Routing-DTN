@@ -16,6 +16,7 @@ public class EncounteredNode {
 
     private static final double TTL = 900.0;  // Waktu kadaluarsa ENS dalam detik
 
+    private double popularity = 0.0;
 
     /**
      * Konstruktor untuk EncounteredNode.
@@ -44,6 +45,11 @@ public class EncounteredNode {
         this.remainingEnergy = remainingEnergy;
         this.bufferSize = bufferSize;
         this.connectionDuration = connectionDuration;
+    }
+
+    // Metode untuk memperbarui durasi koneksi setelah koneksi berakhir
+    public void updateConnectionDuration(long duration) {
+        this.connectionDuration += duration;
     }
 
     /**
@@ -77,7 +83,11 @@ public class EncounteredNode {
      * @return Objek EncounteredNode baru dengan nilai yang sama
      */
     public EncounteredNode clone() {
-        return  new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
+        EncounteredNode clone = new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
+        clone.setPopularity(this.popularity);
+        return clone;
+//
+//        return  new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
 
     }
 
@@ -109,6 +119,29 @@ public class EncounteredNode {
 
     public long getConnectionDuration() {
         return connectionDuration;
+    }
+
+    // ===================== setter ===================== //
+    public void setEncounterTime(long encounterTime) {
+        this.encounterTime = encounterTime;
+    }
+
+    public void setConnectionDuration(long connectionDuration) {
+        this.connectionDuration = connectionDuration;
+    }
+
+    public void setRemainingEnergy(double remainingEnergy) {
+        this.remainingEnergy = remainingEnergy;
+    }
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
+
+    // ===================== Social Charateristic ===================== //
+    public double getPopularity() { return popularity; }
+    public void setPopularity(double popularity) {
+        this.popularity = popularity;
     }
 
     public String toString() {
