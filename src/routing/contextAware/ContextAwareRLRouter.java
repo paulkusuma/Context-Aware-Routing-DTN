@@ -36,7 +36,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         this.encounteredNodeSet = new EncounteredNodeSet();
         this.alphaPopularity = s.getDouble(ALPHA_POPULARITY);
-        this.popularity = new Popularity(alphaPopularity, this.encounteredNodeSet);
+        this.popularity = new Popularity(alphaPopularity);
 
         this.tieStrength = new TieStrength(); //Object TieStrength
         //Read FCL file
@@ -53,7 +53,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         this.encounteredNodeSet = r.encounteredNodeSet.clone();
         this.alphaPopularity = r.alphaPopularity;
-        this.popularity = new Popularity(r.popularity);
+        this.popularity = r.popularity;
         this.tieStrength = r.tieStrength;
         this.fclcontextaware = r.fclcontextaware;
         this.bufferSize = r.bufferSize;
@@ -136,19 +136,19 @@ public class ContextAwareRLRouter extends ActiveRouter {
         neighborENS.removeOldEncounters();
 //        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
 
-        neighborRouter.getPopularity().updatePopularity(currentTime);
-        double neighborPop = this.getPopularity().getPopularity();
+        this.popularity.updatePopularity(host, this.encounteredNodeSet);
+        neighborRouter.getPopularity().updatePopularity(neighbor, neighborENS);
+        // Ambil nilai popularitas terbaru setelah update
+        double neighborPop = popularity.getPopularity(neighbor);
+        double myPop = popularity.getPopularity(host);
+        System.out.println("[DEBUG] Popularitas host (" + host.getAddress() + "): " + myPop);
+        System.out.println("[DEBUG] Popularitas neighbor (" + neighbor.getAddress() + "): " + neighborPop);
 
 
         // Update ENS kedua node
         // Tambahkan ke ENS jika bukan diri sendiri
         if (!myId.equals(neighborId)) {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, neighborEnergy, neighborBuffer, duration, neighborPop);
-
-
-            this.getPopularity().updatePopularity(currentTime);
-            double myPop = this.getPopularity().getPopularity();
-
             neighborENS.updateENS(neighbor, host, myId, currentTime, neighborEnergy, neighborBuffer, duration, myPop);
         }
 
@@ -174,9 +174,13 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
             System.out.println("[DEBUG] ENS setelah saling tukar di " + getHost().getAddress() + ":");
             this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
-
         }
-  }
+
+        // Menghitung TieStrength pada saat koneksi up
+        double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
+        // Debug log untuk melihat nilai TieStrength
+        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
+    }
 
     private void handleConnectionDown(DTNHost neighbor, EncounteredNodeSet neighborENS) {
         String myId = String.valueOf(this.getHost().getAddress());

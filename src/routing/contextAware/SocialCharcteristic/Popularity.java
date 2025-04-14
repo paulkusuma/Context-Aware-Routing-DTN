@@ -4,64 +4,172 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import core.DTNHost;
+import core.SimClock;
 import routing.contextAware.ENS.*;
 
 
 public class Popularity {
 
-    private static final int NUM_TH = 50; // Ambang batas default untuk jumlah node yang ditemui
-    private static final int TIME_WINDOW = 200; // Time window in seconds
+    // Menyimpan Popularity setiap node
+    private static Map<DTNHost, Double> popularityMap = new HashMap<>();
+    // Menyimpan encounter history untuk setiap node
+    private static Map<DTNHost, Map<DTNHost, Double>> encounterHistory = new HashMap<>();
+    // Threshold untuk menghitung encounter dalam 200 detik
+    private static final int NUMth = 50;
+    // Interval waktu (200 detik)
+    private static final double TIME_WINDOW = 200.0;
 
-
-    //Menyiman Nilai Alpha
+    // Menyimpan nilai alpha yang diatur melalui konstruktor
     private double alphaPopularity;
-    private EncounteredNodeSet ens;
-    private double currentPopularity;
 
-    public Popularity(double alphaPopularity, EncounteredNodeSet ens) {
+
+    /**
+     * Konstruktor untuk menginisialisasi Popularity dengan nilai alpha.
+     *
+     * @param alphaPopularity Nilai alpha untuk pembaruan Popularity.
+     */
+    public Popularity(double alphaPopularity) {
         this.alphaPopularity = alphaPopularity;
-        this.ens = ens;
-        currentPopularity = 0.0;
     }
 
-    public Popularity(Popularity other) {
-        this.alphaPopularity = other.alphaPopularity;
-        this.currentPopularity = other.currentPopularity;
-        this.ens = other.ens;
+    public void updatePopularity(DTNHost node, EncounteredNodeSet ens) {
+        double currentTime = SimClock.getTime();
+        double currentPopularity = popularityMap.getOrDefault(node, 0.0);
+        int encounterCount = ens.countRecentEncounters(currentTime, TIME_WINDOW);
+
+        // Normalisasi popularitas baru
+        double normalizedPopularity = Math.min((double) encounterCount / NUMth, 1.0);
+
+        double updatedPopularity = (1 - alphaPopularity) * currentPopularity + alphaPopularity * normalizedPopularity;
+
+        popularityMap.put(node, updatedPopularity);
+
+        System.out.println("[POPULARITY] Node " + node.getAddress() +
+                " updated Popularity: " + updatedPopularity +
+                " | Recent encounters: " + encounterCount);
     }
 
-    public void updatePopularity(double currentTime) {
-        int numEncountered = ens.countEncountersInLastPeriod(currentTime, TIME_WINDOW);
-
-
-//        System.out.println("[DEBUG] updatePopularity() Called at time: " + currentTime);
-//        System.out.println("[DEBUG] TIME_WINDOW = " + TIME_WINDOW + " detik");
-//        System.out.println("[DEBUG] Alpha = " + alphaPopularity);
-//        System.out.println("[DEBUG] Daftar Encounter yang dicek:");
-        for (EncounteredNode node : ens.getTable().values()) {
-            double age = currentTime - node.getEncounterTime();
-            System.out.printf("  - NodeID: %s | EncounterTime: %.2f | Age: %.2f %s\n",
-                    node.getNodeId(), node.getEncounterTime(), age,
-                    (age <= TIME_WINDOW ? "<= WINDOW ✅" : "> WINDOW ❌"));
-        }
-        double popularityT = Math.min(1.0, (double) numEncountered / NUM_TH);
-        this.currentPopularity = (1 - alphaPopularity) * this.currentPopularity + alphaPopularity * popularityT;
+//    /**
+//     * Fungsi untuk memperbarui Popularity node berdasarkan encounter yang terjadi.
+//     * @param node Node yang sedang diperbarui Popularity-nya.
+//     * @param encounteredNode Node yang terdeteksi sebagai encounter.
+//     */
+//    public void updatePopularity(DTNHost node, DTNHost encounteredNode) {
+//        // Mengambil waktu saat ini
+//        double currentTime = SimClock.getTime();
 //
-//        System.out.println("[DEBUG] Hasil Update Popularity:");
-//        System.out.println("  → Jumlah Encounter dalam Window = " + numEncountered);
-//        System.out.println("  → PopularityT = " + popularityT);
-//        System.out.println("  → Final Popularity = " + currentPopularity);
+//        // Catat encounter pada node jika belum ada
+//        encounterHistory.putIfAbsent(node, new HashMap<>());
+//        Map<DTNHost, Double> nodeHistory = encounterHistory.get(node);
+//
+//        // Catat waktu encounter antara node dan encounteredNode
+//        nodeHistory.put(encounteredNode, currentTime);
+//
+//        // Hitung jumlah encounter yang terjadi dalam waktu 200 detik
+//        int encounterCount = 0;
+//        for (Map.Entry<DTNHost, Double> entry : nodeHistory.entrySet()) {
+//            double timeDifference = currentTime - entry.getValue();
+//            if (timeDifference <= TIME_WINDOW) {
+//                encounterCount++;
+//            }
+//        }
+//
+//        // Mendapatkan popularitas saat ini untuk node
+//        double currentPopularity = popularityMap.getOrDefault(node, 0.0);
+//
+//        // Menghitung popularitas baru berdasarkan encounterCount
+//        double newPopularity = Math.min(encounterCount, NUMth);
+//
+//        // Persamaan pembaruan: Popularity_t(i) = (1 - alpha) * Popularity_(t-1)(i) + Popularity_t(i)
+//        double updatedPopularity = (1 - alphaPopularity) * currentPopularity + newPopularity;
+//
+//        // Memperbarui popularitas untuk node tersebut
+//        popularityMap.put(node, updatedPopularity);
+//
+//        // Debugging
+//        System.out.println("Updated Popularity for node " + node.getAddress() + ": " + updatedPopularity);
+//    }
+
+    /**
+     * Mendapatkan nilai Popularity untuk sebuah node.
+     * @param node Node yang ingin diperiksa Popularity-nya.
+     * @return Popularity dari node tersebut.
+     */
+    public double getPopularity(DTNHost node) {
+        return popularityMap.getOrDefault(node, 0.0);
     }
 
-    public double getPopularity() {
-        return currentPopularity;
+    /**
+     * Fungsi untuk menghapus node yang tidak aktif (lebih dari 200 detik).
+     * @param node Node yang akan dibersihkan dari encounter history.
+     */
+    public void cleanOldEncounters(DTNHost node) {
+        if (encounterHistory.containsKey(node)) {
+            double currentTime = SimClock.getTime();
+            Map<DTNHost, Double> nodeHistory = encounterHistory.get(node);
+            nodeHistory.entrySet().removeIf(entry -> currentTime - entry.getValue() > TIME_WINDOW);
+        }
     }
 
-    public void reset() {
-        currentPopularity = 0.0;
+    /**
+     * Menampilkan Popularity untuk setiap node.
+     */
+    public void printPopularity() {
+        for (Map.Entry<DTNHost, Double> entry : popularityMap.entrySet()) {
+            System.out.println("Node " + entry.getKey().getAddress() + " has Popularity: " + entry.getValue());
+        }
     }
-
 }
+//    //Menyiman Nilai Alpha
+//    private double alphaPopularity;
+//    private EncounteredNodeSet ens;
+//    private double currentPopularity;
+//
+//    public Popularity(double alphaPopularity, EncounteredNodeSet ens) {
+//        this.alphaPopularity = alphaPopularity;
+//        this.ens = ens;
+//        currentPopularity = 0.0;
+//    }
+//
+//    public Popularity(Popularity other) {
+//        this.alphaPopularity = other.alphaPopularity;
+//        this.currentPopularity = other.currentPopularity;
+//        this.ens = other.ens;
+//    }
+//
+//    public void updatePopularity(double currentTime) {
+//        int numEncountered = ens.countEncountersInLastPeriod(currentTime, TIME_WINDOW);
+//
+//
+////        System.out.println("[DEBUG] updatePopularity() Called at time: " + currentTime);
+////        System.out.println("[DEBUG] TIME_WINDOW = " + TIME_WINDOW + " detik");
+////        System.out.println("[DEBUG] Alpha = " + alphaPopularity);
+////        System.out.println("[DEBUG] Daftar Encounter yang dicek:");
+//        for (EncounteredNode node : ens.getTable().values()) {
+//            double age = currentTime - node.getEncounterTime();
+//            System.out.printf("  - NodeID: %s | EncounterTime: %.2f | Age: %.2f %s\n",
+//                    node.getNodeId(), node.getEncounterTime(), age,
+//                    (age <= TIME_WINDOW ? "<= WINDOW ✅" : "> WINDOW ❌"));
+//        }
+//        double popularityT = Math.min(1.0, (double) numEncountered / NUM_TH);
+//        this.currentPopularity = (1 - alphaPopularity) * this.currentPopularity + alphaPopularity * popularityT;
+////
+////        System.out.println("[DEBUG] Hasil Update Popularity:");
+////        System.out.println("  → Jumlah Encounter dalam Window = " + numEncountered);
+////        System.out.println("  → PopularityT = " + popularityT);
+////        System.out.println("  → Final Popularity = " + currentPopularity);
+//    }
+//
+//    public double getPopularity() {
+//        return currentPopularity;
+//    }
+//
+//    public void reset() {
+//        currentPopularity = 0.0;
+//    }
+//
+//}
 //    private Map<Integer, Double> popularityValues; // Menyimpan nilai popularitas
 
 //    public Popularity(double alphaPopularity, EncounteredNodeSet ens) {

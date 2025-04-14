@@ -14,9 +14,10 @@ public class EncounteredNode {
     int bufferSize;  // Kapasitas buffer node dalam MB
     long connectionDuration;  // Durasi koneksi dalam detik
 
-    private static final double TTL = 900.0;  // Waktu kadaluarsa ENS dalam detik
+    private static final double TTL = 3600.0;  // Waktu kadaluarsa ENS dalam detik
 
     private double popularity = 0.0;
+    private int encounterCount;
 
     /**
      * Konstruktor untuk EncounteredNode.
@@ -29,6 +30,7 @@ public class EncounteredNode {
      */
     public EncounteredNode(String nodeId, long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration) {
         this.nodeId = nodeId;
+        this.encounterCount=0; // Set encounter count awal ke 1 saat node pertama kali ditemui
         update(encounterTime, remainingEnergy, bufferSize, connectionDuration);
     }
 
@@ -142,6 +144,15 @@ public class EncounteredNode {
     public double getPopularity() { return popularity; }
     public void setPopularity(double popularity) {
         this.popularity = popularity;
+    }
+
+    public void incrementEncounterCount() {
+        this.encounterCount++;
+        System.out.println("[DEBUG] Encounter count untuk Node " + this.nodeId + " meningkat menjadi: " + this.encounterCount);
+    }
+
+    public int getEncounterCount() {
+        return this.encounterCount;
     }
 
     public String toString() {

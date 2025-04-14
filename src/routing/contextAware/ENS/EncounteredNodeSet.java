@@ -40,6 +40,13 @@ public class EncounteredNodeSet {
         if (!nodeId.equals(myId)) {
             EncounteredNode newNode = new EncounteredNode(nodeId, encounterTime, remainingEnergy, bufferSize, connectionDuration);
             newNode.setPopularity(popularity);
+
+            // Jika node sudah ada, tambah encounter count-nya
+            if (ensTable.containsKey(nodeId)) {
+                EncounteredNode existingNode = ensTable.get(nodeId);
+                existingNode.incrementEncounterCount();  // Menambah encounter count setiap kali update
+            }
+
             updateOrInsert(nodeId, newNode, myId);
         }
     }
@@ -70,8 +77,13 @@ public class EncounteredNodeSet {
         if (existingNode == null) {
             System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
             ensTable.put(nodeId, newNode);
+            // Inisialisasi encounter count pada encounter pertama kali
+            newNode.incrementEncounterCount();
         } else {
             System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
+
+            // Update encounter count jika node sudah ada
+            existingNode.incrementEncounterCount();
 
             // Field yang *selalu* di-update
             existingNode.setEncounterTime(newNode.getEncounterTime());
@@ -221,29 +233,37 @@ public class EncounteredNodeSet {
     }
 
 
-    /**
-     * Menghitung jumlah encounter yang terjadi dalam periode waktu terakhir.
-     *
-     * @param currentTime Waktu simulasi saat ini
-     * @param timeWindow  Panjang jendela waktu (dalam detik)
-     * @return Jumlah node yang ditemui dalam timeWindow terakhir
-     */
-    public int countEncountersInLastPeriod(double currentTime, int timeWindow) {
+    public int countRecentEncounters(double currentTime, double timeWindow) {
         int count = 0;
-        for (EncounteredNode node : ensTable.values()) {
-            double age = currentTime - node.getEncounterTime();
-            if (age <= timeWindow) {
+        for (Map.Entry<String, EncounteredNode> entry : ensTable.entrySet()) {
+            EncounteredNode node = entry.getValue();
+            double lastSeen = node.getEncounterTime();
+            double delta = currentTime - lastSeen;
+            if (delta <= timeWindow) {
                 count++;
-                System.out.println("[DEBUG] Dihitung: node=" + node.getNodeId() +
-                        ", LastSeen=" + node.getEncounterTime() +
-                        ", Age=" + age + " detik");
+                System.out.printf("  [RECENT] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
             } else {
-                System.out.println("[SKIP] Lewat window: node=" + node.getNodeId() +
-                        ", LastSeen=" + node.getEncounterTime() +
-                        ", Age=" + age + " detik");
+                System.out.printf("  [EXPIRED] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
             }
         }
         return count;
+    }
+
+
+    // Metode ini akan mengembalikan jumlah encounter antara dua node berdasarkan ID mereka.
+    public int getEncounterCount(DTNHost nodeA, DTNHost nodeB) {
+        String nodeIdA = String.valueOf(nodeA.getAddress());
+        String nodeIdB = String.valueOf(nodeB.getAddress());
+
+        EncounteredNode nodeAData = ensTable.get(nodeIdA);
+        EncounteredNode nodeBData = ensTable.get(nodeIdB);
+
+        // Cek apakah kedua node ada dalam ENS
+        if (nodeAData != null && nodeBData != null) {
+            // Misalnya, jika encounter dihitung berdasarkan jumlah encounter yang ada pada node A dan B
+            return nodeAData.getEncounterCount() + nodeBData.getEncounterCount();
+        }
+        return 0;  // Jika salah satu atau keduanya tidak ada, kembalikan 0
     }
 
     /**

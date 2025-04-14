@@ -143,6 +143,10 @@ public class ConnectionDuration {
         return 0.0;
     }
 
+    // Menambahkan method getEndTime()
+    public double getEndTime() {
+        return this.endTime;
+    }
 
     /**
      * Menghapus koneksi dari history berdasarkan fromNode dan toNode.

@@ -10,8 +10,6 @@ import core.Message;
 import core.Settings;
 import routing.ActiveRouter;
 import routing.util.EnergyModel;
-import routing.contextAware.SocialCharcteristic.Popularity;
-import routing.contextAware.SocialCharcteristic.TieStrength;
 
 import net.sourceforge.jFuzzyLogic.FIS;
 
@@ -49,8 +47,8 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 	protected double alphaPopularity;
 
 	protected FIS fclcontextaware;
-	private Popularity popularity;
-	private TieStrength tieStrength;
+//	private Popularity popularity;
+//	private TieStrength tieStrength;
 
 	private DTNHost selectedRelayNode;
 
@@ -61,7 +59,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 		alphaPopularity = s.getDouble(ALPHA_POPULARITY);
 //		this.popularity = new Popularity(alphaPopularity);
 		//TieStregth
-		this.tieStrength = new TieStrength();
+//		this.tieStrength = new TieStrength();
 
 		initialNrofCopies = s.getInt(NROF_COPIES);
 		isBinary = s.getBoolean(BINARY_MODE);
@@ -109,10 +107,10 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 		this.fclcontextaware = r.fclcontextaware;
 
 		//Popularity
-		this.popularity=r.popularity;
+//		this.popularity=r.popularity;
 		this.alphaPopularity = r.alphaPopularity;
 		//TieStrength
-		this.tieStrength = r.tieStrength;
+//		this.tieStrength = r.tieStrength;
 
 	}
 
@@ -146,8 +144,8 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 //		popularity.updatePopularity();
 
 		//TieStrength
-		tieStrength.recordEncounter(this.getHost(), from);
-		tieStrength.recordEncounter(from, this.getHost());
+//		tieStrength.recordEncounter(this.getHost(), from);
+//		tieStrength.recordEncounter(from, this.getHost());
 
 
 //		System.out.println("Energy after receiving message: " + energy.getEnergy());
@@ -156,56 +154,56 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 
 
 	/// Daftra Tetangga
-	public static List<DTNHost> getNeighbors(DTNHost host, Popularity popularity, TieStrength tieStrength) {
-		List<DTNHost> neighbors = new ArrayList<>();
-		List<Connection> connections = host.getConnections();
-
-
-		// Debugging: Cek jumlah koneksi dan status masing-masing koneksi
-//		System.out.println("Total connections: " + connections.size());
-		if (popularity == null) {
-			System.err.println("Error: Popularity object is NULL!");
-			return neighbors; // Mengembalikan daftar kosong agar tidak crash
-		}
-
-		if (tieStrength == null){
-			System.out.println("Error TieStrength Null");
-			return neighbors;
-		}
-
-		// Dapatkan popularitas node saat ini
-//		double currentNodePopularity = popularity.getPopularity(host);
-//		System.out.println("Popularitas Node " + host.getAddress() + ": " + currentNodePopularity);
-
-		for (Connection conn : connections) {
-			// Periksa apakah koneksi aktif
-			if (conn.isUp()) {
-				DTNHost neighbor = conn.getOtherNode(host);
-				neighbors.add(neighbor);
-//				System.out.println("Connection to active neighbor: " + neighbor.getAddress());
-
-				//Popularity
-				// Dapatkan dan cetak popularitas tetangga
-//				double neighborPopularity = popularity.getPopularity(neighbor);
-//				System.out.println("Tetangga: " + neighbor.getAddress() + ", Popularitas: " + neighborPopularity);
-
-				//tieStrength
-//				double neighborTieStrength =tieStrength.getTieStrength(host, neighbor);
-//				System.out.println("Tetangga: " + neighbor.getAddress() + ", tiestrength: " + neighborTieStrength);
-			}
-		}
-//		// Cetak hanya jika ada lebih dari 2 tetangga aktif
-//		if (neighbors.size() >= 2) {
-//			System.out.println("Node " + host.getAddress() + " memiliki " + neighbors.size() + " tetangga dengan koneksi aktif.");
+//	public static List<DTNHost> getNeighbors(DTNHost host, Popularity popularity, TieStrength tieStrength) {
+//		List<DTNHost> neighbors = new ArrayList<>();
+//		List<Connection> connections = host.getConnections();
 //
-//			// Menampilkan alamat tetangga dengan koneksi aktif
-//			for (DTNHost neighbor : neighbors.values()) {
-//				System.out.println("- " + neighbor.getAddress());
+//
+//		// Debugging: Cek jumlah koneksi dan status masing-masing koneksi
+////		System.out.println("Total connections: " + connections.size());
+//		if (popularity == null) {
+//			System.err.println("Error: Popularity object is NULL!");
+//			return neighbors; // Mengembalikan daftar kosong agar tidak crash
+//		}
+//
+//		if (tieStrength == null){
+//			System.out.println("Error TieStrength Null");
+//			return neighbors;
+//		}
+//
+//		// Dapatkan popularitas node saat ini
+////		double currentNodePopularity = popularity.getPopularity(host);
+////		System.out.println("Popularitas Node " + host.getAddress() + ": " + currentNodePopularity);
+//
+//		for (Connection conn : connections) {
+//			// Periksa apakah koneksi aktif
+//			if (conn.isUp()) {
+//				DTNHost neighbor = conn.getOtherNode(host);
+//				neighbors.add(neighbor);
+////				System.out.println("Connection to active neighbor: " + neighbor.getAddress());
+//
+//				//Popularity
+//				// Dapatkan dan cetak popularitas tetangga
+////				double neighborPopularity = popularity.getPopularity(neighbor);
+////				System.out.println("Tetangga: " + neighbor.getAddress() + ", Popularitas: " + neighborPopularity);
+//
+//				//tieStrength
+////				double neighborTieStrength =tieStrength.getTieStrength(host, neighbor);
+////				System.out.println("Tetangga: " + neighbor.getAddress() + ", tiestrength: " + neighborTieStrength);
 //			}
 //		}
-
-		return neighbors;
-	}
+////		// Cetak hanya jika ada lebih dari 2 tetangga aktif
+////		if (neighbors.size() >= 2) {
+////			System.out.println("Node " + host.getAddress() + " memiliki " + neighbors.size() + " tetangga dengan koneksi aktif.");
+////
+////			// Menampilkan alamat tetangga dengan koneksi aktif
+////			for (DTNHost neighbor : neighbors.values()) {
+////				System.out.println("- " + neighbor.getAddress());
+////			}
+////		}
+//
+//		return neighbors;
+//	}
 	
 	@Override
 	public Message messageTransferred(String id, DTNHost from) {
@@ -296,7 +294,7 @@ public class ContextSprayAndWaitRouter extends ActiveRouter {
 //		}
 
 		// Mengambil daftar tetangga aktif
-		List<DTNHost> neighbors = getNeighbors(this.getHost(), this.popularity, this.tieStrength); // Menampilkan tetangga aktif
+//		List<DTNHost> neighbors = getNeighbors(this.getHost(), this.popularity, this.tieStrength); // Menampilkan tetangga aktif
 
 		/// EvaluateNeighbor class
 //		routing.testContext.NeighborEvaluator.evaluateNeighbors(this.getHost(), this.popularity, this.tieStrength);
