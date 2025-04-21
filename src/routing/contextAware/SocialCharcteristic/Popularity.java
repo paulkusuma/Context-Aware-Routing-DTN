@@ -1,114 +1,80 @@
 package routing.contextAware.SocialCharcteristic;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import routing.testContext.EncounteredNodeSet;
+import core.DTNHost;
+import core.SimClock;
+import routing.contextAware.ENS.*;
 
-
+/**
+ * Kelas Popularity digunakan untuk menghitung dan memperbarui tingkat popularitas setiap node
+ * dalam jaringan Opportunistic berdasarkan jumlah encounter dalam jendela waktu tertentu.
+ * Popularity dihitung menggunakan metode exponential smoothing untuk memberikan bobot lebih
+ * pada encounter terbaru dibanding encounter lama.
+ *
+ * Nilai popularitas berada dalam rentang [0, 1], yang mencerminkan seberapa "aktif" atau
+ * "terkenal" sebuah node di jaringan berdasarkan encounter-nya.
+ */
 public class Popularity {
 
-    private static final int NUM_TH = 50; // Ambang batas default untuk jumlah node yang ditemui
-    //Menyiman Nilai Alpha
+    // Menyimpan Popularity setiap node
+    private static Map<DTNHost, Double> popularityMap = new HashMap<>();
+    // Menyimpan encounter history untuk setiap node
+    private static Map<DTNHost, Map<DTNHost, Double>> encounterHistory = new HashMap<>();
+    // Threshold untuk menghitung encounter maksimal untuk normalisasi (digunakan sebagai pembagi)
+    private static final int NUMth = 4;
+    // Interval waktu (200 detik)
+    private static final double TIME_WINDOW = 200.0;
+
+    // Smoothing alpha untuk pembaruan popularitas
     private double alphaPopularity;
-    private EncounteredNodeSet ens;
-    private Map<Integer, Double> popularityValues; // Menyimpan nilai popularitas
 
-    public Popularity(double alphaPopularity, EncounteredNodeSet ens) {
 
-        System.out.println("✅ [DEBUG] Popularity Constructor DIPANGGIL");
-
-        if (ens == null) {
-            throw new IllegalArgumentException("❌ [ERROR] EncounteredNodeSet is NULL!");
-        }
-
-        System.out.println("Popularity Constructor: alpha = " + alphaPopularity);
-
+    /**
+     * Konstruktor untuk menginisialisasi Popularity dengan parameter alpha smoothing.
+     *
+     * @param alphaPopularity Nilai smoothing factor (α) antara 0.0 dan 1.0.
+     *                        Semakin tinggi nilainya, semakin cepat perubahan popularitas mengikuti perubahan encounter.
+     */
+    public Popularity(double alphaPopularity) {
         this.alphaPopularity = alphaPopularity;
-        this.ens = ens;
-        this.popularityValues = new HashMap<>(); // ✅ INISIALISASI HashMap
-
-        System.out.println("ENS Size: " + ens.getEncounters().size());
-
-        if (ens.getEncounters().isEmpty()) {
-            System.out.println("❌ [ERROR] ENS Kosong saat Konstruktor!");
-        }
-
-        // ✅ Inisialisasi nilai awal semua node
-        for (Integer nodeId : ens.getEncounters().keySet()) {
-            popularityValues.put(nodeId, 0.0);
-        }
-        System.out.println("Popularity successfully initialized with " + popularityValues.size() + " nodes.");
-
-    }
-
-
-    /**
-     * Menghitung nilai popularitas berdasarkan jumlah node yang ditemui dalam 200 detik terakhir.
-     * @param nodeId Node yang popularitasnya dihitung
-     * @return Nilai popularitas node
-     */
-    public double calculatePopularity(int nodeId) {
-        int recentEncounters = ens.getRecentEncounterCount(nodeId); // Ambil encounter dari ENS
-        // 🔥 DEBUGGING OUTPUT
-        System.out.println("📊 [DEBUG] Node " + nodeId +
-                " | Recent Encounters: " + recentEncounters +
-                " | Popularity Before Update: " + popularityValues.getOrDefault(nodeId, 0.0));
-
-
-        double popularity = Math.min((double) recentEncounters / NUM_TH, 1.0);
-        // 🔥 Debugging Output
-        System.out.println("calculatePopularity | Node: " + nodeId +
-                " | Recent Encounters: " + recentEncounters +
-                " | Calculated Popularity: " + popularity);
-        return popularity;
     }
 
     /**
-     * Memperbarui nilai popularitas setiap node.
+     * Memperbarui nilai Popularity untuk sebuah node berdasarkan jumlah encounter
+     * dalam jendela waktu tertentu.
+     *
+     * @param node Node yang akan diperbarui nilai popularitasnya.
+     * @param ens  EncounteredNodeSet yang berisi riwayat encounter node tersebut.
      */
-    public void updatePopularity() {
+    public void updatePopularity(DTNHost node, EncounteredNodeSet ens) {
+        double currentTime = SimClock.getTime();
+        double currentPopularity = popularityMap.getOrDefault(node, 0.0);
+        int encounterCount = ens.countRecentEncounters(currentTime, TIME_WINDOW);
 
-        if (ens.getEncounters().isEmpty()) {
-            System.out.println("⚠️ [WARNING] ENS masih kosong, updatePopularity() ditunda.");
-            return;
-        }
-        if (popularityValues.isEmpty()) {
-            System.out.println("🔄 [DEBUG] Inisialisasi Popularity karena HashMap masih kosong.");
-            for (Integer nodeId : ens.getEncounters().keySet()) {
-                popularityValues.put(nodeId, 0.0);
-            }
-            System.out.println("✅ [DEBUG] Popularity berhasil diisi dengan " + popularityValues.size() + " nodes.");
-        }
+        // Normalisasi popularitas baru
+        double normalizedPopularity = Math.min((double) encounterCount / NUMth, 1.0);
 
-        System.out.println("🛠 [DEBUG] updatePopularity() DIPANGGIL!");
+        // Perbarui popularitas dengan exponential smoothing
+        double updatedPopularity = (1 - alphaPopularity) * currentPopularity + alphaPopularity * normalizedPopularity;
 
-        for (Integer nodeId : popularityValues.keySet()) {
-            double currentPopularity = calculatePopularity(nodeId);
-            double previousPopularity = popularityValues.getOrDefault(nodeId, 0.0);
-            double updatedPopularity = (1 - alphaPopularity) * previousPopularity + alphaPopularity * currentPopularity;
-            popularityValues.put(nodeId, Math.max(0, Math.min(updatedPopularity, 1))); // Batasi ke [0,1]
+        popularityMap.put(node, updatedPopularity);
 
-
-            System.out.println("Node " + nodeId + " | Previous Popularity: " + previousPopularity +
-                    " | Updated Popularity: " + updatedPopularity);
-        }
+        System.out.println("[POPULARITY] Node " + node.getAddress() +
+                " updated Popularity: " + updatedPopularity +
+                " | Recent encounters: " + encounterCount);
     }
 
     /**
-     * Mengambil popularitas node.
-     * @param nodeId Node target
-     * @return Popularitas node
+     * Mendapatkan nilai Popularity terkini untuk sebuah node.
+     *
+     * @param node Node yang ingin diambil nilai popularitasnya.
+     * @return Nilai popularitas node dalam rentang [0, 1]. Jika belum ada, akan dikembalikan 0.0.
      */
-    public double getPopularity(int nodeId) {
-        return popularityValues.getOrDefault(nodeId, 0.0);
+    public double getPopularity(DTNHost node) {
+        return popularityMap.getOrDefault(node, 0.0);
     }
 
-    /**
-     * Mendapatkan daftar semua popularitas node yang tercatat.
-     * @return Map yang berisi popularitas untuk setiap node
-     */
-    public Map<Integer, Double> getAllPopularity() {
-        return popularityValues;
-    }
 }

@@ -1,18 +1,24 @@
 Scenario.name = ContextAwareRLRouter
 
-Group.router = contextAware.ContextAwareRLRouter
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
 
+Group.router = contextAware.ContextAwareRLRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
 
+Group.MovementModel = RandomWaypoint
+
 Group.bufferSize = 1M
-Group.initialEnergy = 10
-Group.scanEnergy = 0.1
-Group.transmitEnergy   = 5
-Group.scanResponseEnergy = 0.1
+Group.initialEnergy = 100
+Group.scanEnergy = 0.01
+Group.transmitEnergy   = 0.2
+Group.scanResponseEnergy = 0.01
 Group.scanInterval = 10
 Group.warmupTime = 10
-
+Group.interface1 = btInterface
 Group.alphaPopularity=0.6
+
 
 
 Report.nrofReports = 2
