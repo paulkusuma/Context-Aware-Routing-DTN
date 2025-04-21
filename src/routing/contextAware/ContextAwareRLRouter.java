@@ -6,6 +6,7 @@ import routing.ActiveRouter;
 import core.*;
 import routing.contextAware.ENS.*;
 //import routing.contextAware.ENS.*;
+import routing.contextAware.FuzzyLogic.FuzzyContextAware;
 import routing.contextAware.SocialCharcteristic.*;
 
 
@@ -30,6 +31,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
     private Popularity popularity; //Instance class popularity
     private TieStrength tieStrength; //Instance class TieStrength
     private EncounteredNodeSet encounteredNodeSet;
+    private FuzzyContextAware fuzzyContextAware;
 
     public ContextAwareRLRouter(Settings s) {
         super(s);
@@ -42,6 +44,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         //Read FCL file
         String FLCfromString = s.getSetting(FCL_Context);
         fclcontextaware = FIS.load(FLCfromString);
+        this.fuzzyContextAware = new FuzzyContextAware();
 
         bufferSize = s.getInt(BUFFER_SIZE);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
@@ -56,13 +59,14 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.popularity = r.popularity;
         this.tieStrength = r.tieStrength;
         this.fclcontextaware = r.fclcontextaware;
+        this.fuzzyContextAware = r.fuzzyContextAware;
         this.bufferSize = r.bufferSize;
         this.initialEnergy = r.initialEnergy;
     }
 
 
     //Getter FLC
-    protected FIS getFIS() {
+    public FIS getFIS() {
         return fclcontextaware;
     }
 
@@ -110,10 +114,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         } else {
             handleConnectionDown(neighbor, neighborENS);
         }
-
-//        // Bersihkan ENS yang sudah kadaluarsa
-//        this.encounteredNodeSet.removeOldEncounters();
-//        neighborENS.removeOldEncounters();
     }
 
     private void handleConnectionUp(DTNHost host, DTNHost neighbor, ContextAwareRLRouter neighborRouter, EncounteredNodeSet neighborENS) {
@@ -122,6 +122,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         String neighborId = String.valueOf(neighbor.getAddress());
 
         double neighborEnergy = neighborRouter.getEnergyModel().getEnergy();
+        // Casting langsung ke tipe int
+        int integerEnergy = (int) neighborEnergy;
         int neighborBuffer = neighborRouter.getFreeBufferSize();
 
         // Mulai pencatatan durasi koneksi
@@ -148,8 +150,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Update ENS kedua node
         // Tambahkan ke ENS jika bukan diri sendiri
         if (!myId.equals(neighborId)) {
-            this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, neighborEnergy, neighborBuffer, duration, neighborPop);
-            neighborENS.updateENS(neighbor, host, myId, currentTime, neighborEnergy, neighborBuffer, duration, myPop);
+            this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
+            neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
         }
 
 //        // Debug log sebelum merge ENS
@@ -180,6 +182,11 @@ public class ContextAwareRLRouter extends ActiveRouter {
         double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
         // Debug log untuk melihat nilai TieStrength
         System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
+
+        double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
+        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
+        // Simpan nilai TransferOpportunity jika ingin digunakan untuk Q-Learning nanti
+        // this.transferOpportunityMap.put(neighborId, transferOpportunity);
     }
 
     private void handleConnectionDown(DTNHost neighbor, EncounteredNodeSet neighborENS) {
