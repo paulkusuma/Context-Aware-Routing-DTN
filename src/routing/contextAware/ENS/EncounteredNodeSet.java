@@ -241,29 +241,63 @@ public class EncounteredNodeSet {
             double delta = currentTime - lastSeen;
             if (delta <= timeWindow) {
                 count++;
-                System.out.printf("  [RECENT] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
+//                System.out.printf("  [RECENT] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
             } else {
-                System.out.printf("  [EXPIRED] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
+//                System.out.printf("  [EXPIRED] Node %s: LastSeen %.1f detik lalu\n", entry.getKey(), delta);
             }
         }
         return count;
     }
 
 
-    // Metode ini akan mengembalikan jumlah encounter antara dua node berdasarkan ID mereka.
-    public int getEncounterCount(DTNHost nodeA, DTNHost nodeB) {
-        String nodeIdA = String.valueOf(nodeA.getAddress());
-        String nodeIdB = String.valueOf(nodeB.getAddress());
+    /**
+     * Mengembalikan jumlah encounter dengan target node dari ENS milik thisHost.
+     *
+     * @param neighbor Node yang ingin dicek encounter-nya
+     * @return Jumlah encounter dengan nodeB, 0 jika tidak ditemukan
+     */
+    public int getEncounterCount(DTNHost neighbor) {
+        String neighborId = String.valueOf(neighbor.getAddress());
 
-        EncounteredNode nodeAData = ensTable.get(nodeIdA);
-        EncounteredNode nodeBData = ensTable.get(nodeIdB);
+        EncounteredNode data = ensTable.get(neighborId);
 
-        // Cek apakah kedua node ada dalam ENS
-        if (nodeAData != null && nodeBData != null) {
-            // Misalnya, jika encounter dihitung berdasarkan jumlah encounter yang ada pada node A dan B
-            return nodeAData.getEncounterCount() + nodeBData.getEncounterCount();
+        if (data != null) {
+            System.out.println("[DEBUG] Encounter count untuk Node " + neighborId + " = " + data.getEncounterCount());
+            return data.getEncounterCount();
         }
-        return 0;  // Jika salah satu atau keduanya tidak ada, kembalikan 0
+
+        System.out.println("[DEBUG] Node " + neighborId + " tidak ditemukan dalam ENS.");
+        return 0;
+//        EncounteredNode nodeAData = ensTable.get(nodeIdA);
+//        EncounteredNode nodeBData = ensTable.get(nodeIdB);
+//
+//        if (nodeAData != null) {
+//            System.out.println("[DEBUG] nodeAData found. Total encounter count: " + nodeAData.getEncounterCount());
+//        } else {
+//            System.out.println("[DEBUG] nodeAData NOT found in ensTable.");
+//        }
+//
+//        if (nodeBData != null) {
+//            System.out.println("[DEBUG] nodeBData found. Total encounter count: " + nodeBData.getEncounterCount());
+//        } else {
+//            System.out.println("[DEBUG] nodeBData NOT found in ensTable.");
+//        }
+//
+//        // Cek apakah kedua node ada dalam ENS
+//        if (nodeAData != null && nodeBData != null) {
+//            int total = nodeAData.getEncounterCount() + nodeBData.getEncounterCount();
+//            System.out.println("[DEBUG] Combined encounter count: " + total);
+//            return total;
+//        }
+//
+//        System.out.println("[DEBUG] One or both nodes not found in ensTable. Returning 0.");
+//        return 0;
+////        // Cek apakah kedua node ada dalam ENS
+////        if (nodeAData != null && nodeBData != null) {
+////            // Misalnya, jika encounter dihitung berdasarkan jumlah encounter yang ada pada node A dan B
+////            return nodeAData.getEncounterCount() + nodeBData.getEncounterCount();
+////        }
+////        return 0;  // Jika salah satu atau keduanya tidak ada, kembalikan 0
     }
 
     /**

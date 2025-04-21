@@ -2,7 +2,6 @@ package routing.contextAware.ENS;
 
 import core.DTNHost;
 import  core.SimClock;
-//import routing.testContext.EncounterManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +18,6 @@ public class ConnectionDuration {
 
     // Riwayat koneksi menggunakan HashMap
     private static Map<DTNHost, Map<DTNHost, ConnectionDuration>> connectionHistory = new HashMap<>();
-
 
     /**
      * Konstruktor untuk membuat instance ConnectionDuration.
