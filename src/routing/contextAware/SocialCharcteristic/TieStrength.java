@@ -13,6 +13,9 @@ import routing.contextAware.ENS.EncounteredNodeSet;
  * 1. Frekuensi encounter (Frequency)
  * 2. Durasi koneksi (Closeness)
  * 3. Recency atau kedekatan waktu encounter terakhir (Recency)
+ *
+ * Semua nilai dikonversi ke skala [0-1] sebelum dikombinasikan agar hasil akhir
+ * tetap bervariasi dan terkontrol, serta tidak selalu bernilai maksimal.
  */
 public class TieStrength {
 
@@ -72,31 +75,50 @@ public class TieStrength {
                                               EncounteredNodeSet encounteredNodeSet,
                                               ConnectionDuration connectionDurationInst) {
 
+        // Normalisasi Parameter
         // 1. Menghitung frekuensi encounter
         int frequency = calculateFrequency(neighbor, encounteredNodeSet);
+        double normFreq = normalize(frequency, 5.0);
 //        System.out.println("[TieStrength] Frequency antara " + host + " dan " + neighbor + ": " + frequency);
+
         // 2. Menghitung kedekatan berdasarkan durasi koneksi (Closeness)
         double closeness = calculateCloseness(host, neighbor, connectionDurationInst);
+        double normCloseness = normalize(closeness, 300.0);
 //        System.out.println("[TieStrength] Closeness (durasi koneksi) antara " + host + " dan " + neighbor + ": " + closeness);
+
         // 3. Menghitung recency (waktu yang telah berlalu sejak encounter terakhir)
         double recency = calculateRecency(host, neighbor, connectionDurationInst);
 //        System.out.println("[TieStrength] Recency (selisih waktu sekarang - encounter terakhir) antara " + host + " dan " + neighbor + ": " + recency);
         // Menambahkan faktor recency untuk meningkatkan TieStrength jika encounter baru terjadi
-        double recencyFactor = Math.exp(-recency / 10000.0);
+        double recencyFactor = Math.exp(-recency / 1000.0);
 //        System.out.println("[TieStrength] RecencyFactor untuk " + host + " dan " + neighbor + ": " + recencyFactor);
 
         // 4. Menghitung TieStrength berdasarkan bobot
-        double tieStrength = (CLOSENESS_WEIGHT * closeness) +
-                (FREQUENCY_WEIGHT * frequency);
-        tieStrength *= (1 + RECENCY_FACTOR * recencyFactor); // Menerapkan bobot recency
+        double rawScore  = (CLOSENESS_WEIGHT * normCloseness) +
+                (FREQUENCY_WEIGHT * normFreq);
+        double tieStrength = rawScore * (1 + RECENCY_FACTOR * recencyFactor); // Menerapkan bobot recency
+
+        // Pastikan nilai akhir tetap dalam rentang [0,1]
+        tieStrength = Math.min(Math.max(tieStrength, 0.0), 1.0);
         // Normalisasi ke rentang 0-1
         // Menggunakan statistik dari data yang telah dihitung sebelumnya (misalnya, kita hitung min dan max)
-        double tieStrengthMin = 0.0; // Nilai minimal TieStrength yang mungkin terjadi
-        double tieStrengthMax = 1.0; // Nilai maksimal TieStrength yang mungkin terjadi
+//        double tieStrengthMin = 0.0; // Nilai minimal TieStrength yang mungkin terjadi
+//        double tieStrengthMax = 1.0; // Nilai maksimal TieStrength yang mungkin terjadi
         // Normalisasi tieStrength ke rentang 0-1 berdasarkan teori bahwa min dan max nilai tieStrength adalah 0 dan 1
-        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
+//        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
 
         System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host + " dan " + neighbor + ": " + tieStrength);
         return tieStrength;
+    }
+
+    /**
+     * Fungsi pembantu untuk menormalkan nilai ke rentang [0,1]
+     *
+     * @param value Nilai aktual
+     * @param max Nilai maksimum yang diharapkan
+     * @return Hasil normalisasi
+     */
+    private static double normalize(double value, double max) {
+        return Math.min(value / max, 1.0); // Membatasi agar tidak lebih dari 1
     }
 }

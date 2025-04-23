@@ -17,10 +17,10 @@ Group.msgTtl = 300
 Group.movementModel = RandomWaypoint
 
 Group.initialEnergy = 100
-Group.scanEnergy = 0.01
-Group.transmitEnergy   = 0.2
-Group.scanResponseEnergy = 0.01
-Group.scanInterval = 10
+Group.scanEnergy = 0.001
+Group.transmitEnergy   = 0.1
+Group.scanResponseEnergy = 0.001
+Group.scanInterval = 0.01
 
 Group.alphaPopularity = 0.8
 

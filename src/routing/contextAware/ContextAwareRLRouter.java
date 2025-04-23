@@ -2,8 +2,11 @@ package routing.contextAware;
 
 import core.Settings;
 import net.sourceforge.jFuzzyLogic.FIS;
+import reinforcementLearning_ContextAware.QTableUpdateStrategy;
+import reinforcementLearning_ContextAware.Qtable;
 import routing.ActiveRouter;
 import core.*;
+import routing.MessageRouter;
 import routing.contextAware.ENS.*;
 //import routing.contextAware.ENS.*;
 import routing.contextAware.FuzzyLogic.FuzzyContextAware;
@@ -11,6 +14,7 @@ import routing.contextAware.SocialCharcteristic.*;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +36,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
     private TieStrength tieStrength; //Instance class TieStrength
     private EncounteredNodeSet encounteredNodeSet;
     private FuzzyContextAware fuzzyContextAware;
+    private Qtable qtable;
 
     public ContextAwareRLRouter(Settings s) {
         super(s);
@@ -39,12 +44,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.encounteredNodeSet = new EncounteredNodeSet();
         this.alphaPopularity = s.getDouble(ALPHA_POPULARITY);
         this.popularity = new Popularity(alphaPopularity);
-
         this.tieStrength = new TieStrength(); //Object TieStrength
         //Read FCL file
         String FLCfromString = s.getSetting(FCL_Context);
         fclcontextaware = FIS.load(FLCfromString);
         this.fuzzyContextAware = new FuzzyContextAware();
+        this.qtable = new Qtable();
 
         bufferSize = s.getInt(BUFFER_SIZE);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
@@ -60,6 +65,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.tieStrength = r.tieStrength;
         this.fclcontextaware = r.fclcontextaware;
         this.fuzzyContextAware = r.fuzzyContextAware;
+        this.qtable = r.qtable;
+
         this.bufferSize = r.bufferSize;
         this.initialEnergy = r.initialEnergy;
     }
@@ -68,6 +75,11 @@ public class ContextAwareRLRouter extends ActiveRouter {
     //Getter FLC
     public FIS getFIS() {
         return fclcontextaware;
+    }
+
+    //Getter Q-Table
+    public Qtable getQtable() {
+        return this.qtable;
     }
 
     public static List<DTNHost> getNeighbors(DTNHost host, Popularity popularity, TieStrength tieStrength){
@@ -92,6 +104,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public Popularity getPopularity() {
         return this.popularity;
     }
+
 
     /**
      * Metode ini dipanggil ketika ada perubahan status koneksi antara dua node dalam jaringan.
@@ -185,8 +198,27 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
         System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
-        // Simpan nilai TransferOpportunity jika ingin digunakan untuk Q-Learning nanti
-        // this.transferOpportunityMap.put(neighborId, transferOpportunity);
+
+        updateQValueOnConUp(host,neighbor,transferOpportunity);
+    }
+
+    private void updateQValueOnConUp(DTNHost host, DTNHost neighbor, double tfOpportunity) {
+        MessageRouter router = host.getRouter();
+        Collection<Message> messages = router.getMessageCollection();
+
+        String hostId = String.valueOf(this.getHost().getAddress());
+        String actionId = String.valueOf(neighbor.getAddress());
+
+        QTableUpdateStrategy qtableUpdate = new QTableUpdateStrategy(this.qtable);
+
+        for (Message msg : messages){
+            String destinationId = String.valueOf(msg.getTo().getAddress());
+
+            String state = hostId +","+ destinationId;
+            System.out.println("[STATE-ACTION] State = " + state + " Action = " + actionId);
+
+            qtableUpdate.updateFirstStrategy(host, state, actionId, tfOpportunity);
+        }
     }
 
     private void handleConnectionDown(DTNHost neighbor, EncounteredNodeSet neighborENS) {
