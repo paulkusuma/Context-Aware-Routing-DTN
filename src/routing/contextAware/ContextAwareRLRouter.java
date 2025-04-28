@@ -82,20 +82,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return this.qtable;
     }
 
-    public static List<DTNHost> getNeighbors(DTNHost host, Popularity popularity, TieStrength tieStrength){
-        List<DTNHost> neighbors = new ArrayList<>();
-        List<Connection> connections = host.getConnections();
-
-        for (Connection conn : connections) {
-            // Periksa apakah koneksi aktif
-            if (conn.isUp()) {
-                DTNHost neighbor = conn.getOtherNode(host);
-                neighbors.add(neighbor);
-            }
-        }
-        return neighbors;
-    }
-
     // Getter ENS untuk bisa diakses oleh node lain
     public EncounteredNodeSet getEncounteredNodeSet() {
         return this.encounteredNodeSet;
@@ -142,22 +128,20 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Mulai pencatatan durasi koneksi
         ConnectionDuration connectionDuration = ConnectionDuration.startConnection(this.getHost(), neighbor);
         long duration = (long) connectionDuration.getDuration();
-//        connectionDuration.printConnectionInfo(host, neighbor);
 
         // Debug log sebelum update ENS
         System.out.println("[INFO] Sebelum update ENS:");
         // Bersihkan ENS yang sudah kadaluarsa
         this.encounteredNodeSet.removeOldEncounters();
         neighborENS.removeOldEncounters();
-//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
 
         this.popularity.updatePopularity(host, this.encounteredNodeSet);
         neighborRouter.getPopularity().updatePopularity(neighbor, neighborENS);
         // Ambil nilai popularitas terbaru setelah update
         double neighborPop = popularity.getPopularity(neighbor);
         double myPop = popularity.getPopularity(host);
-        System.out.println("[DEBUG] Popularitas host (" + host.getAddress() + "): " + myPop);
-        System.out.println("[DEBUG] Popularitas neighbor (" + neighbor.getAddress() + "): " + neighborPop);
+//        System.out.println("[DEBUG] Popularitas host (" + host.getAddress() + "): " + myPop);
+//        System.out.println("[DEBUG] Popularitas neighbor (" + neighbor.getAddress() + "): " + neighborPop);
 
 
         // Update ENS kedua node
@@ -166,7 +150,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
         }
-
 //        // Debug log sebelum merge ENS
 //        System.out.println("[INFO] Sebelum merge ENS:");
 //        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
@@ -179,7 +162,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 myId,
                 neighborId
         );
-//        System.out.println("[DENSITY] Density antara " + myId + " dan " + neighborId + ": " + density);
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
@@ -193,13 +175,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         // Menghitung TieStrength pada saat koneksi up
         double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
-        // Debug log untuk melihat nilai TieStrength
-        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
-
+//        Debug log untuk melihat nilai TieStrength
+//        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
         double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
-        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
 
         updateQValueOnConUp(host,neighbor,transferOpportunity);
+        qtable.printQtableByHost(myId);
     }
 
     private void updateQValueOnConUp(DTNHost host, DTNHost neighbor, double tfOpportunity) {
@@ -217,7 +198,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
             String state = hostId +","+ destinationId;
             System.out.println("[STATE-ACTION] State = " + state + " Action = " + actionId);
 
-            qtableUpdate.updateFirstStrategy(host, state, actionId, tfOpportunity);
+            qtableUpdate.updateFirstStrategy(host, neighbor, state, actionId, tfOpportunity);
         }
     }
 
@@ -233,35 +214,65 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 connDuration.endConnection(this.getHost(), neighbor, neighborENS);
             }
 
+            // Update Q-Value Second Strategy
+            QTableUpdateStrategy qTableUpdate = new QTableUpdateStrategy(this.qtable);
+            qTableUpdate.updateSecondStrategy(this.getHost(), neighbor);
+            qtable.printQtableByHost(myId);
+
             System.out.println("[DEBUG] Sebelum Dihapus karena terputus ");
             this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
 //            connDuration.printConnectionInfo(this.getHost(), neighbor);
         } finally {
-//            // Hapus ENS untuk node yang terputus
-//            String myId = String.valueOf(this.getHost().getAddress());
-//            String neighborId = String.valueOf(neighbor.getAddress());
-
-//            System.out.println("[DEBUG] Sebelum Dihapus karena terputus ");
-//            this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
-////            ConnectionDuration.printConnectionHistory(this.getHost());
-
             this.encounteredNodeSet.removeEncounter(neighborId);
             neighborENS.removeEncounter(myId);
         }
 
     }
 
+    // Memeriksa apakah node ini adalah penerima akhir dari pesan
+    private boolean isFinalRecipient(Message m) {
+        return m.getTo() == getHost();  // Mengecek apakah penerima pesan adalah node ini
+    }
+
+    // Memeriksa apakah ini adalah pengiriman pertama untuk pesan ini
+    private boolean isFirstDelivery(Message m) {
+        return m.getHopCount() == 0;  // Jika hop count adalah 0, berarti ini pengiriman pertama
+    }
+
+    @Override
+    public Message messageTransferred(String id, DTNHost from) {
+        // Step 1: Panggil super untuk mendapatkan pesan yang ditransfer
+        Message m = super.messageTransferred(id, from);
+
+        // Step 2: Tambahkan logika update Q-Table
+        if(m != null){
+            // Langkah 3: Cek apakah kita penerima final atau ini first delivery
+            boolean isFinalRecipient = isFinalRecipient(m);
+            boolean isFirstDelivery = isFirstDelivery(m);
+
+            // Step 4: Update Q-table jika penerima final atau pengiriman pertama
+            if (isFinalRecipient || isFirstDelivery){
+                // Step 5: Ambil QTable sender dan receiver
+                Qtable senderQtable = ((ContextAwareRLRouter) from.getRouter()).getQtable();
+                Qtable receiverQtable = this.getQtable();
+
+                // Update Qtable
+                QTableUpdateStrategy receiverUpdate = new QTableUpdateStrategy(receiverQtable);
+                receiverUpdate.updateThirdStrategy(senderQtable, receiverQtable);
+                QTableUpdateStrategy senderUpdate = new QTableUpdateStrategy(senderQtable);
+                senderUpdate.updateThirdStrategy(receiverQtable, senderQtable);
+
+            }
+        }
+        return m;
+    }
+
+
     public void update(){
         super.update();
+//        qtable.printQtableByHost(String.valueOf(this.getHost().getAddress()));
+//        qtable.printQtableByHost();
 
-
-//
-//        // Update popularitas berdasarkan waktu simulasi
-//        double currentTime = SimClock.getTime(); // Pastikan pakai waktu simulasi
-//        popularity.updatePopularity(currentTime);
-
-//        this.encounteredNodeSet.debugENS(getHost());
-        //routing.contextAware.ContextAwareNeighborEvaluator.tetagga(this.getHost(), this.popularity, this.tieStrength);
     }
 
     @Override

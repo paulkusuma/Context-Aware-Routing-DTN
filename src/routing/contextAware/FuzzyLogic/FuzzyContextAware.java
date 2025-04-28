@@ -35,7 +35,7 @@ public class FuzzyContextAware {
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
 
         // Debug log untuk memastikan variabel telah diset dengan benar
-        System.out.println("[DEBUG] Setting input variables:");
+        System.out.println("[DEBUG] Setting input variables for FuzzyContextAware:");
         System.out.println("[DEBUG] bufferNeighbor: " + freeBufferNeighbor);
         System.out.println("[DEBUG] energyNeighbor: " + remainingEnergy);
         System.out.println("[DEBUG] popularityNeighbor: " + popularity);

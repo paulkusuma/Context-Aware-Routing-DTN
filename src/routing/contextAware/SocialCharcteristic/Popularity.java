@@ -60,9 +60,9 @@ public class Popularity {
 
         popularityMap.put(node, updatedPopularity);
 
-        System.out.println("[POPULARITY] Node " + node.getAddress() +
-                " updated Popularity: " + updatedPopularity +
-                " | Recent encounters: " + encounterCount);
+//        System.out.println("[POPULARITY] Node " + node.getAddress() +
+//                " updated Popularity: " + updatedPopularity +
+//                " | Recent encounters: " + encounterCount);
     }
 
     /**

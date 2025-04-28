@@ -1,36 +1,30 @@
-    package routing.contextAware;
+    package routing.testContext;
 
-    import core.DTNHost;
-    import net.sourceforge.jFuzzyLogic.FIS;
-    import net.sourceforge.jFuzzyLogic.FunctionBlock;
-    import routing.ActiveRouter;
-    import routing.contextAware.SocialCharcteristic.Popularity;
-    import routing.contextAware.SocialCharcteristic.TieStrength;
-    import routing.contextAware.ContextAwareRLRouter;
-    import java.util.List;
+    //    import routing.contextAware.SocialCharcteristic.Popularity;
+//    import routing.contextAware.SocialCharcteristic.TieStrength;
 
 
     public class ContextAwareNeighborEvaluator {
-
-        public static void tetagga(DTNHost host, Popularity popularity, TieStrength tieStrength){
-            List<DTNHost> neighbors = ContextAwareRLRouter.getNeighbors(host, popularity, tieStrength);
-
-
-//            System.out.println("==============");
-//            System.out.println("Informasi Buffer Tetangga untuk Host: " + host.getAddress());
-            for (DTNHost neighbor : neighbors) {
-                // Ambil router dari tetangga
-                ActiveRouter neighborRouter = (ActiveRouter) neighbor.getRouter();
-
-                // Ambil ukuran buffer yang tersisa
-                int remainingBuffer = neighborRouter.getFreeBufferSize();
-
-                // Cetak informasi buffer tetangga
-                System.out.println("Tetangga: " + neighbor.getAddress() + ", Sisa Buffer: " + remainingBuffer);
-            }
-            // Tambahkan garis pemisah di bawah
-            System.out.println("==================");
-        }
+//
+//        public static void tetagga(DTNHost host, Popularity popularity, TieStrength tieStrength){
+//            List<DTNHost> neighbors = ContextAwareRLRouter.getNeighbors(host, popularity, tieStrength);
+//
+//
+////            System.out.println("==============");
+////            System.out.println("Informasi Buffer Tetangga untuk Host: " + host.getAddress());
+//            for (DTNHost neighbor : neighbors) {
+//                // Ambil router dari tetangga
+//                ActiveRouter neighborRouter = (ActiveRouter) neighbor.getRouter();
+//
+//                // Ambil ukuran buffer yang tersisa
+//                int remainingBuffer = neighborRouter.getFreeBufferSize();
+//
+//                // Cetak informasi buffer tetangga
+//                System.out.println("Tetangga: " + neighbor.getAddress() + ", Sisa Buffer: " + remainingBuffer);
+//            }
+//            // Tambahkan garis pemisah di bawah
+//            System.out.println("==================");
+//        }
 
 //        public static void evaluateNeighbors(DTNHost host, Popularity popularity, TieStrength tieStrength) {
 //            List<DTNHost> neighbors = ContextAwareRLRouter.getNeighbors(host, popularity, tieStrength);

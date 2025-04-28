@@ -107,7 +107,7 @@ public class TieStrength {
         // Normalisasi tieStrength ke rentang 0-1 berdasarkan teori bahwa min dan max nilai tieStrength adalah 0 dan 1
 //        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
 
-        System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host + " dan " + neighbor + ": " + tieStrength);
+        System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
         return tieStrength;
     }
 
