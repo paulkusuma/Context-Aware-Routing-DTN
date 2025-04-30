@@ -7,8 +7,10 @@ Scenario.nrofHostGroups = 6
 
 Group.router = contextAware.ContextAwareRLRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
+Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
 
 Group.bufferSize = 100M
+Group.msgTtl = 100
 Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
@@ -17,10 +19,10 @@ Group.msgTtl = 300
 Group.movementModel = RandomWaypoint
 
 Group.initialEnergy = 100
-Group.scanEnergy = 0.01
-Group.transmitEnergy   = 0.2
-Group.scanResponseEnergy = 0.01
-Group.scanInterval = 10
+Group.scanEnergy = 0.001
+Group.transmitEnergy   = 0.1
+Group.scanResponseEnergy = 0.001
+Group.scanInterval = 0.01
 
 Group.alphaPopularity = 0.8
 
@@ -39,6 +41,7 @@ MapBasedMovement.nrofMapFiles = 4
 # Group1 - pedestrian 1 (MBM)
 Group1.groupID = p1
 Group1.bufferSize = 100M
+Group1.msgTtl = 100
 Group1.nrofHosts = 15
 # Group1.movementModel = MapBasedMovement
 # Group1.movementModel = RandomWalk
@@ -47,12 +50,14 @@ Group1.nrofHosts = 15
 Group2.groupID = p2
 Group2.nrofHosts = 15
 Group2.bufferSize = 100M
+Group2.msgTtl = 100
 Group2.movementModel =RandomWalk
 
 
 # Group3 - car 1
 Group3.groupID = c1
 Group3.bufferSize = 100M
+Group3.msgTtl = 100
 Group3.nrofHosts = 10
 Group3.movementModel = RandomWalk
 Group3.speed = 2.7, 13.9
@@ -62,6 +67,7 @@ Group3.okMaps = 1
 # Group4 - car 2
 Group4.groupID = c2
 Group4.bufferSize = 100M
+Group4.msgTtl = 100
 Group4.nrofHosts = 10
 Group4.movementModel = RandomWalk
 Group4.speed = 2.7, 13.9
@@ -71,6 +77,7 @@ Group4.okMaps = 1
 # Group5 - bus 1
 Group5.groupID = b1
 Group5.bufferSize = 100M
+Group5.msgTtl = 100
 Group5.nrofHosts = 2
 Group5.movementModel = RandomWalk
 # Group5.routeFile = data/tram3.wkt
@@ -81,6 +88,7 @@ Group5.speed = 7, 10
 # Group6 - bus 2
 Group6.groupID = b2
 Group6.bufferSize = 100M
+Group6.msgTtl = 100
 Group6.nrofHosts = 2
 Group6.movementModel = RandomWalk
 # Group6.routeFile = data/tram4.wkt
