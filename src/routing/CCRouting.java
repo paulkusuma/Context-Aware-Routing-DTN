@@ -2,7 +2,7 @@ package routing;
 
 import java.util.*;
 import core.*;
-import reinforcement.*;
+import rl.*;
 
 public class CCRouting extends ActiveRouter implements CongestionRate {
 	private int msgReceived = 0;

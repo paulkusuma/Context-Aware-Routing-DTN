@@ -21,12 +21,10 @@ public class Popularity {
 
     // Menyimpan Popularity setiap node
     private static Map<DTNHost, Double> popularityMap = new HashMap<>();
-    // Menyimpan encounter history untuk setiap node
-    private static Map<DTNHost, Map<DTNHost, Double>> encounterHistory = new HashMap<>();
     // Threshold untuk menghitung encounter maksimal untuk normalisasi (digunakan sebagai pembagi)
     private static final int NUMth = 4;
     // Interval waktu (200 detik)
-    private static final double TIME_WINDOW = 200.0;
+    private static final double TIME_WINDOW = 1200.0;
 
     // Smoothing alpha untuk pembaruan popularitas
     private double alphaPopularity;
@@ -62,9 +60,9 @@ public class Popularity {
 
         popularityMap.put(node, updatedPopularity);
 
-        System.out.println("[POPULARITY] Node " + node.getAddress() +
-                " updated Popularity: " + updatedPopularity +
-                " | Recent encounters: " + encounterCount);
+//        System.out.println("[POPULARITY] Node " + node.getAddress() +
+//                " updated Popularity: " + updatedPopularity +
+//                " | Recent encounters: " + encounterCount);
     }
 
     /**

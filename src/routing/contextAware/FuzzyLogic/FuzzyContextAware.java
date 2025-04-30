@@ -30,12 +30,13 @@ public class FuzzyContextAware {
         return fb;
     }
 
+    // EVALUASI UNTUK MENDAPATKAN TRANSFER OPPORTUNITY
     public double evaluateNeighbor(DTNHost host, DTNHost neighbor, int freeBufferNeighbor, int remainingEnergy, double popularity, double tieStrength) {
         FIS fis = getFISFromHost(host);
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
 
         // Debug log untuk memastikan variabel telah diset dengan benar
-        System.out.println("[DEBUG] Setting input variables:");
+        System.out.println("[DEBUG] Setting input variables for FuzzyContextAware:");
         System.out.println("[DEBUG] bufferNeighbor: " + freeBufferNeighbor);
         System.out.println("[DEBUG] energyNeighbor: " + remainingEnergy);
         System.out.println("[DEBUG] popularityNeighbor: " + popularity);
@@ -68,7 +69,5 @@ public class FuzzyContextAware {
         // Kembalikan nilai Transfer Opportunity
         return transferOpportunity;
 //        return fb.getVariable("TRANSFER_OPPORTUNITY").getValue();
-
-
     }
 }

@@ -3,7 +3,7 @@ FUNCTION_BLOCK FuzzyContextAware
 VAR_INPUT
         bufferNeighbor      : REAL;
         energyNeighbor      : REAL;
-        centralityNeighbor  : REAL;
+        popularityNeighbor  : REAL;
         tieStrengthNeighbor : REAL;
 
         ABILITY             : REAL;
@@ -13,6 +13,7 @@ END_VAR
 VAR_OUTPUT
         ABILITY_NODE            : REAL;
         SOCIAL_IMPORTANCE       : REAL;
+
         TRANSFER_OPPORTUNITY    : REAL;
 END_VAR
 
@@ -54,7 +55,7 @@ RULEBLOCK ABILITY
         RULE 9 : IF bufferNeighbor IS low AND energyNeighbor IS low THEN ABILITY_NODE IS vbad;
 END_RULEBLOCK
 
-FUZZIFY centralityNeighbor
+FUZZIFY popularityNeighbor
         TERM slow   := TRAPE  0 0 0 0.5 ;
         TERM med    := TRAPE  0 0.5 1.0 1.0 ;
         TERM fast   := TRAPE  0.5 1.0 1.0 1.0 ;
@@ -80,18 +81,18 @@ RULEBLOCK SOCIAL
         ACT     : MIN;
         ACCU    : MAX;
 
-        RULE 1 : IF centralityNeighbor IS fast AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS perfect;
-        RULE 2 : IF centralityNeighbor IS fast AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS good;
-        RULE 3 : IF centralityNeighbor IS fast AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS good;
-        RULE 4 : IF centralityNeighbor IS med AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS good;
-        RULE 5 : IF centralityNeighbor IS med AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS good;
-        RULE 6 : IF centralityNeighbor IS med AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS bad;
-        RULE 7 : IF centralityNeighbor IS slow AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS good;
-        RULE 8 : IF centralityNeighbor IS slow AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS bad;
-        RULE 9 : IF centralityNeighbor IS slow AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS bad;
+        RULE 1 : IF popularityNeighbor IS fast AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS perfect;
+        RULE 2 : IF popularityNeighbor IS fast AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS good;
+        RULE 3 : IF popularityNeighbor IS fast AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS good;
+        RULE 4 : IF popularityNeighbor IS med AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS good;
+        RULE 5 : IF popularityNeighbor IS med AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS good;
+        RULE 6 : IF popularityNeighbor IS med AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS bad;
+        RULE 7 : IF popularityNeighbor IS slow AND tieStrengthNeighbor IS good THEN SOCIAL_IMPORTANCE IS good;
+        RULE 8 : IF popularityNeighbor IS slow AND tieStrengthNeighbor IS fair THEN SOCIAL_IMPORTANCE IS bad;
+        RULE 9 : IF popularityNeighbor IS slow AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS bad;
 END_RULEBLOCK
 
-// Defuzzification untuk TransferOpportunity
+
 FUZZIFY ABILITY    // ABILITY_NODE input
     TERM vbad       := TRAPE 0.0 0.0 0.2 0.3 ;
     TERM bad        := TRAPE 0.2 0.3 0.4 0.5 ;
