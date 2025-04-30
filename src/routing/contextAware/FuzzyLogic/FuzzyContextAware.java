@@ -30,6 +30,7 @@ public class FuzzyContextAware {
         return fb;
     }
 
+    // EVALUASI UNTUK MENDAPATKAN TRANSFER OPPORTUNITY
     public double evaluateNeighbor(DTNHost host, DTNHost neighbor, int freeBufferNeighbor, int remainingEnergy, double popularity, double tieStrength) {
         FIS fis = getFISFromHost(host);
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
@@ -68,7 +69,5 @@ public class FuzzyContextAware {
         // Kembalikan nilai Transfer Opportunity
         return transferOpportunity;
 //        return fb.getVariable("TRANSFER_OPPORTUNITY").getValue();
-
-
     }
 }

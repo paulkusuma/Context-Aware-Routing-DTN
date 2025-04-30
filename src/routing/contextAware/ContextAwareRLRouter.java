@@ -7,9 +7,11 @@ import reinforcementLearning_ContextAware.Qtable;
 import routing.ActiveRouter;
 import core.*;
 import routing.MessageRouter;
+import routing.contextAware.ContextMessage.MessageListTable;
 import routing.contextAware.ENS.*;
 //import routing.contextAware.ENS.*;
 import routing.contextAware.FuzzyLogic.FuzzyContextAware;
+import routing.contextAware.FuzzyLogic.FuzzyContextMsg;
 import routing.contextAware.SocialCharcteristic.*;
 
 
@@ -22,21 +24,28 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
 //    public static final String NROF_HOSTS = "nrofHosts";
     public static final String BUFFER_SIZE = "bufferSize";
+    public static final String MSG_TTL = "msgTtl";
     public static final String INIT_ENERGY_S = "initialEnergy"; //Inisialisasi Energi
     public static final String ALPHA_POPULARITY = "alphaPopularity"; //Inisialisasi Alpha Popularity
 
     public static final String FCL_Context = "fcl"; //FuzzyLogicController
+    public static final String FCL_MSG = "fclmsg"; //FuzzyLogicController
 
 //    protected int nrofHosts;
     protected int bufferSize;
+    protected int msgTtl;
     protected int initialEnergy;
     protected double alphaPopularity;
     protected FIS fclcontextaware; //FLC
+    protected FIS fclcontextmsg;
+
     private Popularity popularity; //Instance class popularity
     private TieStrength tieStrength; //Instance class TieStrength
     private EncounteredNodeSet encounteredNodeSet;
     private FuzzyContextAware fuzzyContextAware;
+    private FuzzyContextMsg fuzzyContextMsg;
     private Qtable qtable;
+    private MessageListTable messageListTable;
 
     public ContextAwareRLRouter(Settings s) {
         super(s);
@@ -48,10 +57,17 @@ public class ContextAwareRLRouter extends ActiveRouter {
         //Read FCL file
         String FLCfromString = s.getSetting(FCL_Context);
         fclcontextaware = FIS.load(FLCfromString);
+        String FCLmsgfromString = s.getSetting(FCL_MSG);
+        fclcontextmsg = FIS.load(FCLmsgfromString);
+
         this.fuzzyContextAware = new FuzzyContextAware();
+        this.fuzzyContextMsg = new FuzzyContextMsg();
+
         this.qtable = new Qtable();
+        this.messageListTable = new MessageListTable(this.getHost());
 
         bufferSize = s.getInt(BUFFER_SIZE);
+        msgTtl = s.getInt(MSG_TTL);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
 
     }
@@ -64,10 +80,14 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.popularity = r.popularity;
         this.tieStrength = r.tieStrength;
         this.fclcontextaware = r.fclcontextaware;
+        this.fclcontextmsg = r.fclcontextmsg;
         this.fuzzyContextAware = r.fuzzyContextAware;
+        this.fuzzyContextMsg = r.fuzzyContextMsg;
         this.qtable = r.qtable;
+        this.messageListTable = r.messageListTable;
 
         this.bufferSize = r.bufferSize;
+        this.msgTtl = r.msgTtl;
         this.initialEnergy = r.initialEnergy;
     }
 
@@ -75,6 +95,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
     //Getter FLC
     public FIS getFIS() {
         return fclcontextaware;
+    }
+
+    public FIS getFISMsg(){
+        return fclcontextmsg;
     }
 
     //Getter Q-Table
@@ -199,6 +223,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
             System.out.println("[STATE-ACTION] State = " + state + " Action = " + actionId);
 
             qtableUpdate.updateFirstStrategy(host, neighbor, state, actionId, tfOpportunity);
+
+            // Evaluasi Context Message
+//            int msgTtl = msg.getTtl();
+//            int msgHopCount = msg.getHopCount();
+//            double msgPriority =fuzzyContextMsg.evaluateMsg(host, msgTtl, msgHopCount);
+//            double msgPriority = fuzzyContextAware.evaluateMsg(host, msgTtl, msgHopCount);
         }
     }
 
@@ -227,6 +257,71 @@ public class ContextAwareRLRouter extends ActiveRouter {
             neighborENS.removeEncounter(myId);
         }
 
+    }
+
+    /**
+     * Melakukan proses pengiriman semua pesan ke semua koneksi aktif pada node ini.
+     * Pesan yang akan dikirim dievaluasi terlebih dahulu menggunakan fuzzy logic
+     * untuk menentukan prioritasnya, kemudian diurutkan berdasarkan nilai prioritas tersebut.
+     */
+    @Override
+    protected Connection tryAllMessagesToAllConnections() {
+        // Ambil semua koneksi node saat ini
+        List<Connection> connections = getConnections();
+        // Jika tidak ada koneksi atau tidak ada pesan, langsung return null
+        if (connections.isEmpty() || this.getNrofMessages() == 0) {
+            return null;
+        }
+        // Ambil semua pesan yang ada di buffer node ini
+        List<Message> messages = new ArrayList<>(this.getMessageCollection());
+
+        // Lakukan evaluasi fuzzy logic untuk setiap pesan
+        for (Message msg : messages) {
+            int msgTtl = msg.getTtl();
+            int msgHopCount = 8;
+            // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
+            double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msgTtl, msgHopCount);
+            // Simpan atau update prioritas pesan tersebut ke dalam table
+            messageListTable.updateMessagePriority(msg, priority); // Menyimpan Prioritas di table
+        }
+        // Urutkan pesan berdasarkan prioritas (descending) menggunakan sortByQueueMode
+        this.sortByQueueMode(messages);
+        // Kirim pesan ke koneksi aktif berdasarkan urutan prioritas
+        return tryMessagesToConnections(messages, connections);
+    }
+
+    /**
+     * Mengurutkan daftar pesan atau tuple pesan-koneksi berdasarkan mode antrian (queue mode).
+     * Dalam implementasi ini, pesan akan diurutkan berdasarkan nilai prioritas fuzzy (descending).
+     * Prioritas diambil dari MessageListTable yang sudah diisi sebelumnya.
+     * @param list Daftar objek yang akan diurutkan (bisa berupa List<Message> atau List<Tuple<Message, Connection>>)
+     * @return Daftar yang telah diurutkan sesuai prioritas.
+     */
+    @Override
+    protected List sortByQueueMode(List list) {
+        // Cek apakah list berisi Message langsung atau Tuple<Message, Connection>
+        // Jika list berisi objek Message langsung
+        if (!list.isEmpty() && list.get(0) instanceof Message) {
+            list.sort((Object o1, Object o2) -> {
+                Message m1 = (Message) o1;
+                Message m2 = (Message) o2;
+                // Ambil nilai prioritas dari masing-masing pesan
+                double p1 = messageListTable.getPriority(m1);
+                double p2 = messageListTable.getPriority(m2);
+                return Double.compare(p2, p1); //Desending (prioritas tinggi di awal)
+            });
+        }else if(!list.isEmpty() && list.get(0) instanceof Tuple) {
+            list.sort((Object o1, Object o2) -> {
+                Message m1 = ((Tuple<Message, Connection>) o1).getKey();
+                Message m2 = ((Tuple<Message, Connection>) o2).getKey();
+                // Ambil nilai prioritas dari masing-masing pesan dalam tuple
+                double p1 = messageListTable.getPriority(m1);
+                double p2 = messageListTable.getPriority(m2);
+                return Double.compare(p2,p1); //Desending (prioritas tinggi di awal)
+            });
+        }
+        // Kembalikan list yang sudah diurutkan
+        return list;
     }
 
     // Memeriksa apakah node ini adalah penerima akhir dari pesan
@@ -270,6 +365,9 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
     public void update(){
         super.update();
+        this.tryAllMessagesToAllConnections();
+
+
 //        qtable.printQtableByHost(String.valueOf(this.getHost().getAddress()));
 //        qtable.printQtableByHost();
 

@@ -13,6 +13,7 @@ END_VAR
 VAR_OUTPUT
         ABILITY_NODE            : REAL;
         SOCIAL_IMPORTANCE       : REAL;
+
         TRANSFER_OPPORTUNITY    : REAL;
 END_VAR
 
@@ -91,7 +92,7 @@ RULEBLOCK SOCIAL
         RULE 9 : IF popularityNeighbor IS slow AND tieStrengthNeighbor IS poor THEN SOCIAL_IMPORTANCE IS bad;
 END_RULEBLOCK
 
-// Defuzzification untuk TransferOpportunity
+
 FUZZIFY ABILITY    // ABILITY_NODE input
     TERM vbad       := TRAPE 0.0 0.0 0.2 0.3 ;
     TERM bad        := TRAPE 0.2 0.3 0.4 0.5 ;
