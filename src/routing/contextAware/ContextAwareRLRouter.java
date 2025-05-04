@@ -8,6 +8,8 @@ import routing.ActiveRouter;
 import core.*;
 import routing.MessageRouter;
 import routing.contextAware.ContextMessage.MessageListTable;
+import routing.contextAware.DensityMCopies.CopyControlMechanism;
+import routing.contextAware.DensityMCopies.NetworkDensityCalculator;
 import routing.contextAware.ENS.*;
 //import routing.contextAware.ENS.*;
 import routing.contextAware.FuzzyLogic.FuzzyContextAware;
@@ -17,7 +19,6 @@ import routing.contextAware.SocialCharcteristic.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 public class ContextAwareRLRouter extends ActiveRouter {
@@ -186,6 +187,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 myId,
                 neighborId
         );
+        // Menghitung salinan pesan berdasarkan density
+        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
+        // Update salinan pesan dalam CopyControlMechanism
+        CopyControlMechanism.updateMessageCopies(copies);
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
@@ -201,8 +206,9 @@ public class ContextAwareRLRouter extends ActiveRouter {
         double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
 //        Debug log untuk melihat nilai TieStrength
 //        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
-        double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
 
+//        fuzzyContextAware.evaluateSelf(this.getHost(), myPop, this.tieStrength);
+        double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
         updateQValueOnConUp(host,neighbor,transferOpportunity);
         qtable.printQtableByHost(myId);
     }
@@ -278,7 +284,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Lakukan evaluasi fuzzy logic untuk setiap pesan
         for (Message msg : messages) {
             int msgTtl = msg.getTtl();
-            int msgHopCount = 8;
+            int msgHopCount = msg.getHopCount();
             // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
             double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msgTtl, msgHopCount);
             // Simpan atau update prioritas pesan tersebut ke dalam table
@@ -365,7 +371,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
     public void update(){
         super.update();
-        this.tryAllMessagesToAllConnections();
+//        this.tryAllMessagesToAllConnections();
 
 
 //        qtable.printQtableByHost(String.valueOf(this.getHost().getAddress()));

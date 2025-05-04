@@ -1,4 +1,4 @@
-package routing.contextAware;
+package routing.contextAware.DensityMCopies;
 
 import routing.contextAware.ENS.EncounteredNodeSet;
 import java.util.HashSet;
@@ -10,11 +10,12 @@ import java.util.Set;
 public class NetworkDensityCalculator {
 
     private static final Random random = new Random();
-
+    private static int copies;
 
     /**
      * Menghitung contextual density dari dua ENS (host & neighbor).
-     *
+     * Densitas ini digunakan sebagai estimasi jumlah node aktif di area saat ini,
+     * untuk mengontrol jumlah salinan pesan seperti dijelaskan dalam "Proposed Copy Control Mechanism".
      * @param totalNodes  Jumlah total node di jaringan (misal: 50)
      * @param hostENS     ENS dari node utama (host)
      * @param neighborENS ENS dari node tetangga (neighbor)
@@ -55,10 +56,12 @@ public class NetworkDensityCalculator {
         return density;
     }
 
-
-
     /**
      * Menentukan jumlah salinan pesan berdasarkan kepadatan node.
+     * Menentukan jumlah salinan pesan (L) berdasarkan node density.
+     * Sesuai dengan paper, jumlah L dikontrol berdasarkan kepadatan area
+     * untuk mengurangi overhead di area padat dan meningkatkan delivery di area jarang.
+     * Rentang nilai random digunakan untuk memberikan fleksibilitas.
      * @param density Kepadatan jaringan
      * @return Jumlah salinan pesan
      */

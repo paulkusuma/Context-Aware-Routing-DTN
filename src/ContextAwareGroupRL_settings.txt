@@ -28,7 +28,7 @@ Group.alphaPopularity = 0.8
 
 btInterface.type = SimpleBroadcastInterface
 btInterface.transmitSpeed = 250k
-btInterface.transmitRange = 100
+btInterface.transmitRange = 10
 
 MovementModel.worldSize = 4400, 3400
 MovementModel.warmup = 1000
