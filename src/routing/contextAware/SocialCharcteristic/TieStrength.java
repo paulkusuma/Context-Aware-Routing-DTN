@@ -19,6 +19,9 @@ import routing.contextAware.ENS.EncounteredNodeSet;
  */
 public class TieStrength {
 
+    // Menyimpan nilai TieStrength setiap pasangan node dalam Map
+    private static Map<DTNHost, Map<DTNHost, Double>> tieStrengthMap = new HashMap<>();
+
     // Bobot untuk masing-masing faktor dalam perhitungan TieStrength
     private static final double RECENCY_FACTOR = 0.5; // Faktor untuk memberi bobot pada recency
     private static final double FREQUENCY_WEIGHT = 0.3; // Bobot untuk encounter frequency
@@ -71,7 +74,7 @@ public class TieStrength {
      * @param connectionDurationInst Instansi dari kelas ConnectionDuration untuk menghitung durasi koneksi
      * @return Nilai TieStrength antara nodeA dan nodeB
      */
-    public static double calculateTieStrength(DTNHost host, DTNHost neighbor,
+    public void calculateTieStrength(DTNHost host, DTNHost neighbor,
                                               EncounteredNodeSet encounteredNodeSet,
                                               ConnectionDuration connectionDurationInst) {
 
@@ -107,8 +110,26 @@ public class TieStrength {
         // Normalisasi tieStrength ke rentang 0-1 berdasarkan teori bahwa min dan max nilai tieStrength adalah 0 dan 1
 //        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
 
+        tieStrengthMap.computeIfAbsent(host, k -> new HashMap<>()).put(neighbor, tieStrength);
         System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
-        return tieStrength;
+
+    }
+
+    /**
+     * Mendapatkan nilai TieStrength untuk sebuah node jika sudah dihitung sebelumnya.
+     *
+     * @param host Node pertama
+     * @param neighbor Node kedua
+     * @return Nilai TieStrength antara host dan neighbor, jika ada, atau 0 jika belum dihitung.
+     */
+    public double getTieStrength(DTNHost host, DTNHost neighbor) {
+        // Cek apakah nilai TieStrength sudah ada dalam Map
+        if (tieStrengthMap.containsKey(host) && tieStrengthMap.get(host).containsKey(neighbor)) {
+            // Jika sudah ada, kembalikan nilai yang telah disimpan
+            return tieStrengthMap.get(host).get(neighbor);
+        }
+        // Jika belum ada, return 0.0
+        return 0.0;
     }
 
     /**

@@ -10,7 +10,6 @@ import java.util.Set;
 public class NetworkDensityCalculator {
 
     private static final Random random = new Random();
-    private static int copies;
 
     /**
      * Menghitung contextual density dari dua ENS (host & neighbor).

@@ -8,7 +8,6 @@ import routing.ActiveRouter;
 import core.*;
 import routing.MessageRouter;
 import routing.contextAware.ContextMessage.MessageListTable;
-import routing.contextAware.DensityMCopies.CopyControlMechanism;
 import routing.contextAware.DensityMCopies.NetworkDensityCalculator;
 import routing.contextAware.ENS.*;
 //import routing.contextAware.ENS.*;
@@ -116,6 +115,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return this.popularity;
     }
 
+    public TieStrength getTieStrength(){
+        return this.tieStrength;
+    }
+
 
     /**
      * Metode ini dipanggil ketika ada perubahan status koneksi antara dua node dalam jaringan.
@@ -175,22 +178,30 @@ public class ContextAwareRLRouter extends ActiveRouter {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
         }
-//        // Debug log sebelum merge ENS
-//        System.out.println("[INFO] Sebelum merge ENS:");
-//        this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
+        for (Message m : this.getMessageCollection()) {
+            // Debugging pesan yang sedang diproses
+            System.out.println("Memproses pesan dengan ID: " + m.getId() + " dari: " + m.getFrom().getAddress());
+            if (m.getFrom().equals(this.getHost()) && m.getProperty("copies") == null) {
+                // Debugging sebelum perhitungan density
+                System.out.println("Pesan belum memiliki properti 'copies'. Menghitung density...");
+                // Perhitungan density (contextual)
+                double density = NetworkDensityCalculator.calculateNodeDensity(
+                        SimScenario.getInstance().getHosts().size(),
+                        this.encounteredNodeSet,
+                        neighborENS,
+                        myId,
+                        neighborId
+                );
+                System.out.println("Density dihitung: " + density);
+                int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
+                System.out.println("Jumlah salinan yang dihitung: " + copies);
+                m.addProperty("copies", copies);
+                createNewMessage(m);
+            }
+        }
 
-        // Perhitungan density (contextual)
-        double density = NetworkDensityCalculator.calculateNodeDensity(
-                SimScenario.getInstance().getHosts().size(),
-                this.encounteredNodeSet,
-                neighborENS,
-                myId,
-                neighborId
-        );
-        // Menghitung salinan pesan berdasarkan density
-        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
-        // Update salinan pesan dalam CopyControlMechanism
-        CopyControlMechanism.updateMessageCopies(copies);
+//        // Menghitung salinan pesan berdasarkan density
+//        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
@@ -203,12 +214,15 @@ public class ContextAwareRLRouter extends ActiveRouter {
         }
 
         // Menghitung TieStrength pada saat koneksi up
-        double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
+//        double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
 //        Debug log untuk melihat nilai TieStrength
 //        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
 
+        this.tieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
+        double TieStrength = tieStrength.getTieStrength(host, neighbor);
 //        fuzzyContextAware.evaluateSelf(this.getHost(), myPop, this.tieStrength);
-        double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, tieStrength);
+        double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, TieStrength);
+
         updateQValueOnConUp(host,neighbor,transferOpportunity);
         qtable.printQtableByHost(myId);
     }
@@ -230,31 +244,22 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
             qtableUpdate.updateFirstStrategy(host, neighbor, state, actionId, tfOpportunity);
 
-            // Evaluasi Context Message
-//            int msgTtl = msg.getTtl();
-//            int msgHopCount = msg.getHopCount();
-//            double msgPriority =fuzzyContextMsg.evaluateMsg(host, msgTtl, msgHopCount);
-//            double msgPriority = fuzzyContextAware.evaluateMsg(host, msgTtl, msgHopCount);
         }
     }
 
     private void handleConnectionDown(DTNHost neighbor, EncounteredNodeSet neighborENS) {
         String myId = String.valueOf(this.getHost().getAddress());
         String neighborId = String.valueOf(neighbor.getAddress());
-
-//
         try {
             // Akhiri pencatatan durasi koneksi
             ConnectionDuration connDuration = ConnectionDuration.getConnection(this.getHost(), neighbor);
             if (connDuration != null) {
                 connDuration.endConnection(this.getHost(), neighbor, neighborENS);
             }
-
             // Update Q-Value Second Strategy
             QTableUpdateStrategy qTableUpdate = new QTableUpdateStrategy(this.qtable);
             qTableUpdate.updateSecondStrategy(this.getHost(), neighbor);
             qtable.printQtableByHost(myId);
-
             System.out.println("[DEBUG] Sebelum Dihapus karena terputus ");
             this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
 //            connDuration.printConnectionInfo(this.getHost(), neighbor);
@@ -263,6 +268,82 @@ public class ContextAwareRLRouter extends ActiveRouter {
             neighborENS.removeEncounter(myId);
         }
 
+    }
+
+    @Override
+    public boolean createNewMessage(Message m) {
+        makeRoomForMessage(m.getSize());
+        Integer copies = (Integer) m.getProperty("copies");
+        if(copies != null && copies >0){
+            // Buat salinan pesan sesuai dengan jumlah copies yang sudah ditentukan
+            for (int i = 1; i < copies; i++) {
+                // Debugging setiap salinan yang dibuat
+                System.out.println("Membuat salinan pesan ke-" + (i + 1));
+                // Gunakan metode replicate() untuk membuat salinan pesan
+                Message copy = m.replicate();
+                // Salin properti lainnya dari pesan asli jika perlu
+                addToMessages(copy, true);  // Menambahkan salinan pesan ke buffer
+            }
+        }
+        // Debugging penambahan pesan asli ke buffer
+        System.out.println("Menambahkan pesan asli ke buffer.");
+        // Tambahkan pesan asli ke buffer setelah salinan-salinan dibuat
+        addToMessages(m, true);
+        return true;
+
+    }
+
+    private void copiesControlMechanism(List<Message> messages, List<Connection> connections) {
+        for (Connection c : connections) {
+            DTNHost neighbor = c.getOtherNode(this.getHost());
+            String neighborId = String.valueOf(neighbor.getAddress());
+            String hostId = String.valueOf(this.getHost().getAddress());
+
+            double myPop = popularity.getPopularity(this.getHost());
+            double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
+            double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
+
+            double neighborPop = popularity.getPopularity(neighbor);
+            double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
+
+            for (Message msg : messages) {
+                int copies = (Integer) msg.getProperty("copies");
+                DTNHost destination = msg.getTo();
+                String destinationId = String.valueOf(msg.getTo().getAddress());
+
+                String state = hostId +","+ destinationId;
+                double myQ = qtable.getQvalue(state, neighborId);
+                String stateNeighbor = neighborId +","+ destinationId;
+                double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
+                double messagePriority = messageListTable.getPriority(msg);
+
+                // 7. Jika copies > 1
+                if(copies > 1){
+                    // 8. Jika neighbor adalah tujuan
+                    if(neighborId.equals(destinationId)) {
+                        startTransfer(msg, c);
+                    }
+                    // 10. Jika priority >= normal (misal threshold = 0.5)
+                    else if(messagePriority >= 0.5){
+                        // 11. Jika social atau Q-value si neighbor lebih baik
+                        if(neighborSocial > mySocial || neighborQ > myQ){
+                            startTransfer(msg, c);
+                        }
+                    }
+                }
+                // 14. Jika copies == 1 (pesan terakhir)
+                else if(copies == 1){
+                    if(neighborId.equals(destinationId)) {
+                        startTransfer(msg, c);
+                    } else if (messagePriority >= 0.5) {
+                        if(neighborSocial > mySocial && neighborQ > myQ){
+                            startTransfer(msg, c);
+                            this.deleteMessage(msg.getId(), true);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -292,6 +373,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
         }
         // Urutkan pesan berdasarkan prioritas (descending) menggunakan sortByQueueMode
         this.sortByQueueMode(messages);
+
+        // Panggil mekanisme kontrol salinan pesan sebelum mengirim
+        copiesControlMechanism(messages, connections);
+
         // Kirim pesan ke koneksi aktif berdasarkan urutan prioritas
         return tryMessagesToConnections(messages, connections);
     }
