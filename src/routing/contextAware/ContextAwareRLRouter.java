@@ -189,7 +189,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 myId,
                 neighborId
         );
-//        System.out.println("Density dihitung: " + density);
+//        System.out.println("Density dihitung: " + latestDensity);
 //        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
 //
 //        // Memberikan Copies berdasarkan density saat koenksi aktif
@@ -299,9 +299,16 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public boolean createNewMessage(Message m) {
         makeRoomForMessage(m.getSize());
         int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(this.latestDensity);
-        // Debugging penambahan pesan asli ke buffer
-        System.out.println("Menambahkan pesan asli ke buffer.");
-        addToMessages(m, true);
+        m.addProperty("copies", copies);
+        this.addToMessages(m, true);
+        if (m.getFrom().equals(this.getHost()) && m.getProperty("copies") == null) {
+            for (int i = 1; i < copies; i++) {
+                Message copy = m.replicate();
+                copy.setTtl(this.msgTtl);
+//                copy.addProperty("copies", copies);
+                this.addToMessages(copy, true);
+            }
+        }
         return true;
     }
 
@@ -469,9 +476,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
             Message sendingMsg = con.getMessage(); // ini salinan dari m
 
             if (sendingMsg != null && m.getProperty("copies") != null) {
-                sendingMsg.addProperty("copies", m.getProperty("copies"));
-                System.out.println("[DEBUG] Menyalin properti 'copies' ke pesan " + sendingMsg.getId() +
-                        " saat transfer ke " + con.getOtherNode(getHost()).getAddress());
+                // Cek apakah 'copies' sudah ada pada sendingMsg
+                if (sendingMsg.getProperty("copies") == null) {
+                    sendingMsg.addProperty("copies", m.getProperty("copies"));
+                    System.out.println("[DEBUG] Menyalin properti 'copies' ke pesan " + sendingMsg.getId() +
+                            " saat transfer ke " + con.getOtherNode(getHost()).getAddress());
+                }
             }
         }
 
