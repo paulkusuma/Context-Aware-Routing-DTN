@@ -38,6 +38,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
     protected double alphaPopularity;
     protected FIS fclcontextaware; //FLC
     protected FIS fclcontextmsg;
+    private double latestDensity;
 
     private Popularity popularity; //Instance class popularity
     private TieStrength tieStrength; //Instance class TieStrength
@@ -69,6 +70,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         bufferSize = s.getInt(BUFFER_SIZE);
         msgTtl = s.getInt(MSG_TTL);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
+        latestDensity = -1;
 
     }
 
@@ -89,6 +91,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.bufferSize = r.bufferSize;
         this.msgTtl = r.msgTtl;
         this.initialEnergy = r.initialEnergy;
+        this.latestDensity = r.latestDensity;
     }
 
 
@@ -178,30 +181,44 @@ public class ContextAwareRLRouter extends ActiveRouter {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
         }
-        for (Message m : this.getMessageCollection()) {
-            // Debugging pesan yang sedang diproses
-            System.out.println("Memproses pesan dengan ID: " + m.getId() + " dari: " + m.getFrom().getAddress());
-            if (m.getFrom().equals(this.getHost()) && m.getProperty("copies") == null) {
-                // Debugging sebelum perhitungan density
-                System.out.println("Pesan belum memiliki properti 'copies'. Menghitung density...");
-                // Perhitungan density (contextual)
-                double density = NetworkDensityCalculator.calculateNodeDensity(
-                        SimScenario.getInstance().getHosts().size(),
-                        this.encounteredNodeSet,
-                        neighborENS,
-                        myId,
-                        neighborId
-                );
-                System.out.println("Density dihitung: " + density);
-                int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
-                System.out.println("Jumlah salinan yang dihitung: " + copies);
-                m.addProperty("copies", copies);
-                createNewMessage(m);
-            }
-        }
-
-//        // Menghitung salinan pesan berdasarkan density
+        // Perhitungan density (contextual)
+        double latestDensity = NetworkDensityCalculator.calculateNodeDensity(
+                SimScenario.getInstance().getHosts().size(),
+                this.encounteredNodeSet,
+                neighborENS,
+                myId,
+                neighborId
+        );
+//        System.out.println("Density dihitung: " + density);
 //        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
+//
+//        // Memberikan Copies berdasarkan density saat koenksi aktif
+//        // Periksa semua pesan dalam buffer
+//        for (Message m : this.getMessageCollection()) {
+//            String msgId = m.getId();
+//            int fromId = m.getFrom().getAddress();
+//
+//            System.out.println("Memproses pesan dengan ID: " + msgId + " dari: " + fromId);
+//
+//            // Hanya pesan buatan sendiri yang belum punya properti "copies"
+//            if (m.getFrom().equals(host) && m.getProperty("copies") == null) {
+//                m.addProperty("copies", copies);
+//                System.out.println("Menetapkan copies=" + copies + " untuk pesan: " + msgId);
+//
+//                for (int i = 1; i < copies; i++) {
+//                    Message copy = m.replicate();
+//                    copy.setTtl(this.msgTtl);
+//                    // Penting! Salin properti "copies"
+//                    copy.addProperty("copies", copies);
+//                    System.out.println("Membuat salinan ke-" + (i + 1) + " untuk pesan: " + msgId);
+//
+//                    this.addToMessages(copy, true);
+//                }
+//            } else {
+//                Object existingCopies = m.getProperty("copies");
+//                System.out.println("Pesan " + msgId + " sudah punya properti copies: " + existingCopies);
+//            }
+//        }
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
@@ -213,14 +230,9 @@ public class ContextAwareRLRouter extends ActiveRouter {
             this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
         }
 
-        // Menghitung TieStrength pada saat koneksi up
-//        double tieStrength = TieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
-//        Debug log untuk melihat nilai TieStrength
-//        System.out.println("[DEBUG] TieStrength antara " + myId + " dan " + neighborId + ": " + tieStrength);
-
         this.tieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
         double TieStrength = tieStrength.getTieStrength(host, neighbor);
-//        fuzzyContextAware.evaluateSelf(this.getHost(), myPop, this.tieStrength);
+
         double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, TieStrength);
 
         updateQValueOnConUp(host,neighbor,transferOpportunity);
@@ -271,80 +283,28 @@ public class ContextAwareRLRouter extends ActiveRouter {
     }
 
     @Override
+    public int receiveMessage(Message m, DTNHost from) {
+//        // Cek apakah properti "copies" tidak ada pada pesan yang diterima
+        if (m.getProperty("copies") == null) {
+            // Asumsikan pengirim harus sudah menetapkan copies, jadi kita log saja
+            System.out.println("Warning: message " + m.getId() + " received from " + from.getAddress() +
+                    " does not have 'copies' property. Assigning default value.========");
+//            // Berikan nilai default jika diperlukan (misalnya 1), atau bisa dihitung berdasarkan konteks
+//            m.addProperty("copies", 1);
+        }
+        return super.receiveMessage(m, from);
+    }
+
+    @Override
     public boolean createNewMessage(Message m) {
         makeRoomForMessage(m.getSize());
-        Integer copies = (Integer) m.getProperty("copies");
-        if(copies != null && copies >0){
-            // Buat salinan pesan sesuai dengan jumlah copies yang sudah ditentukan
-            for (int i = 1; i < copies; i++) {
-                // Debugging setiap salinan yang dibuat
-                System.out.println("Membuat salinan pesan ke-" + (i + 1));
-                // Gunakan metode replicate() untuk membuat salinan pesan
-                Message copy = m.replicate();
-                // Salin properti lainnya dari pesan asli jika perlu
-                addToMessages(copy, true);  // Menambahkan salinan pesan ke buffer
-            }
-        }
+        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(this.latestDensity);
         // Debugging penambahan pesan asli ke buffer
         System.out.println("Menambahkan pesan asli ke buffer.");
-        // Tambahkan pesan asli ke buffer setelah salinan-salinan dibuat
         addToMessages(m, true);
         return true;
-
     }
 
-    private void copiesControlMechanism(List<Message> messages, List<Connection> connections) {
-        for (Connection c : connections) {
-            DTNHost neighbor = c.getOtherNode(this.getHost());
-            String neighborId = String.valueOf(neighbor.getAddress());
-            String hostId = String.valueOf(this.getHost().getAddress());
-
-            double myPop = popularity.getPopularity(this.getHost());
-            double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
-            double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
-
-            double neighborPop = popularity.getPopularity(neighbor);
-            double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
-
-            for (Message msg : messages) {
-                int copies = (Integer) msg.getProperty("copies");
-                DTNHost destination = msg.getTo();
-                String destinationId = String.valueOf(msg.getTo().getAddress());
-
-                String state = hostId +","+ destinationId;
-                double myQ = qtable.getQvalue(state, neighborId);
-                String stateNeighbor = neighborId +","+ destinationId;
-                double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
-                double messagePriority = messageListTable.getPriority(msg);
-
-                // 7. Jika copies > 1
-                if(copies > 1){
-                    // 8. Jika neighbor adalah tujuan
-                    if(neighborId.equals(destinationId)) {
-                        startTransfer(msg, c);
-                    }
-                    // 10. Jika priority >= normal (misal threshold = 0.5)
-                    else if(messagePriority >= 0.5){
-                        // 11. Jika social atau Q-value si neighbor lebih baik
-                        if(neighborSocial > mySocial || neighborQ > myQ){
-                            startTransfer(msg, c);
-                        }
-                    }
-                }
-                // 14. Jika copies == 1 (pesan terakhir)
-                else if(copies == 1){
-                    if(neighborId.equals(destinationId)) {
-                        startTransfer(msg, c);
-                    } else if (messagePriority >= 0.5) {
-                        if(neighborSocial > mySocial && neighborQ > myQ){
-                            startTransfer(msg, c);
-                            this.deleteMessage(msg.getId(), true);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * Melakukan proses pengiriman semua pesan ke semua koneksi aktif pada node ini.
@@ -366,6 +326,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         for (Message msg : messages) {
             int msgTtl = msg.getTtl();
             int msgHopCount = msg.getHopCount();
+//            Object copies = msg.getProperty("copies");
+//            System.out.println("Menetapkan copies=" + copies + " untuk pesan: " + msg.getId());
             // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
             double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msgTtl, msgHopCount);
             // Simpan atau update prioritas pesan tersebut ke dalam table
@@ -425,6 +387,111 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return m.getHopCount() == 0;  // Jika hop count adalah 0, berarti ini pengiriman pertama
     }
 
+    private void copiesControlMechanism(List<Message> messages, List<Connection> connections) {
+        DTNHost host = this.getHost();
+        String hostId = String.valueOf(this.getHost().getAddress());
+
+        for (Connection c : connections) {
+            DTNHost neighbor = c.getOtherNode(this.getHost());
+            String neighborId = String.valueOf(neighbor.getAddress());
+
+            double myPop = popularity.getPopularity(host);
+            double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
+            double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
+
+            double neighborPop = popularity.getPopularity(neighbor);
+            double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
+
+            for (Message msg : messages) {
+                String msgId = msg.getId();
+                DTNHost destination = msg.getTo();
+                String destinationId = String.valueOf(msg.getTo().getAddress());
+                System.out.println("Memeriksa copies untuk pesan: " + msgId + ", from: " + msg.getFrom().getAddress() + ", host: " + host.getAddress());
+
+                Object prop = msg.getProperty("copies");
+                if (prop == null) {
+                    System.out.println("WARNING: Properti 'copies' tidak ditemukan pada pesan " + msgId + ". Lewati pesan ini.");
+                    continue;
+                }
+
+                int copies;
+                try {
+                    copies = ((Integer) prop).intValue();
+                } catch (ClassCastException e) {
+                    System.out.println("ERROR: Properti 'copies' bukan Integer pada pesan " + msgId + ". Lewati pesan ini.");
+                    continue;
+                }
+
+                double messagePriority = messageListTable.getPriority(msg);
+                //Qvalue State
+                String state = hostId +","+ destinationId;
+                double myQ = qtable.getQvalue(state, neighborId);
+                String stateNeighbor = neighborId +","+ destinationId;
+                double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
+
+                // Decision Rules
+                // 7. Jika copies > 1
+                if(copies > 1){
+                    // 8. Jika neighbor adalah tujuan
+                    if(neighborId.equals(destinationId)) {
+                        startTransfer(msg, c);
+                    }
+                    // 10. Jika priority >= normal (misal threshold = 0.5)
+                    else if(messagePriority >= 0.5){
+                        // 11. Jika social atau Q-value si neighbor lebih baik
+                        if(neighborSocial > mySocial || neighborQ > myQ){
+                            startTransfer(msg, c);
+                        }
+                    }
+                }
+                // 14. Jika copies == 1 (pesan terakhir)
+                else if(copies == 1){
+                    if(neighborId.equals(destinationId)) {
+                        startTransfer(msg, c);
+                    } else if (messagePriority >= 0.5) {
+                        if(neighborSocial > mySocial && neighborQ > myQ){
+                            startTransfer(msg, c);
+                            this.deleteMessage(msg.getId(), true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected int startTransfer(Message m, Connection con) {
+        // Salin pesan seperti biasa
+        int result = super.startTransfer(m, con);
+
+        if (result == RCV_OK) {
+            // Salin properti "copies" secara eksplisit ke pesan yang akan dikirim
+            Message sendingMsg = con.getMessage(); // ini salinan dari m
+
+            if (sendingMsg != null && m.getProperty("copies") != null) {
+                sendingMsg.addProperty("copies", m.getProperty("copies"));
+                System.out.println("[DEBUG] Menyalin properti 'copies' ke pesan " + sendingMsg.getId() +
+                        " saat transfer ke " + con.getOtherNode(getHost()).getAddress());
+            }
+        }
+
+        return result;
+    }
+
+    public void update(){
+        super.update();
+        if(!canStartTransfer() || isTransferring()){
+            return;
+        }
+        this.tryAllMessagesToAllConnections();
+//        this.tryAllMessagesToAllConnections();
+
+
+//        qtable.printQtableByHost(String.valueOf(this.getHost().getAddress()));
+//        qtable.printQtableByHost();
+
+    }
+
     @Override
     public Message messageTransferred(String id, DTNHost from) {
         // Step 1: Panggil super untuk mendapatkan pesan yang ditransfer
@@ -451,17 +518,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
             }
         }
         return m;
-    }
-
-
-    public void update(){
-        super.update();
-//        this.tryAllMessagesToAllConnections();
-
-
-//        qtable.printQtableByHost(String.valueOf(this.getHost().getAddress()));
-//        qtable.printQtableByHost();
-
     }
 
     @Override

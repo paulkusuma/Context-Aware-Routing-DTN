@@ -77,11 +77,11 @@ public class FuzzyContextAware {
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
 
 
-        fb.setVariable("popularityHost", popularity);
-        fb.setVariable("tieStrengthHost", tieStrength);
+        fb.setVariable("popularityNeighbor", popularity);
+        fb.setVariable("tieStrengthNeighbor", tieStrength);
 
         fb.evaluate();
-        double selfSocialImportance = fb.getVariable("SOCIAL IMPORTANCE").getValue();
+        double selfSocialImportance = fb.getVariable("SOCIAL_IMPORTANCE").getValue();
 
         return selfSocialImportance;
     }
