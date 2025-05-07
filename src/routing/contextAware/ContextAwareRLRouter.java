@@ -182,43 +182,13 @@ public class ContextAwareRLRouter extends ActiveRouter {
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
         }
         // Perhitungan density (contextual)
-        double latestDensity = NetworkDensityCalculator.calculateNodeDensity(
+        this.latestDensity = NetworkDensityCalculator.calculateNodeDensity(
                 SimScenario.getInstance().getHosts().size(),
                 this.encounteredNodeSet,
                 neighborENS,
                 myId,
                 neighborId
         );
-//        System.out.println("Density dihitung: " + latestDensity);
-//        int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(density);
-//
-//        // Memberikan Copies berdasarkan density saat koenksi aktif
-//        // Periksa semua pesan dalam buffer
-//        for (Message m : this.getMessageCollection()) {
-//            String msgId = m.getId();
-//            int fromId = m.getFrom().getAddress();
-//
-//            System.out.println("Memproses pesan dengan ID: " + msgId + " dari: " + fromId);
-//
-//            // Hanya pesan buatan sendiri yang belum punya properti "copies"
-//            if (m.getFrom().equals(host) && m.getProperty("copies") == null) {
-//                m.addProperty("copies", copies);
-//                System.out.println("Menetapkan copies=" + copies + " untuk pesan: " + msgId);
-//
-//                for (int i = 1; i < copies; i++) {
-//                    Message copy = m.replicate();
-//                    copy.setTtl(this.msgTtl);
-//                    // Penting! Salin properti "copies"
-//                    copy.addProperty("copies", copies);
-//                    System.out.println("Membuat salinan ke-" + (i + 1) + " untuk pesan: " + msgId);
-//
-//                    this.addToMessages(copy, true);
-//                }
-//            } else {
-//                Object existingCopies = m.getProperty("copies");
-//                System.out.println("Pesan " + msgId + " sudah punya properti copies: " + existingCopies);
-//            }
-//        }
 
         // Pastikan ENS keduanya tidak kosong
         if (!this.encounteredNodeSet.isEmpty() && !neighborENS.isEmpty()) {
@@ -299,12 +269,13 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public boolean createNewMessage(Message m) {
         makeRoomForMessage(m.getSize());
         int copies = NetworkDensityCalculator.calculateCopiesBasedOnDensity(this.latestDensity);
+        m.setTtl(msgTtl);
         m.addProperty("copies", copies);
         this.addToMessages(m, true);
         if (m.getFrom().equals(this.getHost()) && m.getProperty("copies") == null) {
             for (int i = 1; i < copies; i++) {
                 Message copy = m.replicate();
-                copy.setTtl(this.msgTtl);
+                copy.setTtl(msgTtl);
 //                copy.addProperty("copies", copies);
                 this.addToMessages(copy, true);
             }
@@ -332,6 +303,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Lakukan evaluasi fuzzy logic untuk setiap pesan
         for (Message msg : messages) {
             int msgTtl = msg.getTtl();
+            System.out.println("TTL " + msgTtl);
             int msgHopCount = msg.getHopCount();
 //            Object copies = msg.getProperty("copies");
 //            System.out.println("Menetapkan copies=" + copies + " untuk pesan: " + msg.getId());
@@ -412,22 +384,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
             for (Message msg : messages) {
                 String msgId = msg.getId();
                 DTNHost destination = msg.getTo();
-                String destinationId = String.valueOf(msg.getTo().getAddress());
+                String destinationId = String.valueOf(destination.getAddress());
                 System.out.println("Memeriksa copies untuk pesan: " + msgId + ", from: " + msg.getFrom().getAddress() + ", host: " + host.getAddress());
 
                 Object prop = msg.getProperty("copies");
-                if (prop == null) {
-                    System.out.println("WARNING: Properti 'copies' tidak ditemukan pada pesan " + msgId + ". Lewati pesan ini.");
-                    continue;
-                }
-
-                int copies;
-                try {
-                    copies = ((Integer) prop).intValue();
-                } catch (ClassCastException e) {
-                    System.out.println("ERROR: Properti 'copies' bukan Integer pada pesan " + msgId + ". Lewati pesan ini.");
-                    continue;
-                }
+                if(!(prop instanceof Integer)) continue;
+                int copies = (Integer) prop;
 
                 double messagePriority = messageListTable.getPriority(msg);
                 //Qvalue State
@@ -436,32 +398,61 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 String stateNeighbor = neighborId +","+ destinationId;
                 double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
 
-                // Decision Rules
-                // 7. Jika copies > 1
+                boolean isDest = neighborId.equals(destinationId);
+                boolean better = (neighborSocial > mySocial || neighborQ > myQ);
+                boolean canSend = canStartTransfer();
+
                 if(copies > 1){
-                    // 8. Jika neighbor adalah tujuan
-                    if(neighborId.equals(destinationId)) {
+                    if(isDest && canSend){
                         startTransfer(msg, c);
-                    }
-                    // 10. Jika priority >= normal (misal threshold = 0.5)
-                    else if(messagePriority >= 0.5){
-                        // 11. Jika social atau Q-value si neighbor lebih baik
-                        if(neighborSocial > mySocial || neighborQ > myQ){
+                        msg.updateProperty("copies", copies - 1);
+                        return;
+                    } else if (messagePriority >= 0.5 && better){
+                        int sendCopies = copies / 2;
+                        int remainingCopies = copies - sendCopies;
+                        msg.updateProperty("copies", remainingCopies);
+
+                        Message copy = msg.replicate();
+                        copy.addProperty("copies", sendCopies);
+                        if(canSend){
                             startTransfer(msg, c);
+                            return;
                         }
                     }
-                }
-                // 14. Jika copies == 1 (pesan terakhir)
-                else if(copies == 1){
-                    if(neighborId.equals(destinationId)) {
+                } else if (copies == 1){
+                    if((isDest || (messagePriority >= 0.5)) && canSend){
                         startTransfer(msg, c);
-                    } else if (messagePriority >= 0.5) {
-                        if(neighborSocial > mySocial && neighborQ > myQ){
-                            startTransfer(msg, c);
-                            this.deleteMessage(msg.getId(), true);
-                        }
+                        deleteMessage(msgId, true);
+                        return;
                     }
                 }
+
+//                // Decision Rules
+//                // 7. Jika copies > 1
+//                if(copies > 1){
+//                    // 8. Jika neighbor adalah tujuan
+//                    if(neighborId.equals(destinationId)) {
+//                        startTransfer(msg, c);
+//                    }
+//                    // 10. Jika priority >= normal (misal threshold = 0.5)
+//                    else if(messagePriority >= 0.5){
+//                        // 11. Jika social atau Q-value si neighbor lebih baik
+//                        if(neighborSocial > mySocial || neighborQ > myQ){
+//                            startTransfer(msg, c);
+//                        }
+//                    }
+//                }
+//                // 14. Jika copies == 1 (pesan terakhir)
+//                else if(copies == 1){
+//                    if(neighborId.equals(destinationId)) {
+//                        startTransfer(msg, c);
+//                    } else if (messagePriority >= 0.5) {
+//                        if(neighborSocial > mySocial && neighborQ > myQ){
+//                            startTransfer(msg, c);
+//                            this.deleteMessage(msg.getId(), true);
+//                        }
+//                    }
+//                }
             }
         }
     }
