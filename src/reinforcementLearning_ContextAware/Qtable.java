@@ -21,7 +21,7 @@ public class Qtable {
     public double getQvalue(String state, String action) {
         String key = state + ":" + action;
         //Mengembalikan nilai Q-Value jika ada, atau 0 jika tidak ada
-        return qtable.getOrDefault(key, 0.1);
+        return qtable.getOrDefault(key, 0.0);
     }
 
     // Cari Q-maksimum dari node yang pernah ditemui (Nm)

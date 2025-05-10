@@ -245,9 +245,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
             System.out.println("[DEBUG] Sebelum Dihapus karena terputus ");
             this.encounteredNodeSet.printEncounterLog(this.getHost(), neighborId, neighborENS);
 //            connDuration.printConnectionInfo(this.getHost(), neighbor);
-        } finally {
-            this.encounteredNodeSet.removeEncounter(neighborId);
-            neighborENS.removeEncounter(myId);
+        }
+        finally {
+//            this.encounteredNodeSet.removeEncounter(neighborId);
+//            neighborENS.removeEncounter(myId);
         }
 
     }
@@ -332,10 +333,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Lakukan evaluasi fuzzy logic untuk prioritas setiap pesan
         for (Message msg : messages) {
             int msgTtl = msg.getTtl();
-            System.out.println("TTL " + msgTtl);
+//            System.out.println("TTL " + msgTtl);
             int msgHopCount = msg.getHopCount();
-//            Object copies = msg.getProperty("copies");
-//            System.out.println("Menetapkan copies=" + copies + " untuk pesan: " + msg.getId());
             // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
             double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msgTtl, msgHopCount);
             // Simpan atau update prioritas pesan tersebut ke dalam table
@@ -344,9 +343,17 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Urutkan pesan berdasarkan prioritas (descending) menggunakan sortByQueueMode
         this.sortByQueueMode(messages);
 
-        // Panggil mekanisme kontrol salinan pesan
-        // Kirim pesan ke koneksi aktif berdasarkan urutan prioritas
-        return copiesControlMechanism(messages, connections);
+        // Coba kirim semua pesan satu per satu berdasarkan prioritas
+        for (Message msg : messages) {
+            Connection conn = copiesControlMechanism(msg, connections);
+            if (conn != null) {
+//                // Menambahkan node tetangga ke dalam path pesan
+//                DTNHost neighbor = conn.getOtherNode(this.getHost());
+//                msg.getHops().add(neighbor);
+                return conn;
+            }
+        }
+        return null;
     }
 
     /**
@@ -399,54 +406,60 @@ public class ContextAwareRLRouter extends ActiveRouter {
      * nilai sosial (social importance), dan nilai Q-value antar node.
      * Salinan pesan hanya disebar setengah jika memenuhi syarat, untuk mengurangi overhead jaringan.
      *
-     * @param messages Daftar pesan yang ada pada node yang menjalankan metode ini.
+     * @param msg pesan yang ada pada node yang menjalankan metode ini.
      * @param connections Daftar koneksi aktif antara node saat ini dan node tetangganya.
      */
-    private Connection copiesControlMechanism(List<Message> messages, List<Connection> connections) {
+    private Connection copiesControlMechanism(Message msg, List<Connection> connections) {
         DTNHost host = this.getHost();
         String hostId = String.valueOf(this.getHost().getAddress());
+        DTNHost destination = msg.getTo();
+        String destinationId = String.valueOf(destination.getAddress());
+        String msgId = msg.getId();
+
+        // Prioritas pesan di MessageListTable
+        double messagePriority = messageListTable.getPriority(msg);
+        int copies = (int) msg.getProperty("copies");
 
         // Iterasi untuk memeriksa setiap koneksi yang tersedia antara host dan tetangga
         for (Connection c : connections) {
             DTNHost neighbor = c.getOtherNode(this.getHost());
             String neighborId = String.valueOf(neighbor.getAddress());
 
-            double myPop = popularity.getPopularity(host);
-            double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
-            double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
-            double neighborPop = popularity.getPopularity(neighbor);
-            double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
+            boolean isDestination = neighborId.equals(destinationId);
+            if (!canStartTransfer()) continue;
+            // Langsung kirim jika neighbor adalah tujuan
+            if (isDestination) {
+                if (copies > 1) {
+                    msg.updateProperty("copies", copies - 1);
+                } else {
+                    deleteMessage(msg.getId(), true);
+                }
+                startTransfer(msg, c);
+                return c;
+            }
+            Connection bestConnection = selectBestNeighbor(msg, connections);
+            DTNHost bestNeighbor = (bestConnection != null) ? bestConnection.getOtherNode(this.getHost()) : null;
 
-            // Iterasi untuk memeriksa setiap pesan dalam daftar messages.
-            for (Message msg : messages) {
-                String msgId = msg.getId();
-                DTNHost destination = msg.getTo();
-                String destinationId = String.valueOf(destination.getAddress());
-
-                // Mengambil properti 'copies' yang menunjukkan jumlah salinan pesan.
-                Object prop = msg.getProperty("copies");
-                if(!(prop instanceof Integer)) continue;
-                int copies = (Integer) prop; // Jumlah salinan pesan.
-
-                // Prioritas pesan di MessageListTable
-                double messagePriority = messageListTable.getPriority(msg);
+            if(bestNeighbor != null && bestNeighbor.getAddress() != host.getAddress()) {
+                double myPop = popularity.getPopularity(host);
+                double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
+                double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
+                double neighborPop = popularity.getPopularity(neighbor);
+                double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
 
                 // Mengambil Q-value untuk host dan tetangga berdasarkan state tujuan pesan
                 String state = hostId +","+ destinationId;
                 double myQ = qtable.getQvalue(state, neighborId);
                 String stateNeighbor = neighborId +","+ destinationId;
                 double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
-
-                boolean isDest = neighborId.equals(destinationId);  // Menentukan apakah tetangga adalah tujuan pesan
-                // Menentukan apakah tetangga lebih baik dibandingkan host dalam hal nilai sosial atau Q-value
                 boolean socialBetter = neighborSocial > mySocial;
                 boolean qvalueBetter = neighborQ > myQ;
-                boolean canSend = canStartTransfer(); // Memeriksa apakah koneksi siap untuk mengirim pesan
+                boolean canSend = canStartTransfer();
 
                 // Kondisi untuk jumlah salinan pesan lebih dari 1
                 if(copies > 1){
                     // Jika tujuan adalah tetangga dan koneksi siap, transfer pesan
-                    if(isDest && canSend){
+                    if(isDestination && canSend){
                         startTransfer(msg, c); // Memulai transfer pesan
                         msg.updateProperty("copies", copies - 1); // Mengurangi jumlah salinan pesan
                         return c;
@@ -466,7 +479,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     }
                     // Kondisi jika jumlah salinan pesan adalah 1
                 } else if (copies == 1){
-                    if(isDest && canSend){
+                    if(isDestination && canSend){
                         startTransfer(msg, c);
                         deleteMessage(msgId, true);
                         return c;
@@ -498,6 +511,11 @@ public class ContextAwareRLRouter extends ActiveRouter {
         if(!canStartTransfer() || isTransferring()){
             return;
         }
+        // try messages that could be delivered to final recipient
+        if (exchangeDeliverableMessages() != null) {
+            return;
+        }
+
         this.tryAllMessagesToAllConnections();
     }
 
@@ -505,6 +523,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public Message messageTransferred(String id, DTNHost from) {
         // Step 1: Panggil super untuk mendapatkan pesan yang ditransfer
         Message m = super.messageTransferred(id, from);
+
+//        m.getHops().add(from);
 
         // Step 2: Tambahkan logika update Q-Table
         if(m != null){

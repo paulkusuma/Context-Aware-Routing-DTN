@@ -7,7 +7,7 @@ Scenario.endTime = 15000
 ## Interface
 btInterface.type = SimpleBroadcastInterface
 btInterface.transmitSpeed = 250k
-btInterface.transmitRange = 300
+btInterface.transmitRange = 100
 
 ## Node Groups
 Scenario.nrofHostGroups = 2
@@ -23,7 +23,7 @@ Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
-Group.msgTtl = 300
+
 
 Group.initialEnergy = 100
 Group.scanEnergy = 0.001
