@@ -10,15 +10,15 @@ VAR_OUTPUT
 END_VAR
 
 FUZZIFY msgTTL
-    TERM small   := TRAPE 0 0 10 20 ;
+    TERM small   := TRAPE 0 0 10 20 ; // TTL hampir habis
     TERM medium  := TRAPE 10 20 50 70 ;
-    TERM large   := TRAPE 50 70 100 100 ;
+    TERM large   := TRAPE 50 70 100 100 ; // TTL masih panjang
 END_FUZZIFY
 
 FUZZIFY msgHopCount
-    TERM small   := TRAPE 0 0 2 4 ;
-    TERM medium  := TRAPE 2 4 6 8 ;
-    TERM large   := TRAPE 6 8 10 10 ;
+    TERM small   := TRAPE 0 0 1 2 ; // Baru dikirim
+    TERM medium  := TRAPE 1 2 3 4 ;
+    TERM large   := TRAPE 3 4 6 6 ; // Sudah banyak node
 END_FUZZIFY
 
 DEFUZZIFY MESSAGE_PRIORITY
@@ -36,15 +36,20 @@ RULEBLOCK MESSAGE
     ACT     : MIN;
     ACCU    : MAX;
 
-    RULE 1 : IF msgTTL IS large AND msgHopCount IS large THEN MESSAGE_PRIORITY IS normal;
-    RULE 2 : IF msgTTL IS large AND msgHopCount IS medium THEN MESSAGE_PRIORITY IS normal;
-    RULE 3 : IF msgTTL IS large AND msgHopCount IS small THEN MESSAGE_PRIORITY IS low;
-    RULE 4 : IF msgTTL IS medium AND msgHopCount IS large THEN MESSAGE_PRIORITY IS normal;
+    // TTL kecil → penting
+    // Hop besar → sudah lama beredar, belum sampai
+
+    RULE 1 : IF msgTTL IS small AND msgHopCount IS large THEN MESSAGE_PRIORITY IS urgent;
+    RULE 2 : IF msgTTL IS small AND msgHopCount IS medium THEN MESSAGE_PRIORITY IS high;
+    RULE 3 : IF msgTTL IS small AND msgHopCount IS small THEN MESSAGE_PRIORITY IS normal;
+
+    RULE 4 : IF msgTTL IS medium AND msgHopCount IS large THEN MESSAGE_PRIORITY IS high;
     RULE 5 : IF msgTTL IS medium AND msgHopCount IS medium THEN MESSAGE_PRIORITY IS normal;
     RULE 6 : IF msgTTL IS medium AND msgHopCount IS small THEN MESSAGE_PRIORITY IS low;
-    RULE 7 : IF msgTTL IS small AND msgHopCount IS large THEN MESSAGE_PRIORITY IS urgent;
-    RULE 8 : IF msgTTL IS small AND msgHopCount IS medium THEN MESSAGE_PRIORITY IS urgent;
-    RULE 9 : IF msgTTL IS small AND msgHopCount IS small THEN MESSAGE_PRIORITY IS high;
+
+    RULE 7 : IF msgTTL IS large AND msgHopCount IS large THEN MESSAGE_PRIORITY IS normal;
+    RULE 8 : IF msgTTL IS large AND msgHopCount IS medium THEN MESSAGE_PRIORITY IS low;
+    RULE 9 : IF msgTTL IS large AND msgHopCount IS small THEN MESSAGE_PRIORITY IS low;
 END_RULEBLOCK
 
 END_FUNCTION_BLOCK

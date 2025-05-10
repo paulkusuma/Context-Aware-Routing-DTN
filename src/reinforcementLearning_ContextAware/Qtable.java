@@ -21,17 +21,18 @@ public class Qtable {
     public double getQvalue(String state, String action) {
         String key = state + ":" + action;
         //Mengembalikan nilai Q-Value jika ada, atau 0 jika tidak ada
-        return qtable.getOrDefault(key, 0.0);
+        return qtable.getOrDefault(key, 0.1);
     }
 
     // Cari Q-maksimum dari node yang pernah ditemui (Nm)
-    public double getMaxQvalueForEncounteredNodes(String destinationId, EncounteredNodeSet ens) {
+    public double getMaxQvalueForEncounteredNodes(String state, EncounteredNodeSet ens) {
         double maxQvalue = Double.NEGATIVE_INFINITY;
+//        String state = hostId + "," + destinationId;
 
         // Iterasi melalui semua node yang pernah ditemui
         for (String encounteredNodeId : ens.getAllNodeIds()) {
             // Ambil nilai Q untuk pasangan (encounteredNodeId, destinationId)
-            double qValue = getQvalue(encounteredNodeId, destinationId);
+            double qValue = getQvalue(state, encounteredNodeId);
 //            System.out.println("[DEBUG] Encountered Node: " + encounteredNodeId +
 //                    " Q-value: " + qValue);
             // Perbarui maxQvalue dengan nilai Q tertinggi
