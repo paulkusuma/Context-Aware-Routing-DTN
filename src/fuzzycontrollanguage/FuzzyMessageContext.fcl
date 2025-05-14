@@ -10,9 +10,9 @@ VAR_OUTPUT
 END_VAR
 
 FUZZIFY msgTTL
-    TERM small   := TRAPE 0 0 10 20 ; // TTL hampir habis
-    TERM medium  := TRAPE 10 20 50 70 ;
-    TERM large   := TRAPE 50 70 100 100 ; // TTL masih panjang
+    TERM small   := TRAPE 0 50 100 150 ; // TTL hampir habis
+    TERM medium  := TRAPE 150 170 200 250 ;
+    TERM large   := TRAPE 250 300 360 360 ; // TTL masih panjang
 END_FUZZIFY
 
 FUZZIFY msgHopCount

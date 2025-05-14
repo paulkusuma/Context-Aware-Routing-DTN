@@ -66,11 +66,11 @@ public class NetworkDensityCalculator {
      */
     public static int calculateCopiesBasedOnDensity(double density) {
         if (density > 0.7) {
-            return random.nextInt(3) + 1;  // Rentang: 1 - 3
+            return random.nextInt(3) + 1;
         } else if (density > 0.3) {
-            return random.nextInt(4) + 4;  // Rentang: 4 - 7
+            return random.nextInt(4) + 3;
         } else {
-            return random.nextInt(5) + 8;  // Rentang: 8 - 12
+            return random.nextInt(5) + 8;
         }
     }
 }

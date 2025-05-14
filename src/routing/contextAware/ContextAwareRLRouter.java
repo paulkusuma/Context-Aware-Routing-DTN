@@ -247,8 +247,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
 //            connDuration.printConnectionInfo(this.getHost(), neighbor);
         }
         finally {
-//            this.encounteredNodeSet.removeEncounter(neighborId);
-//            neighborENS.removeEncounter(myId);
+            this.encounteredNodeSet.removeEncounter(neighborId);
+            neighborENS.removeEncounter(myId);
         }
 
     }
@@ -284,19 +284,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
             }
         }
         return true;
-    }
-
-    @Override
-    public int receiveMessage(Message m, DTNHost from) {
-//        // Cek apakah properti "copies" tidak ada pada pesan yang diterima
-        if (m.getProperty("copies") == null) {
-            // Asumsikan pengirim harus sudah menetapkan copies, jadi kita log saja
-            System.out.println("Warning: message " + m.getId() + " received from " + from.getAddress() +
-                    " does not have 'copies' property. Assigning default value.========");
-//            // Berikan nilai default jika diperlukan (misalnya 1), atau bisa dihitung berdasarkan konteks
-//            m.addProperty("copies", 1);
-        }
-        return super.receiveMessage(m, from);
     }
 
     /**
@@ -351,28 +338,23 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return lowest;
     }
 
-    @Override
-    protected void makeRoomForNewMessage(int size) {
-        makeRoomForMessage(size); // Gunakan logika dengan prioritas fuzzy
-    }
-
     /**
      * Memilih tetangga terbaik untuk relay pesan berdasarkan kombinasi nilai
      * social importance dan Q-value terhadap tujuan pesan.
      *
      * @param msg Pesan yang sedang diproses.
-     * @param connections Daftar koneksi aktif saat ini.
      * @return Koneksi ke tetangga terbaik, atau null jika tidak ada yang cocok.
      */
-    private Connection selectBestNeighbor(Message msg, List<Connection> connections) {
+    private Connection selectBestNeighbor(Message msg) {
         DTNHost host = this.getHost();
         String hostId = String.valueOf(host.getAddress());
         String destId = String.valueOf(msg.getTo().getAddress());
 
         Connection bestConn = null;
         double bestQVal = Double.NEGATIVE_INFINITY;
+        List<Connection> connUp = getConnections();
 
-        for (Connection conn : connections) {
+        for (Connection conn : connUp) {
             DTNHost neighbor = conn.getOtherNode(host);
             String neighborId = String.valueOf(neighbor.getAddress());
 
@@ -410,24 +392,22 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         // Lakukan evaluasi fuzzy logic untuk prioritas setiap pesan
         for (Message msg : messages) {
-            int msgTtl = msg.getTtl();
-//            System.out.println("TTL " + msgTtl);
-            int msgHopCount = msg.getHopCount();
+            if (msg == null) {
+                return null;
+            }
             // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
-            double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msgTtl, msgHopCount);
+            double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msg.getTtl(), msg.getHopCount());
             // Simpan atau update prioritas pesan tersebut ke dalam table
             messageListTable.updateMessagePriority(msg, priority); // Menyimpan Prioritas di table
         }
-        // Urutkan pesan berdasarkan prioritas (descending) menggunakan sortByQueueMode
-        this.sortByQueueMode(messages);
 
-        // Coba kirim semua pesan satu per satu berdasarkan prioritas
+        // 2. Urutkan menggunakan sortByQueueMode() berdasarkan messageListTable
+        this.sortByFuzzyPriority(messages);
+
+        // 3. Proses forwarding berdasarkan urutan prioritas
         for (Message msg : messages) {
             Connection conn = copiesControlMechanism(msg, connections);
             if (conn != null) {
-//                // Menambahkan node tetangga ke dalam path pesan
-//                DTNHost neighbor = conn.getOtherNode(this.getHost());
-//                msg.getHops().add(neighbor);
                 return conn;
             }
         }
@@ -435,37 +415,24 @@ public class ContextAwareRLRouter extends ActiveRouter {
     }
 
     /**
-     * Mengurutkan daftar pesan atau tuple pesan-koneksi berdasarkan mode antrian (queue mode).
-     * Dalam implementasi ini, pesan akan diurutkan berdasarkan nilai prioritas fuzzy (descending).
-     * Prioritas diambil dari MessageListTable yang sudah diisi sebelumnya.
-     * @param list Daftar objek yang akan diurutkan (bisa berupa List<Message> atau List<Tuple<Message, Connection>>)
-     * @return Daftar yang telah diurutkan sesuai prioritas.
+     * Mengurutkan daftar pesan berdasarkan nilai prioritas fuzzy (dari tinggi ke rendah).
+     * Prioritas masing-masing pesan diambil dari {@code messageListTable} yang telah diisi sebelumnya.
+     * Digunakan untuk menentukan urutan pengiriman pesan yang paling penting lebih dulu.
+     *
+     * @param messages Daftar pesan (List<Message>) yang akan diurutkan.
+     * @return Daftar pesan yang telah diurutkan sesuai nilai prioritas fuzzy (descending).
      */
-    @Override
-    protected List sortByQueueMode(List list) {
-        // Cek apakah list berisi Message langsung atau Tuple<Message, Connection>
-        // Jika list berisi objek Message langsung
-        if (!list.isEmpty() && list.get(0) instanceof Message) {
-            list.sort((Object o1, Object o2) -> {
-                Message m1 = (Message) o1;
-                Message m2 = (Message) o2;
-                // Ambil nilai prioritas dari masing-masing pesan
-                double p1 = messageListTable.getPriority(m1);
-                double p2 = messageListTable.getPriority(m2);
-                return Double.compare(p2, p1); //Desending (prioritas tinggi di awal)
-            });
-        }else if(!list.isEmpty() && list.get(0) instanceof Tuple) {
-            list.sort((Object o1, Object o2) -> {
-                Message m1 = ((Tuple<Message, Connection>) o1).getKey();
-                Message m2 = ((Tuple<Message, Connection>) o2).getKey();
-                // Ambil nilai prioritas dari masing-masing pesan dalam tuple
-                double p1 = messageListTable.getPriority(m1);
-                double p2 = messageListTable.getPriority(m2);
-                return Double.compare(p2,p1); //Desending (prioritas tinggi di awal)
-            });
-        }
-        // Kembalikan list yang sudah diurutkan
-        return list;
+    protected List<Message> sortByFuzzyPriority(List<Message> messages) {
+        // Urutkan pesan berdasarkan nilai prioritas fuzzy secara menurun (descending)
+        messages.sort(( m1, m2) -> {
+            // Ambil nilai prioritas dari masing-masing pesan
+            double p1 = messageListTable.getPriority(m1);
+            double p2 = messageListTable.getPriority(m2);
+            // Urutkan dari prioritas tertinggi ke terendah
+            return Double.compare(p2, p1); //Desending (prioritas tinggi di awal)
+        });
+        // Kembalikan daftar pesan yang telah diurutkan
+        return messages;
     }
 
     /**
@@ -489,20 +456,16 @@ public class ContextAwareRLRouter extends ActiveRouter {
         double messagePriority = messageListTable.getPriority(msg);
         int copies = (int) msg.getProperty("copies");
 
-        // Cari tetangga terbaik menurut Q-value
-        Connection bestConnection = selectBestNeighbor(msg, connections);
-        DTNHost bestNeighbor = (bestConnection != null) ? bestConnection.getOtherNode(this.getHost()) : null;
-
         // Iterasi untuk memeriksa setiap koneksi yang tersedia antara host dan tetangga
         for (Connection c : connections) {
-            DTNHost neighbor = c.getOtherNode(this.getHost());
+            DTNHost neighbor = c.getOtherNode(host);
             String neighborId = String.valueOf(neighbor.getAddress());
             boolean canSend = canStartTransfer();
             boolean isDestination = neighborId.equals(destinationId);
 
 //            if (!canStartTransfer()) continue;
 
-            // Langsung kirim jika neighbor adalah tujuan
+            // --- PRIORITAS 1: Forward langsung ke tujuan jika sedang terkoneksi ---
             if (isDestination && canSend) {
                 if (copies > 1) {
                     msg.updateProperty("copies", copies - 1);
@@ -512,61 +475,60 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 startTransfer(msg, c);
                 return c;
             }
+        }
+        // Cari tetangga terbaik menurut Q-value
+        Connection bestConnection = selectBestNeighbor(msg);
+        if (bestConnection == null || !connections.contains(bestConnection)) {
+            return null; // Tidak ada tetangga terbaik yang sedang terkoneksi
+        }
+        DTNHost bestNeighbor = bestConnection.getOtherNode(host);
+        String bestNeighborId = String.valueOf(bestNeighbor.getAddress());
 
-            // Kasus 2: neighbor adalah relay terbaik (hasil dari selectBestNeighbor)
-            if(bestNeighbor != null && neighbor.equals(bestNeighbor) && canSend) {
-                // Hitung nilai social importance node ini dan neighbor
-                double myPop = popularity.getPopularity(host);
-                double TieStrength = tieStrength.getTieStrength(this.getHost(), neighbor);
-                double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, TieStrength);
-                double neighborPop = popularity.getPopularity(neighbor);
-                double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, TieStrength);
+        if(canStartTransfer()){
+            // Hitung nilai social importance node ini dan neighbor
+            double myPop = popularity.getPopularity(host);
+            double tie = tieStrength.getTieStrength(this.getHost(), bestNeighbor);
+            double mySocial = fuzzyContextAware.evaluateSelf(this.getHost(), myPop, tie);
+            double neighborPop = popularity.getPopularity(bestNeighbor);
+            double neighborSocial = fuzzyContextAware.evaluateSelf(bestNeighbor, neighborPop, tie);
 
-                // Mengambil Q-value untuk host dan tetangga berdasarkan state tujuan pesan
-                String state = hostId +","+ destinationId;
-                double myQ = qtable.getQvalue(state, neighborId);
-                String stateNeighbor = neighborId +","+ destinationId;
-                double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
+            // Mengambil Q-value untuk host dan tetangga berdasarkan state tujuan pesan
+            String state = hostId +","+ destinationId;
+            double myQ = qtable.getQvalue(state, bestNeighborId);
+            String stateNeighbor = bestNeighborId +","+ destinationId;
+            double neighborQ = qtable.getQvalue(stateNeighbor, hostId);
 
-                // Evaluasi apakah neighbor lebih baik dari segi sosial atau Q-value
-                boolean socialBetter = neighborSocial > mySocial;
-                boolean qvalueBetter = neighborQ > myQ;
+            // Evaluasi apakah neighbor lebih baik dari segi sosial atau Q-value
+            boolean socialBetter = neighborSocial > mySocial;
+            boolean qvalueBetter = neighborQ > myQ;
 
-                // Kondisi untuk jumlah salinan pesan lebih dari 1
-                // Jika copies masih > 1 → buat salinan dan kirim
-                if(copies > 1 && messagePriority >= 0.5 && (socialBetter || qvalueBetter)){
-                    int sendCopies = copies / 2; // Membagi salinan pesan untuk dikirim
-                    int remainingCopies = copies - sendCopies; // Salinan yang tersisa
-                    msg.updateProperty("copies", remainingCopies); // Mengupdate jumlah salinan yang tersisa
+            if(copies > 1 && messagePriority >= 0.5 && (socialBetter || qvalueBetter)){
+                int sendCopies = copies / 2; // Membagi salinan pesan untuk dikirim
+                int remainingCopies = copies - sendCopies; // Salinan yang tersisa
+                msg.updateProperty("copies", remainingCopies); // Mengupdate jumlah salinan yang tersisa
 
-                    Message copy = msg.replicate(); // Membuat salinan pesan
-                    copy.setTtl(msg.getTtl());
-                    copy.updateProperty("copies", sendCopies); // Menambahkan jumlah salinan untuk salinan pesan baru
+                Message copy = msg.replicate(); // Membuat salinan pesan
+                copy.setTtl(msg.getTtl());
+                copy.updateProperty("copies", sendCopies); // Menambahkan jumlah salinan untuk salinan pesan baru
 
-                    startTransfer(copy, c);
-                    return c;
+                startTransfer(copy, bestConnection);
+                return bestConnection;
 
-                    // Kondisi jika jumlah salinan pesan adalah 1
-                    // Jika hanya tersisa 1 copy, lakukan forwarding final
-                } else if (copies == 1){
-                    // Kirim jika social dan qvalue lebih baik, atau salah satunya cukup
-                    if((messagePriority >= 0.5 && socialBetter && qvalueBetter)
-                            || (messagePriority < 0.5 && (socialBetter || qvalueBetter))){
-                        startTransfer(msg, c);
-                        deleteMessage(msgId, true);
-                        return c;
-                    }
+                // Kondisi jika jumlah salinan pesan adalah 1
+                // Jika hanya tersisa 1 copy, lakukan forwarding final
+            } else if (copies == 1){
+                // Kirim jika social dan qvalue lebih baik, atau salah satunya cukup
+                if((messagePriority >= 0.5 && socialBetter && qvalueBetter)
+                        || (messagePriority < 0.5 && (socialBetter || qvalueBetter))){
+                    startTransfer(msg, bestConnection);
+                    deleteMessage(msgId, true);
+                    return bestConnection;
                 }
             }
         }
         return null; // Tidak ada koneksi yang layak
     }
 
-    @Override
-    protected int startTransfer(Message m, Connection con) {
-        // Mengirimkan pesan
-        return super.startTransfer(m, con);
-    }
 
     public void update(){
         super.update();
@@ -582,8 +544,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
     }
 
     // Memeriksa apakah node ini adalah penerima akhir dari pesan
-    private boolean isFinalRecipient(Message m) {
-        return m.getTo() == getHost();  // Mengecek apakah penerima pesan adalah node ini
+    private boolean isFinalDest(Message m, DTNHost to) {
+        return m.getTo() == to;  // Mengecek apakah penerima pesan adalah node ini
     }
 
     // Memeriksa apakah ini adalah pengiriman pertama untuk pesan ini
@@ -603,35 +565,33 @@ public class ContextAwareRLRouter extends ActiveRouter {
      */
     @Override
     public Message messageTransferred(String id, DTNHost from) {
-        // Step 1: Panggil super untuk mendapatkan pesan yang ditransfer
+        // Step 1: Ambil pesan yang ditransfer menggunakan logika standar dari parent class
         Message m = super.messageTransferred(id, from);
 
-        // Step 2: Tambahkan logika update Q-Table
-        if(m != null){
-            // Langkah 3: Cek apakah kita penerima final atau ini first delivery
-            boolean isFinalRecipient = isFinalRecipient(m);
+        if (m!= null){
+            // Step 2: Cek apakah kita adalah tujuan akhir atau ini adalah pengiriman pertama
+            boolean isFinalRecipient = isFinalDest(m, getHost());
             boolean isFirstDelivery = isFirstDelivery(m);
 
-            // Step 4: Update Q-table jika penerima final atau pengiriman pertama
-            if (isFinalRecipient || isFirstDelivery){
-
-                // Step 5: Ambil QTable sender dan receiver
+            // Step 3: Jika ini pengiriman pertama atau kita adalah penerima akhir,
+            // maka sinkronkan Q-table antara pengirim dan penerima
+            if (isFinalRecipient || isFirstDelivery) {
                 Qtable senderQtable = ((ContextAwareRLRouter) from.getRouter()).getQtable();
                 Qtable receiverQtable = this.getQtable();
 
-                QTableUpdateStrategy.updateThirdStrategy(senderQtable, receiverQtable); //Pemanggilan static
-
+                QTableUpdateStrategy.updateThirdStrategy(senderQtable, receiverQtable);
             }
-            // Jika bukan tujuan akhir, kurangi jumlah copies
-            if(!isFinalRecipient){
-                Integer copies = (Integer) m.getProperty("copies");
 
-                if (copies != null && copies > 1){
-                    m.updateProperty("copies", copies -1);
+            // Step 4: Jika kita bukan tujuan akhir, kurangi jumlah salinan (copies)
+            if (!isFinalRecipient) {
+                Integer copies = (Integer) m.getProperty("copies");
+                if (copies != null && copies > 1) {
+                    m.updateProperty("copies", copies - 1);
                 }
             }
         }
         return m;
+
     }
 
     @Override
