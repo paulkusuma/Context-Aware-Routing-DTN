@@ -33,10 +33,10 @@ public class FuzzyContextMsg {
     public double evaluateMsg(DTNHost host, int msgTTL, int msgHopCount){
         FIS fis = getFISFromHost(host);
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyMessageContext");
-        System.out.println("[DEBUG] Setting input variables for message priority:");
+//        System.out.println("[DEBUG] Setting input variables for message priority:");
 
 //        System.out.println("[DEBUG] Msg TTL : " + msgTTL);
-        System.out.println("[DEBUG] Msg HopCount: " + msgHopCount);
+//        System.out.println("[DEBUG] Msg HopCount: " + msgHopCount);
 
         fb.setVariable("msgTTL", msgTTL);
         fb.setVariable("msgHopCount", msgHopCount);

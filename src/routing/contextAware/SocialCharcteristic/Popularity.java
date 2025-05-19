@@ -22,9 +22,9 @@ public class Popularity {
     // Menyimpan Popularity setiap node
     private static Map<DTNHost, Double> popularityMap = new HashMap<>();
     // Threshold untuk menghitung encounter maksimal untuk normalisasi (digunakan sebagai pembagi)
-    private static final int NUMth = 4;
+    private static final int NUMth = 35;
     // Interval waktu (200 detik)
-    private static final double TIME_WINDOW = 1200.0;
+    private static final double TIME_WINDOW = 200.0;
 
     // Smoothing alpha untuk pembaruan popularitas
     private double alphaPopularity;

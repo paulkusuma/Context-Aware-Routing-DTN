@@ -35,4 +35,8 @@ public class MessageListTable {
         return 0.0;
     }
 
+    public void removeMessageLowPriority(Message message) {
+        messagePriorityList.removeIf(messagePriority -> messagePriority.message.getId().equals(message.getId()));
+    }
+
 }

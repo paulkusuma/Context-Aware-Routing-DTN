@@ -10,15 +10,15 @@ VAR_OUTPUT
 END_VAR
 
 FUZZIFY msgTTL
-    TERM small   := TRAPE 0 50 100 150 ; // TTL hampir habis
-    TERM medium  := TRAPE 150 170 200 250 ;
-    TERM large   := TRAPE 250 300 360 360 ; // TTL masih panjang
+      TERM small  := TRAPE 0 20 40 80 ;         // Pesan hampir kedaluwarsa
+      TERM medium := TRAPE 60 90 120 150 ;      // Umur sedang
+      TERM large  := TRAPE 130 150 180 180 ;    // Umur masih panjang
 END_FUZZIFY
 
 FUZZIFY msgHopCount
-    TERM small   := TRAPE 0 0 1 2 ; // Baru dikirim
-    TERM medium  := TRAPE 1 2 3 4 ;
-    TERM large   := TRAPE 3 4 6 6 ; // Sudah banyak node
+    TERM small   := TRAPE 0 0 0.5 1 ; // Baru dikirim
+    TERM medium  := TRAPE 0.5 1 1.5 2 ;
+    TERM large   := TRAPE 1.5 2 3 3 ; // Sudah banyak node
 END_FUZZIFY
 
 DEFUZZIFY MESSAGE_PRIORITY

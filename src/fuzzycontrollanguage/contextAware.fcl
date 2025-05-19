@@ -7,6 +7,13 @@ VAR_INPUT
         tieStrengthNeighbor : REAL;
 END_VAR
 
+FUZZIFY msgTTL
+   TERM small  := TRAPE 0 80 160 320 ;
+        TERM medium := TRAPE 300 400 540 640 ;
+        TERM large  := TRAPE 600 680 720 720 ;
+END_FUZZIFY
+
+
 VAR_OUTPUT
         ABILITY_NODE            : REAL;
         SOCIAL_IMPORTANCE       : REAL;

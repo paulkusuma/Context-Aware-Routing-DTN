@@ -1,120 +1,159 @@
-Scenario.name = ContextAwareRLScenario
+####################################
+# SCENARIO: Simulation Time Evaluation
+####################################
+Scenario.name = ContextAwareRLScenarioTestReport
 Scenario.simulateConnections = true
-Scenario.updateInterval = 0.1
+#Scenario.updateInterval = 0.1
+Scenario.updateInterval = 0.2
 #Scenario.endTime = 43200
-Scenario.endTime = 15000
+Scenario.endTime = 20000
 
-Scenario.nrofHostGroups = 6
-
+####################################
+# INTERFACE CONFIGURATION
+####################################
 btInterface.type = SimpleBroadcastInterface
-btInterface.transmitSpeed = 250k
-btInterface.transmitRange = 50
+btInterface.transmitSpeed = 300k
+btInterface.transmitRange = 20
+
+####################################
+# COMMON GROUP SETTINGS
+####################################
+Scenario.nrofHostGroups = 6
 
 Group.router = contextAware.ContextAwareRLRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
 Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
 
-Group.bufferSize = 100M
-Group.msgTtl = 70
+Group.bufferSize = 10M
+Group.msgTtl = 180
 Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
-Group.msgTtl = 300
-Group.movementModel = RandomWaypoint
-
-Group.initialEnergy = 100
-Group.scanEnergy = 0.001
-Group.transmitEnergy   = 0.1
+Group.initialEnergy = 1000
+Group.scanEnergy = 0.01
+Group.transmitEnergy   = 0.2
 Group.scanResponseEnergy = 0.001
 Group.scanInterval = 0.01
+Group.alphaPopularity = 0.6
 
-Group.alphaPopularity = 0.8
-
-# All nodes have the bluetooth interface
-Group.nrofInterfaces = 1
-Group.interface1 = btInterface
-
-MovementModel.worldSize = 4400, 3400
-MovementModel.warmup = 1000
-MapBasedMovement.nrofMapFiles = 4
-# MapBasedMovement.mapFile1 = data/roads.wkt
-# MapBasedMovement.mapFile2 = data/main_roads.wkt
-# MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
-# MapBasedMovement.mapFile4 = data/shops.wkt
-
-# Group1 - pedestrian 1 (MBM)
+####################################
+# GROUP 1: PEDESTRIAN (MBM/SPMB)
+####################################
 Group1.groupID = p1
-Group1.bufferSize = 100M
-Group1.msgTtl = 70
-Group1.nrofHosts = 15
-# Group1.movementModel = MapBasedMovement
-# Group1.movementModel = RandomWalk
+Group1.nrofHosts = 10
+Group1.bufferSize = 10M
+Group1.msgTtl = 180
+Group1.nrofInterfaces = 1
+Group1.interface1 = btInterface
 
-# Group2 - pedestrian 2 (SPMB)
+# Default: gunakan MapBasedMovement (MBM)
+Group1.movementModel = MapBasedMovement
+
+# Untuk menguji Shortest Path Map Based Movement (SPMBM)
+#Group1.movementModel = ShortestPathMapBasedMovement
+#Group1.pois = 0,1, 1,1, 2,1
+#Group1.okMaps = 3
+
+####################################
+# GROUP 2: PEDESTRIAN (RWP)
+####################################
 Group2.groupID = p2
 Group2.nrofHosts = 15
-Group2.bufferSize = 100M
-Group2.msgTtl = 70
-Group2.movementModel =RandomWalk
+Group2.bufferSize = 10M
+Group2.msgTtl = 180
+Group2.nrofInterfaces = 1
+Group2.interface1 = btInterface
+Group2.movementModel = RandomWaypoint
 
-
-# Group3 - car 1
+####################################
+# GROUP 3: CAR GROUP 1
+####################################
 Group3.groupID = c1
-Group3.bufferSize = 100M
-Group3.msgTtl = 70
 Group3.nrofHosts = 10
-Group3.movementModel = RandomWalk
-#Group3.speed = 2.7, 13.9
+Group3.bufferSize = 10M
+Group3.msgTtl = 180
+Group3.nrofInterfaces = 1
+Group3.interface1 = btInterface
+Group3.movementModel = MapRouteMovement
+Group3.routeFile = data/tram3.wkt
+Group3.routeType = 1
+Group3.speed = 8.3, 13.9
 
-
-
-# Group4 - car 2
+####################################
+# GROUP 4: CAR GROUP 2
+####################################
 Group4.groupID = c2
-Group4.bufferSize = 100M
-Group4.msgTtl = 70
 Group4.nrofHosts = 10
+Group4.bufferSize = 10M
+Group4.msgTtl = 180
+Group4.nrofInterfaces = 1
 Group4.interface1 = btInterface
-Group4.movementModel = RandomWalk
-#Group4.speed = 2.7, 13.9
+Group4.movementModel = MapRouteMovement
+Group4.routeFile = data/tram10.wkt
+Group4.routeType = 2
+Group4.speed = 8.3, 13.9
 
-
-
-# Group5 - bus 1
+####################################
+# GROUP 5: BUS GROUP 1
+####################################
 Group5.groupID = b1
-Group5.bufferSize = 100M
-Group5.msgTtl = 70
 Group5.nrofHosts = 2
-Group5.movementModel = RandomWalk
-# Group5.routeFile = data/tram3.wkt
+Group5.bufferSize = 10M
+Group5.msgTtl = 180
+Group5.nrofInterfaces = 1
+Group5.interface1 = btInterface
+Group5.movementModel = MapRouteMovement
+Group5.routeFile = data/demo_bus.wkt
 Group5.routeType = 1
-Group5.waitTime = 10, 30
-#Group5.speed = 7, 10
+Group5.speed = 5.5, 10
 
-# Group6 - bus 2
+####################################
+# GROUP 6: BUS GROUP 2
+####################################
 Group6.groupID = b2
-Group6.bufferSize = 100M
-Group6.msgTtl = 70
 Group6.nrofHosts = 2
-Group6.movementModel = RandomWalk
-# Group6.routeFile = data/tram4.wkt
+Group6.bufferSize = 10M
+Group6.msgTtl = 180
+Group6.nrofInterfaces = 1
+Group6.interface1 = btInterface
+Group6.movementModel = MapRouteMovement
+Group6.routeFile = data/tram4.wkt
 Group6.routeType = 2
-Group6.waitTime = 10, 30
-#Group6.speed = 7, 10
+Group6.speed = 5.5, 10
 
+####################################
+# MAP CONFIGURATION
+####################################
+MovementModel.worldSize = 4400, 3400
+MovementModel.warmup = 1000
+MovementModel.rngSeed = 1
 
-# Event Generator
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+
+####################################
+# EVENT GENERATOR
+####################################
 Events.nrof = 1
 Events1.class = MessageEventGenerator
-Events1.interval = 25,35
+Events1.interval = 35,45
 Events1.size = 500k,1M
-Events1.hosts = 0,54
+Events1.hosts = 0,48
 Events1.prefix = M
 
-# Report
-Report.nrofReports = 2
+####################################
+# REPORTS
+####################################
+Report.nrofReports = 5
 Report.warmup = 0
 Report.reportDir = reports/
 Report.report1 = MessageStatsReport
-Report.report2 = ContactTimesReport
-
+Report.report2 = TimedStatsMessageReport
+Report.report3 = DeliveredMessagesReport
+Report.report4 = BufferOccupancyReport
+Report.report5 = MessageDeleteReport
+Report.TimedStatsMessageReport.output = reports/timed_stats.txt

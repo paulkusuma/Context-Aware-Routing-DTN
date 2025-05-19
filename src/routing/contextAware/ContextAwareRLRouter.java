@@ -273,16 +273,16 @@ public class ContextAwareRLRouter extends ActiveRouter {
         m.addProperty("copies", copies);
         this.addToMessages(m, true);
 
-        // Jika node ini adalah pengirim awal, buat salinan tambahan dan pesan belum punya properti "copies"
-        if (m.getFrom().equals(this.getHost()) && m.getProperty("copies") == null) {
-            // Buat copies-1 salinan tambahan
-            for (int i = 1; i < copies; i++) {
-                Message copy = m.replicate(); // Salin pesan
-                copy.setTtl(msgTtl);
-                copy.addProperty("copies", copies);
-                this.addToMessages(copy, true);
-            }
-        }
+//        // Jika node ini adalah pengirim awal, buat salinan tambahan dan pesan belum punya properti "copies"
+//        if (m.getFrom().equals(this.getHost()) && copies > 1) {
+//            // Buat copies-1 salinan tambahan
+//            for (int i = 1; i < copies; i++) {
+//                Message copy = m.replicate(); // Salin pesan
+//                copy.setTtl(msgTtl);
+//                copy.updateProperty("copies", copies);
+//                this.addToMessages(copy, true);
+//            }
+//        }
         return true;
     }
 
@@ -310,6 +310,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
             }
             // Hapus pesan dari buffer (mode drop = true)
             deleteMessage(lowestPriorityMsg.getId(),true);
+            messageListTable.removeMessageLowPriority(lowestPriorityMsg);
             // Tambah ruang kosong berdasarkan ukuran pesan yang dihapus
             freeBuffer += lowestPriorityMsg.getSize();
         }
@@ -395,6 +396,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
             if (msg == null) {
                 return null;
             }
+            System.out.println("HopCount : "+ msg.getHopCount());
             // Evaluasi prioritas berdasarkan TTL dan hopCount menggunakan modul FLC
             double priority = fuzzyContextMsg.evaluateMsg(this.getHost(), msg.getTtl(), msg.getHopCount());
             // Simpan atau update prioritas pesan tersebut ke dalam table
@@ -454,24 +456,26 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
         // Prioritas pesan di MessageListTable
         double messagePriority = messageListTable.getPriority(msg);
-        int copies = (int) msg.getProperty("copies");
+        int copies = (int) msg.getProperty("copies"); // Mengambil copies yang sudah di inisialisasi createM
 
         // Iterasi untuk memeriksa setiap koneksi yang tersedia antara host dan tetangga
         for (Connection c : connections) {
             DTNHost neighbor = c.getOtherNode(host);
             String neighborId = String.valueOf(neighbor.getAddress());
-            boolean canSend = canStartTransfer();
+//            boolean canSend = c.isReadyForTransfer();//connection is ready to transfer a message
             boolean isDestination = neighborId.equals(destinationId);
 
 //            if (!canStartTransfer()) continue;
 
             // --- PRIORITAS 1: Forward langsung ke tujuan jika sedang terkoneksi ---
-            if (isDestination && canSend) {
+            if (isDestination && c.isReadyForTransfer()) {
                 if (copies > 1) {
                     msg.updateProperty("copies", copies - 1);
                 } else {
                     deleteMessage(msg.getId(), true);
                 }
+                //
+//                msg.addNodeOnPath(host);
                 startTransfer(msg, c);
                 return c;
             }
@@ -503,32 +507,72 @@ public class ContextAwareRLRouter extends ActiveRouter {
             boolean qvalueBetter = neighborQ > myQ;
 
             if(copies > 1 && messagePriority >= 0.5 && (socialBetter || qvalueBetter)){
-                int sendCopies = copies / 2; // Membagi salinan pesan untuk dikirim
+                int sendCopies = copies/2; // Membagi salinan pesan untuk dikirim
                 int remainingCopies = copies - sendCopies; // Salinan yang tersisa
-                msg.updateProperty("copies", remainingCopies); // Mengupdate jumlah salinan yang tersisa
 
                 Message copy = msg.replicate(); // Membuat salinan pesan
                 copy.setTtl(msg.getTtl());
                 copy.updateProperty("copies", sendCopies); // Menambahkan jumlah salinan untuk salinan pesan baru
 
-                startTransfer(copy, bestConnection);
-                return bestConnection;
+                //
+//                copy.addNodeOnPath(this.getHost());
+                int result = startTransfer(copy, bestConnection); // Coba kirim salinan
+                if(result == RCV_OK){
+                    // Jika pengiriman salinan berhasil, baru kurangi salinan dari pesan asli
+                    msg.updateProperty("copies", remainingCopies); // Mengupdate jumlah salinan yang tersisa
+                    return bestConnection;
+                } else{
+                    double bufferSpace = getFreeBufferSize();
+                    System.out.println("[TRANSFER FAIL] Message " + msg.getId() +
+                            " not sent to " + bestNeighbor.getAddress() +
+                            ". Buffer space: " + bufferSpace);
+                }
+                // Jika gagal kirim, tidak jadi update copies, dan tidak return
 
                 // Kondisi jika jumlah salinan pesan adalah 1
                 // Jika hanya tersisa 1 copy, lakukan forwarding final
             } else if (copies == 1){
-                // Kirim jika social dan qvalue lebih baik, atau salah satunya cukup
-                if((messagePriority >= 0.5 && socialBetter && qvalueBetter)
+                if(bestNeighborId.equals(destinationId)){
+                    //
+//                    msg.addNodeOnPath(host);
+                    int result = startTransfer(msg, bestConnection);
+                    if(result == RCV_OK){
+                        deleteMessage(msg.getId(), true);
+                        return bestConnection;
+                    }
+                } else if((messagePriority >= 0.5 && socialBetter && qvalueBetter)
                         || (messagePriority < 0.5 && (socialBetter || qvalueBetter))){
-                    startTransfer(msg, bestConnection);
-                    deleteMessage(msgId, true);
-                    return bestConnection;
+                    //
+//                    msg.addNodeOnPath(host);
+                    int result = startTransfer(msg, bestConnection);
+                    if(result == RCV_OK){
+                        deleteMessage(msg.getId(), true);
+                        return bestConnection;
+                    }
                 }
+//                // Kirim jika social dan qvalue lebih baik, atau salah satunya cukup
+//                if((messagePriority >= 0.5 && socialBetter && qvalueBetter)
+//                        || (messagePriority < 0.5 && (socialBetter || qvalueBetter))){
+//                    int result = startTransfer(msg, bestConnection);
+//                    if(result == RCV_OK){
+//                        deleteMessage(msgId, true);
+//                        return bestConnection;
+//                    }
+//                }
             }
         }
         return null; // Tidak ada koneksi yang layak
     }
 
+    @Override
+    protected int startTransfer(Message m, Connection con) {
+        int result = super.startTransfer(m, con);
+        if(result == RCV_OK){
+            //Tambahkan hop
+            m.addNodeOnPath(con.getOtherNode(this.getHost()));
+        }
+        return result;
+    }
 
     public void update(){
         super.update();
@@ -582,16 +626,15 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 QTableUpdateStrategy.updateThirdStrategy(senderQtable, receiverQtable);
             }
 
-            // Step 4: Jika kita bukan tujuan akhir, kurangi jumlah salinan (copies)
-            if (!isFinalRecipient) {
-                Integer copies = (Integer) m.getProperty("copies");
-                if (copies != null && copies > 1) {
-                    m.updateProperty("copies", copies - 1);
-                }
-            }
+//            // Step 4: Jika kita bukan tujuan akhir, kurangi jumlah salinan (copies)
+//            if (!isFinalRecipient) {
+//                Integer copies = (Integer) m.getProperty("copies");
+//                if (copies != null && copies > 1) {
+//                    m.updateProperty("copies", copies - 1);
+//                }
+//            }
         }
-        return m;
-
+       return m;
     }
 
     @Override
