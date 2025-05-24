@@ -55,9 +55,9 @@ public class FuzzyContextAware {
         double abilityNode=fb.getVariable("ABILITY_NODE").getValue();
         double socialImportance=fb.getVariable("SOCIAL_IMPORTANCE").getValue();
         // Debug log untuk melihat hasil evaluasi Ability Node dan Social Importance
-        System.out.println("[DEBUG] Evaluated values:");
-        System.out.println("[DEBUG] Ability Node: " + abilityNode);
-        System.out.println("[DEBUG] Social Importance: " + socialImportance);
+//        System.out.println("[DEBUG] Evaluated values:");
+//        System.out.println("[DEBUG] Ability Node: " + abilityNode);
+//        System.out.println("[DEBUG] Social Importance: " + socialImportance);
 
         fb.setVariable("ABILITY", abilityNode);
         fb.setVariable("SOCIAL", socialImportance);
@@ -66,7 +66,7 @@ public class FuzzyContextAware {
 
         // Ambil nilai Transfer Opportunity dan log hasilnya
         double transferOpportunity = fb.getVariable("TRANSFER_OPPORTUNITY").getValue();
-        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
+//        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
 
         // Kembalikan nilai Transfer Opportunity
         return transferOpportunity;

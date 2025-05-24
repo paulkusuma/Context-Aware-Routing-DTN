@@ -148,7 +148,7 @@ public class EncounteredNode {
 
     public void incrementEncounterCount() {
         this.encounterCount++;
-        System.out.println("[DEBUG] Encounter count untuk Node " + this.nodeId + " meningkat menjadi: " + this.encounterCount);
+//        System.out.println("[DEBUG] Encounter count untuk Node " + this.nodeId + " meningkat menjadi: " + this.encounterCount);
     }
 
     public int getEncounterCount() {

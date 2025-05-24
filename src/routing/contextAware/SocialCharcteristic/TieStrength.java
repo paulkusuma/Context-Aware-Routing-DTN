@@ -111,7 +111,7 @@ public class TieStrength {
 //        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
 
         tieStrengthMap.computeIfAbsent(host, k -> new HashMap<>()).put(neighbor, tieStrength);
-        System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
+//        System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
 
     }
 

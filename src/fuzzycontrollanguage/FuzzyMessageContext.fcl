@@ -16,9 +16,9 @@ FUZZIFY msgTTL
 END_FUZZIFY
 
 FUZZIFY msgHopCount
-    TERM small   := TRAPE 0 0 0.5 1 ; // Baru dikirim
-    TERM medium  := TRAPE 0.5 1 1.5 2 ;
-    TERM large   := TRAPE 1.5 2 3 3 ; // Sudah banyak node
+      TERM small   := TRAPE 0 0 1 2 ;       // Baru dikirim atau 1-hop
+      TERM medium  := TRAPE 1.5 2.5 3.5 4 ; // Hop sedang
+      TERM large   := TRAPE 3.5 4.5 6 6 ;   // Sudah jauh tersebar
 END_FUZZIFY
 
 DEFUZZIFY MESSAGE_PRIORITY

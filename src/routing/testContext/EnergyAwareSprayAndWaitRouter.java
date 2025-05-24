@@ -1,14 +1,10 @@
-package routing.contextAware;
+package routing.testContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import core.*;
-import routing.ActiveRouter;
 import routing.EnergyAwareRouter;
-import routing.MessageRouter;
-import routing.SprayAndWaitRouter;
 
 public class EnergyAwareSprayAndWaitRouter extends EnergyAwareRouter {
     public static final String NROF_COPIES = "nrofCopies";

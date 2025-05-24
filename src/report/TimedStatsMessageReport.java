@@ -39,8 +39,8 @@ public class TimedStatsMessageReport extends Report implements MessageListener {
 	private int nrofResponseDelivered;
 	private int nrofDelivered;
 
-	private final List<Double> milestonesTimes = List.of(5000.0, 10000.0, 15000.0, 20000.0);
-//	private final List<Double> milestonesTimes = List.of(5000.0, 10000.0, 30000.0, 43000.0);
+	private final List<Double> milestonesTimes = List.of(5000.0, 10000.0, 30000.0, 43000.0, 45000.0);
+//	private final List<Double> milestonesTimes = List.of(1000.0, 2000.0, 3000.0, 4000.0, 5000.0);
 	private int nextMilestoneIndex=0;
 
 	/**

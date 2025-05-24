@@ -1,4 +1,4 @@
-Scenario.name = ContextAwareRLScenarioTEST1
+Scenario.name = ContextAwareRLScenarioTEST1SPW
 Scenario.simulateConnections = true
 #Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
@@ -14,7 +14,7 @@ btInterface.transmitRange = 15
 Scenario.nrofHostGroups = 2
 
 ## Common defaults
-Group.router = contextAware.ContextAwareRLRouter
+Group.router = SprayAndWaitRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
 Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
 
@@ -30,7 +30,8 @@ Group.scanEnergy = 0.01
 Group.transmitEnergy   = 0.1
 Group.scanResponseEnergy = 0.001
 Group.scanInterval = 0.01
-
+# Parameter khusus SprayAndWait
+Group.SprayAndWaitRouter.nrofCopies = 8
 Group.alphaPopularity = 0.6
 
 # Group1 - pedestrian 1 (MBM)
@@ -115,11 +116,9 @@ Events1.hosts = 0,24
 Events1.prefix = M
 
 # Report
-Report.nrofReports = 5
+Report.nrofReports = 3
 Report.warmup = 0
 Report.reportDir = reports/
 Report.report1 = MessageStatsReport
-Report.report2 = ContactTimesReport
-Report.report3 = DeliveredMessagesReport
-Report.report4 = BufferOccupancyReport
-Report.report5 = MessageDeleteReport
+Report.report2 = DeliveredMessagesReport
+Report.report3 = MessageDeleteReport
