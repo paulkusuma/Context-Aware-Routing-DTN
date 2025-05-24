@@ -31,21 +31,23 @@ public class FuzzyContextAware {
     }
 
     // EVALUASI UNTUK MENDAPATKAN TRANSFER OPPORTUNITY
-    public double evaluateNeighbor(DTNHost host, DTNHost neighbor, int freeBufferNeighbor, int remainingEnergy, double popularity, double tieStrength) {
+    public double evaluateNeighbor(DTNHost host, DTNHost neighbor, int freeBufferNeighbor, int remainingEnergyNeighbor, double popularityNeighbor, double tieStrengthNeighbor) {
         FIS fis = getFISFromHost(host);
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
 
         // Debug log untuk memastikan variabel telah diset dengan benar
-        System.out.println("[DEBUG] Setting input variables for FuzzyContextAware:");
-        System.out.println("[DEBUG] bufferNeighbor: " + freeBufferNeighbor);
-        System.out.println("[DEBUG] energyNeighbor: " + remainingEnergy);
-        System.out.println("[DEBUG] popularityNeighbor: " + popularity);
-        System.out.println("[DEBUG] tieStrengthNeighbor: " + tieStrength);
+//        System.out.println("[DEBUG] Setting input variables for FuzzyContextAware:");
+//        System.out.println("[DEBUG] bufferNeighbor: " + freeBufferNeighbor);
+//        System.out.println("[DEBUG] energyNeighbor: " + remainingEnergyNeighbor);
+//        System.out.println("[DEBUG] popularityNeighbor: " + popularityNeighbor);
+//        System.out.println("[DEBUG] tieStrengthNeighbor: " + tieStrengthNeighbor);
+        double bufferKb = freeBufferNeighbor /1024.0;
+
         //
-        fb.setVariable("bufferNeighbor", freeBufferNeighbor);
-        fb.setVariable("energyNeighbor", remainingEnergy);
-        fb.setVariable("popularityNeighbor", popularity);
-        fb.setVariable("tieStrengthNeighbor", tieStrength);
+        fb.setVariable("bufferNeighbor", bufferKb);
+        fb.setVariable("energyNeighbor", remainingEnergyNeighbor);
+        fb.setVariable("popularityNeighbor", popularityNeighbor);
+        fb.setVariable("tieStrengthNeighbor", tieStrengthNeighbor);
 
         //Evaaluasi COG Ability Node dan Social Importance
         fb.evaluate();
@@ -53,9 +55,9 @@ public class FuzzyContextAware {
         double abilityNode=fb.getVariable("ABILITY_NODE").getValue();
         double socialImportance=fb.getVariable("SOCIAL_IMPORTANCE").getValue();
         // Debug log untuk melihat hasil evaluasi Ability Node dan Social Importance
-        System.out.println("[DEBUG] Evaluated values:");
-        System.out.println("[DEBUG] Ability Node: " + abilityNode);
-        System.out.println("[DEBUG] Social Importance: " + socialImportance);
+//        System.out.println("[DEBUG] Evaluated values:");
+//        System.out.println("[DEBUG] Ability Node: " + abilityNode);
+//        System.out.println("[DEBUG] Social Importance: " + socialImportance);
 
         fb.setVariable("ABILITY", abilityNode);
         fb.setVariable("SOCIAL", socialImportance);
@@ -64,10 +66,25 @@ public class FuzzyContextAware {
 
         // Ambil nilai Transfer Opportunity dan log hasilnya
         double transferOpportunity = fb.getVariable("TRANSFER_OPPORTUNITY").getValue();
-        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
+//        System.out.println("[DEBUG] Transfer Opportunity: " + transferOpportunity);
 
         // Kembalikan nilai Transfer Opportunity
         return transferOpportunity;
 //        return fb.getVariable("TRANSFER_OPPORTUNITY").getValue();
+    }
+
+    // Untuk Pebandingan Nilai Sosial dengan Neighbor di Pembuatan MessageCopies
+    public double evaluateSelf(DTNHost host, double popularity, double tieStrength) {
+        FIS fis = getFISFromHost(host);
+        FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
+
+
+        fb.setVariable("popularityNeighbor", popularity);
+        fb.setVariable("tieStrengthNeighbor", tieStrength);
+
+        fb.evaluate();
+        double selfSocialImportance = fb.getVariable("SOCIAL_IMPORTANCE").getValue();
+
+        return selfSocialImportance;
     }
 }

@@ -3,7 +3,9 @@ package routing.contextAware.ENS;
 import core.DTNHost;
 import  core.SimClock;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,7 +45,7 @@ public class ConnectionDuration {
         String fromNodeId = String.valueOf(fromNode.getAddress());
         String toNodeId = String.valueOf(toNode.getAddress());
         //DEBUG
-        printDebugLog(fromNode, toNode, "Mulai");
+//        printDebugLog(fromNode, toNode, "Mulai");
 
         connectionHistory.putIfAbsent(fromNode, new HashMap<>());
         //Jika sudah ada kembalikan
@@ -52,14 +54,14 @@ public class ConnectionDuration {
             existingConnection.startTime = SimClock.getTime();
             existingConnection.endTime = -1;
             //DEBUG
-            printDebugLog(fromNode, toNode, "Melanjutkan koneksi sebelumnya");
+//            printDebugLog(fromNode, toNode, "Melanjutkan koneksi sebelumnya");
             return existingConnection;
         }
         //buat koneksi baru
         ConnectionDuration newconnectionDuration = new ConnectionDuration(fromNode, toNode);
         connectionHistory.get(fromNode).put(toNode, newconnectionDuration);
         //DEBUG
-        printDebugLog(fromNode, toNode, "Koneksi baru dimulai");
+//        printDebugLog(fromNode, toNode, "Koneksi baru dimulai");
         return newconnectionDuration;
     }
 
@@ -68,6 +70,7 @@ public class ConnectionDuration {
      * Mengakhiri koneksi dan mencatat waktu akhir koneksi.
      */
     public void endConnection(DTNHost fromNode, DTNHost toNode, EncounteredNodeSet encounteredNodeSet) {
+
         this.endTime = SimClock.getTime();
 
 //        // Ambil durasi sebelum diupdate
@@ -82,15 +85,15 @@ public class ConnectionDuration {
         String fromNodeId = String.valueOf(fromNode.getAddress());
         String toNodeId = String.valueOf(toNode.getAddress());
 
-        System.out.println("=======================================================");
-        // Mencetak informasi durasi koneksi sebelumnya
-//        double previousDuration = ConnectionDuration.getTotalConnectionDuration(fromNode, toNode);
-        System.out.println("[DEBUG] Durasi sebelumnya: " + previousDuration + " detik.");
-
-        // Log waktu akhir koneksi
-        System.out.println("[DEBUG] Waktu akhir koneksi antara node " + fromNode.getAddress() + " dan " + toNode.getAddress() + ": " + this.endTime);
-        System.out.println("[DEBUG] Durasi sesi: " + sessionDuration + " detik");
-        System.out.println("[DEBUG] Total durasi koneksi sejauh ini: " + this.totalDuration + " detik");
+//        System.out.println("=======================================================");
+//        // Mencetak informasi durasi koneksi sebelumnya
+////        double previousDuration = ConnectionDuration.getTotalConnectionDuration(fromNode, toNode);
+//        System.out.println("[DEBUG] Durasi sebelumnya: " + previousDuration + " detik.");
+//
+//        // Log waktu akhir koneksi
+//        System.out.println("[DEBUG] Waktu akhir koneksi antara node " + fromNode.getAddress() + " dan " + toNode.getAddress() + ": " + this.endTime);
+//        System.out.println("[DEBUG] Durasi sesi: " + sessionDuration + " detik");
+//        System.out.println("[DEBUG] Total durasi koneksi sejauh ini: " + this.totalDuration + " detik");
 
         // Konversi ke long untuk update ENS
         long sessionDurationLong = (long) sessionDuration;
@@ -103,7 +106,10 @@ public class ConnectionDuration {
         connectionHistory.get(fromNode).put(toNode, this);
         // Mencetak durasi koneksi yang baru setelah koneksi berakhir
         double newTotalDuration = getTotalConnectionDuration(fromNode, toNode);
-        System.out.println("[DEBUG] Durasi total setelah koneksi: " + newTotalDuration + " detik");
+
+//        System.out.printf("[DEBUG] Koneksi %s - %s diakhiri pada %.2f detik\n",
+//                fromNode.getAddress(), toNode.getAddress(), SimClock.getTime());
+//        System.out.println("[DEBUG] Durasi total setelah koneksi: " + newTotalDuration + " detik");
     }
 
 
@@ -126,6 +132,11 @@ public class ConnectionDuration {
      */
     public static ConnectionDuration getConnection(DTNHost fromNode, DTNHost toNode) {
         return connectionHistory.getOrDefault(fromNode, new HashMap<>()).get(toNode);
+    }
+
+    public static List<ConnectionDuration> getConnectionsFromHost(DTNHost host){
+        if (!connectionHistory.containsKey(host)) return new ArrayList<>();
+        return  new ArrayList<>(connectionHistory.get(host).values());
     }
 
     public static double getTotalConnectionDuration(DTNHost nodeA, DTNHost nodeB) {

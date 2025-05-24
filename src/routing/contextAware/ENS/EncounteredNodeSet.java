@@ -35,7 +35,7 @@ public class EncounteredNodeSet {
     public void updateENS(DTNHost host, DTNHost neighbor, String nodeId, long encounterTime, double remainingEnergy, int bufferSize, long connectionDuration, double popularity) {
         String myId = String.valueOf(host.getAddress()); // ID host
         // Logging untuk debugging
-        System.out.println("[TRACE] updateENS dipanggil oleh " + myId + " untuk nodeId: " + nodeId);
+//        System.out.println("[TRACE] updateENS dipanggil oleh " + myId + " untuk nodeId: " + nodeId);
         // Cegah node menyisipkan dirinya sendiri (baik eksplisit maupun implisit)
         if (!nodeId.equals(myId)) {
             EncounteredNode newNode = new EncounteredNode(nodeId, encounterTime, remainingEnergy, bufferSize, connectionDuration);
@@ -64,9 +64,9 @@ public class EncounteredNodeSet {
 //            System.out.println("[BUG DETECTED] Node " + myId + " menyisipkan dirinya sendiri sebagai EncounteredNode!");
         }
         if (ensTable.containsKey(nodeId)) {
-            System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
+//            System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
         } else {
-            System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
+//            System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
         }
         if (nodeId.equals("your node id here")) {
 //            System.out.println("[WARNING] Node menyisipkan dirinya sendiri ke ENS!");
@@ -75,12 +75,12 @@ public class EncounteredNodeSet {
         EncounteredNode existingNode = ensTable.get(nodeId);
 
         if (existingNode == null) {
-            System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
+//            System.out.println("[DEBUG] Tambah ENS baru: " + nodeId);
             ensTable.put(nodeId, newNode);
             // Inisialisasi encounter count pada encounter pertama kali
             newNode.incrementEncounterCount();
         } else {
-            System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
+//            System.out.println("[DEBUG] Update ENS untuk node: " + nodeId);
 
             // Update encounter count jika node sudah ada
             existingNode.incrementEncounterCount();
@@ -173,7 +173,7 @@ public class EncounteredNodeSet {
      */
     public void removeEncounter(String nodeId) {
         if (ensTable.remove(nodeId) != null) {
-            System.out.println("[INFO] NodeID: " + nodeId +" dihapus dari Tabel karena terputus");
+//            System.out.println("[INFO] NodeID: " + nodeId +" dihapus dari Tabel karena terputus");
         }
     }
 
@@ -185,7 +185,7 @@ public class EncounteredNodeSet {
         ensTable.entrySet().removeIf(entry -> {
             boolean expired = entry.getValue().isExpired();
             if (expired) {
-                System.out.println("[INFO] Menghapus encounter kadaluarsa: NodeID " + entry.getKey());
+//                System.out.println("[INFO] Menghapus encounter kadaluarsa: NodeID " + entry.getKey());
             }
             return expired;
         });
@@ -262,11 +262,11 @@ public class EncounteredNodeSet {
         EncounteredNode data = ensTable.get(neighborId);
 
         if (data != null) {
-            System.out.println("[DEBUG] Encounter count untuk Node " + neighborId + " = " + data.getEncounterCount());
+//            System.out.println("[DEBUG] Encounter count untuk Node " + neighborId + " = " + data.getEncounterCount());
             return data.getEncounterCount();
         }
 
-        System.out.println("[DEBUG] Node " + neighborId + " tidak ditemukan dalam ENS.");
+//        System.out.println("[DEBUG] Node " + neighborId + " tidak ditemukan dalam ENS.");
         return 0;
     }
 

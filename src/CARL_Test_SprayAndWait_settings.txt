@@ -1,12 +1,10 @@
 ####################################
-# SCENARIO: Simulation Time Evaluation
+# SCENARIO: SprayAndWaitRouter Simulation
 ####################################
-Scenario.name = ContextAwareRLScenarioFullTTTTtttttt
+Scenario.name = SprayAndWaitScenarioFull
 Scenario.simulateConnections = true
-#Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
-#Scenario.endTime = 45000
-Scenario.endTime = 5000
+Scenario.endTime = 45000
 
 ####################################
 # INTERFACE CONFIGURATION
@@ -20,22 +18,21 @@ btInterface.transmitRange = 20
 ####################################
 Scenario.nrofHostGroups = 6
 
-Group.router = contextAware.ContextAwareRLRouter
-Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
-Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
-
+Group.router = SprayAndWaitRouter
 Group.bufferSize = 10M
 Group.msgTtl = 180
 Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
-Group.initialEnergy = 500
-Group.scanEnergy = 0.0
-Group.transmitEnergy   = 0.2
-Group.scanResponseEnergy = 0.0
-Group.scanInterval = 0.0
-Group.alphaPopularity = 0.6
+#Group.initialEnergy = 500
+#Group.scanEnergy = 0.01
+#Group.transmitEnergy   = 0.2
+#Group.scanResponseEnergy = 0.001
+#Group.scanInterval = 0.01
+
+# Parameter khusus SprayAndWait
+Group.SprayAndWaitRouter.nrofCopies = 8
 
 ####################################
 # GROUP 1: PEDESTRIAN (MBM/SPMB)
