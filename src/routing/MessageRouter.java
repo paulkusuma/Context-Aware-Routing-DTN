@@ -311,8 +311,8 @@ public abstract class MessageRouter {
             occupancy += m.getSize();
         }
 
-//        return this.getBufferSize() - occupancy;
-        return (int) ((this.getBufferSize() - occupancy) / (1024.0 * 1024.0));  // Return in MB
+        return this.getBufferSize() - occupancy;
+//        return (int) ((this.getBufferSize() - occupancy) / (1024.0 * 1024.0));  // Return in MB
     }
 
     /**
