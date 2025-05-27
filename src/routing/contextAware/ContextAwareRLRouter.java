@@ -63,9 +63,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.fuzzyContextAware = new FuzzyContextAware();
         this.fuzzyContextMsg = new FuzzyContextMsg();
 
-        this.qtable = new Qtable();
-        this.messageListTable = new MessageListTable(this.getHost());
-
         bufferSize = s.getInt(BUFFER_SIZE);
         msgTtl = s.getInt(MSG_TTL);
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
@@ -86,8 +83,9 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.fclcontextmsg = r.fclcontextmsg;
         this.fuzzyContextAware = r.fuzzyContextAware;
         this.fuzzyContextMsg = r.fuzzyContextMsg;
-        this.qtable = r.qtable;
-        this.messageListTable = r.messageListTable;
+        // biarkan init() yang akan mengisi ulang qtable
+        this.qtable = null;
+        this.messageListTable = null;
 
         this.bufferSize = r.bufferSize;
         this.msgTtl = r.msgTtl;
@@ -98,6 +96,12 @@ public class ContextAwareRLRouter extends ActiveRouter {
 //        this.deleteDelivered = r.deleteDelivered;
     }
 
+    @Override
+    public void init(DTNHost host, List<MessageListener> mListeners) {
+        super.init(host, mListeners);
+        this.qtable = new Qtable(String.valueOf(this.getHost().getAddress()));
+        this.messageListTable = new MessageListTable(this.getHost());
+    }
 
     //Getter FLC
     public FIS getFIS() {
@@ -230,36 +234,25 @@ public class ContextAwareRLRouter extends ActiveRouter {
         MessageRouter router = host.getRouter();
         Collection<Message> messages = router.getMessageCollection();
         String hostId = String.valueOf(host.getAddress());
-        String actionId = String.valueOf(neighbor.getAddress());
+        String nextHopId = String.valueOf(neighbor.getAddress());
         QTableUpdateStrategy qtableUpdate = new QTableUpdateStrategy(this.qtable);
-//        System.out.println("==== [Q-UPDATE] Connection UP Detected ====");
-//        System.out.println("[HOST]     : " + hostId);
-//        System.out.println("[NEIGHBOR] : " + actionId);
-//        System.out.println("[TOpp]     : " + tfOpportunity);
-//        System.out.println("[MESSAGES] : " + messages.size());
-//        System.out.printf("[BUFFER-CHECK] Node %s | Total Msgs = %d%n", hostId, messages.size());
+
         for (Message msg : messages){
-//            System.out.printf("  → Msg ID: %s | Dest: %s | From: %s%n",
-//                    msg.getId(), msg.getTo(), msg.getFrom());
             String destinationId = String.valueOf(msg.getTo().getAddress());
             String sourceId = String.valueOf(msg.getFrom().getAddress());
             // Jangan update Q jika neighbor adalah pengirim asli (menghindari loop tidak perlu
-            if (actionId.equals(sourceId)) {
+            if (nextHopId.equals(sourceId)) {
                 System.out.println("[SKIP] Neighbor adalah pengirim asli pesan → " + msg.getId());
                 continue;
             }
-//            // Jika neighbor bukan tujuan & Transfer Opportunity rendah → skip
-//            if (!actionId.equals(destinationId) && tfOpportunity < 0.4) {
-//                System.out.println("[SKIP] Neighbor bukan tujuan & TOpp rendah → " + msg.getId());
-//                continue;
-//            }
-            String state = hostId +","+ destinationId;
-//            System.out.println("[STATE-ACTION] State = " + state + " Action = " + actionId);
-            double oldQ = qtable.getQvalue(state, actionId);
-            qtableUpdate.updateFirstStrategy(host, neighbor, state, actionId, tfOpportunity);
-            double newQ = qtable.getQvalue(state, actionId);
-//            System.out.printf("[Q-CHANGE] %s → %s | Old Q = %.4f | New Q = %.4f%n",
-//                    hostId, actionId, oldQ, newQ);
+            // Ambil nilai Q sebelum update
+            double oldQ = qtable.getQvalue(destinationId, nextHopId);
+            qtableUpdate.updateFirstStrategy(host, neighbor, destinationId, nextHopId, tfOpportunity);
+            // Ambil nilai Q setelah update
+            double newQ = qtable.getQvalue(destinationId, nextHopId);
+
+//            System.out.printf("[Q-CHANGE] dst = %s → via %s | Old Q = %.4f | New Q = %.4f%n",
+//                    destinationId, nextHopId, oldQ, newQ);
         }
     }
 
@@ -350,13 +343,14 @@ public class ContextAwareRLRouter extends ActiveRouter {
             }
             // Hapus pesan dari buffer (mode drop = true)
             deleteMessage(Highest.getId(),true);
+            System.out.printf("[BUFFER-DROP] Dropping message %s | priority = %.4f\n",
+                    Highest.getId(),
+                    messageListTable.getPriority(Highest));
             messageListTable.removeMessage(Highest);
             // Tambah ruang kosong berdasarkan ukuran pesan yang dihapus
             freeBuffer += Highest.getSize();
 
-            System.out.printf("[BUFFER-DROP] Dropping message %s | priority = %.4f\n",
-                    Highest.getId(),
-                    messageListTable.getPriority(Highest));
+
         }
         // Berhasil menyediakan ruang yang cukup
         return true;
@@ -466,7 +460,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         boolean isDestination = neighborId.equals(destinationId);
         double messagePriority = messageListTable.getPriority(msg);
         int copies = (int) msg.getProperty("copies");
-
+//        System.out.println("Priority :" + messagePriority);
         // Forward langsung ke tujuan jika sedang terkoneksi ---
         if (isDestination && c.isReadyForTransfer()) {
             int result = startTransfer(msg, c);
@@ -489,10 +483,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
             double neighborPop  = popularity.getPopularity(neighbor);
             double neighborSocial = fuzzyContextAware.evaluateSelf(neighbor, neighborPop, tie);
 
-            String state = hostId + "," + destinationId;
-            String reverseState = neighborId + "," + destinationId;
-            double myQ = qtable.getQvalue(state, neighborId);
-            double neighborQ = qtable.getQvalue(reverseState, hostId);
+            double myQ = qtable.getQvalue(destinationId, neighborId);
+            double neighborQ = qtable.getQvalue(destinationId, hostId);
 
             boolean socialBetter = neighborSocial > mySocial;
             boolean qValueBetter = neighborQ > myQ;
@@ -538,7 +530,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     if (result == RCV_OK && this.hasMessage(msg.getId())) {
                         deleteMessage(msg.getId(), true);
                     }
-                } else if (messagePriority >= 0.6) {
+                } else if (messagePriority >= 0.4) {
                     // Harus memenuhi dua kondisi (AND) jika prioritas tinggi
                     if (socialBetter && qValueBetter) {
                         int result = startTransfer(msg, c);
@@ -670,6 +662,11 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Panggil logika transfer standar dari super class
         Message msg = super.messageTransferred(id, from);
 
+        // Validasi pesan dan pengirim (untuk menghindari NullPointerException)
+        if (msg == null || from.getRouter() == null || !(from.getRouter() instanceof ContextAwareRLRouter)) {
+            return msg;
+        }
+
         // Cek apakah node ini adalah tujuan akhir
         boolean isFinalRecipient = msg.getTo() == this.getHost();
 
@@ -677,8 +674,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
         if (isFinalRecipient || isFirstReception ) {
             Qtable senderQtable = ((ContextAwareRLRouter) from.getRouter()).getQtable();
             Qtable receiverQtable = this.getQtable();
-
-            QTableUpdateStrategy.updateThirdStrategy(senderQtable, receiverQtable);
+            String senderQId = String.valueOf(from.getAddress());
+            String receiverQId = String.valueOf(this.getHost().getAddress());
+//            String focusDest = msg.getTo().toString();
+            QTableUpdateStrategy.updateThirdStrategy(senderQtable, receiverQtable, senderQId, receiverQId);
         }
 
         return msg;
