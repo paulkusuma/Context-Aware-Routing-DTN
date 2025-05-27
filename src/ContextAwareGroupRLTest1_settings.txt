@@ -1,9 +1,9 @@
-Scenario.name = ContextAwareRLScenarioTEST1
+Scenario.name = ContextAwareRLScenarioTEST11111
 Scenario.simulateConnections = true
 #Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
-Scenario.endTime = 43200
-#Scenario.endTime = 7000
+#Scenario.endTime = 43200
+Scenario.endTime = 7000
 
 ## Interface
 btInterface.type = SimpleBroadcastInterface
@@ -42,50 +42,10 @@ Group1.movementModel = RandomWaypoint
 
 # Group2 - pedestrian 2 (SPMB)
 Group2.groupID = p2
-Group2.nrofHosts = 15
+Group2.nrofHosts = 10
 Group2.bufferSize = 10M
 Group2.msgTtl = 180
 Group2.movementModel = RandomWaypoint
-
-# Group3 - Pedestrian 3
-Group3.groupID = p3
-Group3.bufferSize = 5M
-Group3.msgTtl = 70
-Group3.nrofHosts = 10
-Group3.movementModel = RandomWaypoint
-#Group3.speed = 2.7, 13.9
-
-
-# Group 4: Car group (on roads)
-Group4.groupID = c1
-Group4.nrofHosts = 10
-Group4.movementModel = MapRouteMovement
-Group4.routeFile = data/car_route1.wkt
-Group4.routeType = 1
-Group4.bufferSize = 100M
-Group4.msgTtl = 70
-Group4.speed = 8.3, 13.9
-
-
-# Group5 - Car group (on roads)
-Group5.groupID = c2
-Group5.nrofHosts = 10
-Group5.movementModel = MapRouteMovement
-Group5.routeFile = data/car_route2.wkt
-Group5.routeType = 2
-Group5.bufferSize = 100M
-Group5.msgTtl = 70
-Group5.speed = 8.3, 13.9
-
-# Group6 - Car group (on roads)
-Group6.groupID = c3
-Group6.nrofHosts = 2
-Group6.movementModel = MapRouteMovement
-Group6.routeFile = data/bus_route1.wkt
-Group6.routeType = 1
-Group6.speed = 5.5, 10
-Group6.bufferSize = 100M
-Group6.msgTtl = 70
 
 MovementModel.worldSize = 4400, 3400
 MovementModel.warmup = 1000
@@ -111,7 +71,7 @@ Events1.class = MessageEventGenerator
 Events1.interval = 35,45
 #Events1.interval = 60,90
 Events1.size = 500k,1M
-Events1.hosts = 0,24
+Events1.hosts = 0,19
 Events1.prefix = M
 
 # Report
@@ -119,7 +79,7 @@ Report.nrofReports = 5
 Report.warmup = 0
 Report.reportDir = reports/
 Report.report1 = MessageStatsReport
-Report.report2 = ContactTimesReport
+Report.report2 = TimedStatsMessageReport
 Report.report3 = DeliveredMessagesReport
 Report.report4 = BufferOccupancyReport
 Report.report5 = MessageDeleteReport

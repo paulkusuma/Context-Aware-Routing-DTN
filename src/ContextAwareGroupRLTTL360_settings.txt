@@ -1,11 +1,11 @@
 ####################################
 # SCENARIO: Simulation Time Evaluation
 ####################################
-Scenario.name = ContextAwareRLScenarioFuzzy/EndtimeFix
+Scenario.name = ContextAwareRLScenario/TTL360
 Scenario.simulateConnections = true
 #Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
-Scenario.endTime = 45000
+Scenario.endTime = 30000
 #Scenario.endTime = 5000
 
 ####################################
@@ -24,8 +24,8 @@ Group.router = contextAware.ContextAwareRLRouter
 Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
 Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
 
-Group.bufferSize = 10M
-Group.msgTtl = 240
+Group.bufferSize = 30M
+Group.msgTtl = 360
 Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
@@ -42,8 +42,8 @@ Group.alphaPopularity = 0.6
 ####################################
 Group1.groupID = p1
 Group1.nrofHosts = 30
-Group1.bufferSize = 10M
-Group1.msgTtl = 240
+Group1.bufferSize = 30M
+Group1.msgTtl = 360
 Group1.nrofInterfaces = 1
 Group1.interface1 = btInterface
 
@@ -60,8 +60,8 @@ Group1.movementModel = MapBasedMovement
 ####################################
 Group2.groupID = p2
 Group2.nrofHosts = 20
-Group2.bufferSize = 10M
-Group2.msgTtl = 240
+Group2.bufferSize = 30M
+Group2.msgTtl = 360
 Group2.nrofInterfaces = 1
 Group2.interface1 = btInterface
 Group2.movementModel = RandomWaypoint
@@ -71,8 +71,8 @@ Group2.movementModel = RandomWaypoint
 ####################################
 Group3.groupID = c1
 Group3.nrofHosts = 20
-Group3.bufferSize = 10M
-Group3.msgTtl = 240
+Group3.bufferSize = 30M
+Group3.msgTtl = 360
 Group3.nrofInterfaces = 1
 Group3.interface1 = btInterface
 Group3.movementModel = MapRouteMovement
@@ -85,8 +85,8 @@ Group3.speed = 8.3, 13.9
 ####################################
 Group4.groupID = c2
 Group4.nrofHosts = 15
-Group4.bufferSize = 10M
-Group4.msgTtl = 240
+Group4.bufferSize = 30M
+Group4.msgTtl = 360
 Group4.nrofInterfaces = 1
 Group4.interface1 = btInterface
 Group4.movementModel = MapRouteMovement
@@ -99,8 +99,8 @@ Group4.speed = 8.3, 13.9
 ####################################
 Group5.groupID = b1
 Group5.nrofHosts = 10
-Group5.bufferSize = 10M
-Group5.msgTtl = 240
+Group5.bufferSize = 30M
+Group5.msgTtl = 360
 Group5.nrofInterfaces = 1
 Group5.interface1 = btInterface
 Group5.movementModel = MapRouteMovement
@@ -113,8 +113,8 @@ Group5.speed = 5.5, 10
 ####################################
 Group6.groupID = b2
 Group6.nrofHosts = 5
-Group6.bufferSize = 10M
-Group6.msgTtl = 240
+Group6.bufferSize = 30M
+Group6.msgTtl = 360
 Group6.nrofInterfaces = 1
 Group6.interface1 = btInterface
 Group6.movementModel = MapRouteMovement
@@ -154,7 +154,7 @@ Report.reportDir = reports/
 Report.report1 = TimedStatsMessageReport
 Report.report2 = DeliveredMessagesReport
 Report.report3 = MessageStatsReport
-Report.reportDir = reports/Endtime/
+Report.reportDir = reports/TTL/
 
 
 #Report.report1 = MessageStatsReport

@@ -6,10 +6,7 @@ import routing.contextAware.ContextAwareRLRouter;
 import routing.contextAware.ENS.ConnectionDuration;
 import routing.contextAware.ENS.EncounteredNodeSet;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * QTableUpdateStrategy adalah kelas yang mengatur pembaruan Q-table berdasarkan algoritma Q-learning.
@@ -48,22 +45,12 @@ public class QTableUpdateStrategy {
      * 1.0 → jika destinationId ada dalam ENS milik neighbor
      * 0.0 → jika tidak ada
      *
-     * @param neighbor DTNHost tetangga (node action) yang akan dievaluasi ENS-nya
-     * @param state String berisi kombinasi "hostId,destinationId" sebagai identitas state
+     * @param ensNeighbor ENS milik neighbor
+     * @param destinationId ID node tujuan pesan (dari state "hostId,destinationId")
      * @return Reward: 1.0 jika destination ada di ENS neighbor, 0.0 jika tidak
      */
-    public double calculateReward(DTNHost neighbor, String state) {
-        // Membongkar state untuk mendapatkan destinationId
-        String[] stateParts = state.split(",");
-        String destinationId = stateParts[1];  // Mengambil ID tujuan (destinationId)
-
-        ContextAwareRLRouter neighborRouter = (ContextAwareRLRouter) neighbor.getRouter();
-        //Ambil ENS
-        EncounteredNodeSet ensNeighbor = neighborRouter.getEncounteredNodeSet();
-
-//        System.out.printf("[REWARD DEBUG] Neighbor = %s | Dest = %s | ENS = %s%n",
-//                neighbor.getAddress(), destinationId, ensNeighbor);
-        // Destinasi ada di ENS host
+    public double calculateReward(EncounteredNodeSet ensNeighbor, String destinationId) {
+        // Destinasi ada di ENS neighbor
         if (ensNeighbor.getAllNodeIds().contains(destinationId)) {
             return 1.0;
         } else {
@@ -87,21 +74,51 @@ public class QTableUpdateStrategy {
      * @param fuzzOpp Nilai evaluasi fuzzy untuk transfer opportunity
      */
     public void updateFirstStrategy(DTNHost host, DTNHost neighbor, String state, String action, double fuzzOpp) {
-        // Mendapatkan router dari host untuk mengakses ENS
-        ContextAwareRLRouter router = (ContextAwareRLRouter) host.getRouter();
-        // Mengambil Encountered Node Set (ENS) dari router host
-        EncounteredNodeSet ens = router.getEncounteredNodeSet();
-
+        String hostId =String.valueOf(host.getAddress());
+        String neighborId = String.valueOf(neighbor.getAddress());
         // Mengambil nilai Q untuk pasangan state-Action saat ini
         double qCurrent = qtable.getQvalue(state, action);
-        // Menghitung reward
-        double reward = calculateReward(neighbor, state);
+
         // Mendapatkan nilai Q maksimum dari himpunan
-        double maxQ = qtable.getMaxQvalueForEncounteredNodes(state, ens);
+        String destinationId = state.split(",")[1];
+        EncounteredNodeSet ensNeighbor=((ContextAwareRLRouter) neighbor.getRouter()).getEncounteredNodeSet();
+
+        // Menghitung reward dengan ENS neighbor dan destinationId
+        double reward = calculateReward(ensNeighbor, destinationId);
+
+        // maxQ untuk state milik neighbor (Qm(d,y))
+        String stateNeighbor = neighborId +","+ destinationId;
+//        System.out.println("[QTABLE DEBUG] maxQ lookup state = " + stateNeighbor);
+        // Memakai state dari perspektif neighbor
+        double maxQ = qtable.getMaxQvalueForEncounteredNodes(stateNeighbor, ensNeighbor);
+
         // Pembaruan Q-Table First Strategy
         double newQ = ALPHA * (reward + GAMMA * fuzzOpp * maxQ) + (1 - ALPHA) * qCurrent;
+
+//        // logging DEBUG
+//        System.out.println("=== [Q-UPDATE] Strategy 1 ===");
+//        System.out.println("Current Host (c)   : " + hostId);
+//        System.out.println("Neighbor Node (m)  : " + neighborId);
+//        System.out.println("Destination (d)    : " + destinationId);
+//        System.out.println("State (c,d)        : " + state);
+//        System.out.println("Action (m)         : " + action);
+//        System.out.printf("Reward             : %.2f%n", reward);
+//        System.out.printf("TOpp               : %.2f%n", fuzzOpp);
+//        System.out.println("ENS(m)             : " + ensNeighbor.getAllNodeIds());
+//        System.out.println("--- Q(m,d,y) values:");
+//        for (String y : ensNeighbor.getAllNodeIds()) {
+//            double q = qtable.getQvalue(stateNeighbor, y);
+//            System.out.printf("  Q(%s, %s) = %.4f%n", stateNeighbor, y, q);
+//        }
+//        System.out.printf("MaxQ (m,d,y)       : %.4f%n", maxQ);
+//        System.out.printf("Old Q(c,d,m)       : %.4f%n", qCurrent);
+//        System.out.printf("New Q(c,d,m)       : %.4f%n", newQ);
+//        System.out.println("============================");
+
         // Menyimpan kembali nilai Q yang telah di perbarui
         qtable.updateQValue(state, action, newQ);
+//        System.out.println("[QTABLE UPDATE] state=" + state + ", action=" + action + ", Q=" + newQ);
+
 //        System.out.printf(
 //                "[UPDATE DETAIL] Host: %s | Dest: %s | Action: %s | Reward: %.1f | TOpp: %.2f | maxQ: %.4f | OldQ: %.4f | NewQ: %.4f%n",
 //                host.getAddress(), state.split(",")[1], action, reward, fuzzOpp, maxQ, qCurrent, newQ
@@ -201,7 +218,6 @@ public class QTableUpdateStrategy {
         }
         return updated;
     }
-
     /**
      * Update thirdStrategy
      * Strategi sinkronisasi dua arah antar Q-table.
@@ -255,51 +271,115 @@ public class QTableUpdateStrategy {
         }
     }
 }
-//    /**
-//     * Strategi pembaruan Q-Table Ketiga:
-//     * Setelah pesan ditransfer antar dua node (misalnya dari S ke D),
-//     * kedua node memperbarui Q-Table mereka berdasarkan tabel milik lawannya.
-//     * Jika sebuah state-action pair hanya ada di satu sisi, maka akan disalin ke sisi lainnya.
-//     * Jika pair ada di kedua sisi, maka Q-value yang lebih tinggi akan digunakan untuk update.
-//     *
-//     * @param senderQtable Q-Table node pengirim pesan
-//     * @param receiverQtable Q-Table node penerima pesan
-//     */
-//    public void updateThirdStrategy(Qtable senderQtable, Qtable receiverQtable){
-//        for (Map.Entry<String, Double> entry : receiverQtable.getAllEntries()){
-//            String key = entry.getKey(); //State:Action
-//            double reciverQvalue = entry.getValue();
+
+//    public static void updateQTables(Qtable senderQ, Qtable receiverQ) {
+//        Map<String, Double> maxQPerDestAction = new HashMap<>();
 //
-//            //Split key, mengambil State : Action
+//        // Gabungkan semua entry dari kedua Q-table
+//        for (Map.Entry<String, Double> entry : senderQ.getAllEntries()) {
+//            String key = entry.getKey();
+//            double qValue = entry.getValue();
+//
 //            String[] parts = key.split(":");
-//            if (parts.length != 2) continue; // skip kalau format salah
-//            String state = parts[0];
+//            if (parts.length != 2) continue;
+//            String state = parts[0]; // "S,D"
 //            String action = parts[1];
+//            String destination = getDestinationFromState(state);
 //
-//            // Ambil Q-value dari sender jika ada
-//            boolean senderHasAction = senderQtable.hasAction(state, action);
-//            double senderQvalue = senderQtable.getQvalue(state, action);
-//
-//            if (!senderQtable.hasAction(state, action)){
-//                // Jika pengirim tidak punya pasangan state:action, salin dari penerima
-//                senderQtable.updateQValue(state, action, reciverQvalue);
-//            } else{
-//                // Jika keduanya punya, bandingkan Q-value
-//                if (senderQvalue < reciverQvalue){
-//                    // Update sender pakai reciverQvalue
-//                    senderQtable.updateQValue(state, action, reciverQvalue);
-//                } else {
-//                    // Update reciver pakai sender Qvalue
-//                    receiverQtable.updateQValue(state, action, senderQvalue);
-//                }
-//            }
-//
+//            String pairKey = destination + ":" + action;
+//            maxQPerDestAction.put(pairKey, Math.max(maxQPerDestAction.getOrDefault(pairKey, 0.0), qValue));
 //        }
 //
-//        // Ulangi proses yang sama untuk entri di Q-table pengirim (untuk simetri)
-//        for(Map.Entry<String, Double> entry : senderQtable.getAllEntries()){
+//        for (Map.Entry<String, Double> entry : receiverQ.getAllEntries()) {
 //            String key = entry.getKey();
-//            double senderQvalue = entry.getValue();
+//            double qValue = entry.getValue();
+//
+//            String[] parts = key.split(":");
+//            if (parts.length != 2) continue;
+//            String state = parts[0]; // "S,D"
+//            String action = parts[1];
+//            String destination = getDestinationFromState(state);
+//
+//            String pairKey = destination + ":" + action;
+//            maxQPerDestAction.put(pairKey, Math.max(maxQPerDestAction.getOrDefault(pairKey, 0.0), qValue));
+//        }
+//
+//        // Update sender Q-table
+//        for (Map.Entry<String, Double> entry : senderQ.getAllEntries()) {
+//            String key = entry.getKey();
+//            String[] parts = key.split(":");
+//            if (parts.length != 2) continue;
+//            String state = parts[0];
+//            String action = parts[1];
+//            String destination = getDestinationFromState(state);
+//
+//            String pairKey = destination + ":" + action;
+//            if (maxQPerDestAction.containsKey(pairKey)) {
+//                double maxQ = maxQPerDestAction.get(pairKey);
+//                senderQ.updateQValue(state, action, maxQ);
+//            }
+//        }
+//
+//        // Update receiver Q-table
+//        for (Map.Entry<String, Double> entry : receiverQ.getAllEntries()) {
+//            String key = entry.getKey();
+//            String[] parts = key.split(":");
+//            if (parts.length != 2) continue;
+//            String state = parts[0];
+//            String action = parts[1];
+//            String destination = getDestinationFromState(state);
+//
+//            String pairKey = destination + ":" + action;
+//            if (maxQPerDestAction.containsKey(pairKey)) {
+//                double maxQ = maxQPerDestAction.get(pairKey);
+//                receiverQ.updateQValue(state, action, maxQ);
+//            }
+//        }
+//
+//        // Logging (optional)
+//        for (Map.Entry<String, Double> e : maxQPerDestAction.entrySet()) {
+//            String[] parts = e.getKey().split(":");
+//            System.out.printf("[Q-UPDATE STRAT3] Dest: %s | Action: %s → NewQ: %.3f\n",
+//                    parts[0], parts[1], e.getValue());
+//        }
+//    }
+//
+//    private static String getDestinationFromState(String state) {
+//        // Misal state = "S,D" → kembalikan "D"
+//        String[] parts = state.split(",");
+//        return (parts.length == 2) ? parts[1] : "";
+//    }
+
+//    /**
+//     * Update thirdStrategy
+//     * Strategi sinkronisasi dua arah antar Q-table.
+//     * Tujuan: memastikan kedua node (sender dan receiver) saling berbagi informasi
+//     * Q-value untuk mempercepat pembelajaran. Nilai Q disebarkan jika lebih tinggi,
+//     * dan digunakan untuk memperbarui entri yang lebih lemah.
+//     *
+//     * @param senderQtable   Q-table milik node pengirim
+//     * @param receiverQtable Q-table milik node penerima
+//     */
+//    public static void updateThirdStrategy(Qtable senderQtable, Qtable receiverQtable) {
+//        syncQEntries(senderQtable, receiverQtable);
+//        syncQEntries(receiverQtable, senderQtable);
+//    }
+//
+//    /**
+//     * Melakukan sinkronisasi satu arah dari source ke target Q-table.
+//     * Untuk setiap pasangan (state:action) di source:
+//     * - Jika target belum memiliki entry tersebut → langsung salin dari source
+//     * - Jika sudah ada → bandingkan nilai Q dan simpan yang lebih besar
+//     *   (untuk menyebarkan informasi terbaik).
+//     * - Jika nilai target lebih besar → update balik nilai Q di source
+//     *
+//     * @param target Q-table yang akan diperbarui
+//     * @param source Q-table yang menjadi sumber data
+//     */
+//    private static void syncQEntries(Qtable target, Qtable source) {
+//        for (Map.Entry<String, Double> entry : source.getAllEntries()) {
+//            String key = entry.getKey();
+//            double sourceQ = entry.getValue();
 //
 //            String[] parts = key.split(":");
 //            if (parts.length != 2) continue;
@@ -307,16 +387,17 @@ public class QTableUpdateStrategy {
 //            String state = parts[0];
 //            String action = parts[1];
 //
-//            boolean receiverHasAction = receiverQtable.hasAction(state, action);
-//            double receiverQvalue = receiverQtable.getQvalue(state, action);
-//
-//            if(!receiverHasAction){
-//                receiverQtable.updateQValue(state, action, senderQvalue);
-//            } else{
-//                if(receiverQvalue < senderQvalue){
-//                    receiverQtable.updateQValue(state, action, senderQvalue);
-//                } else{
-//                    senderQtable.updateQValue(state, action, receiverQvalue);
+//            if (!target.hasAction(state, action)) {
+//                // Jika target belum punya, langsung salin
+//                target.updateQValue(state, action, sourceQ);
+//            } else {
+//                double targetQ = target.getQvalue(state, action);
+//                if (targetQ < sourceQ) {
+//                    // Jika nilai target lebih kecil, perbarui dengan nilai lebih tinggi dari source
+//                    target.updateQValue(state, action, sourceQ);
+//                } else {
+//                    // Jika nilai target lebih tinggi, balikan ke source (biar dua arah sinkron)
+//                    source.updateQValue(state, action, targetQ);
 //                }
 //            }
 //        }
