@@ -1,7 +1,13 @@
 package reinforcementLearning_ContextAware;
 
 import routing.contextAware.ENS.EncounteredNodeSet;
+
+import java.io.FileWriter;
 import java.util.*;
+
+import java.io.PrintWriter;
+import java.io.File;
+import java.io.IOException;
 
 public class Qtable {
 
@@ -17,10 +23,21 @@ public class Qtable {
         return ownerId;
     }
 
+    public void initializeAllQvalues(Set<String> allNodeIds) {
+//        System.out.println("Menginisialisasi Q-values...");
+        for (String destinationId : allNodeIds) {
+            if (destinationId.equals(ownerId)) continue;
+            for (String nextHop : allNodeIds) {
+                if (nextHop.equals(ownerId)) continue;
+                updateQvalue(destinationId, nextHop, 0.0);
+            }
+        }
+    }
+
     public double getQvalue(String destinationId, String nextHop) {
         Map<String, Double> nextHopMap = qtable.get(destinationId);
-        if (nextHopMap == null) return 0.1;
-        return nextHopMap.getOrDefault(nextHop, 0.1);
+        if (nextHopMap == null) return 0.0;
+        return nextHopMap.getOrDefault(nextHop, 0.0);
     }
 
     public void updateQvalue(String destinationId, String nextHop, double qvalue) {
@@ -83,29 +100,87 @@ public class Qtable {
         return "Qtable milik" + ownerId + ":\n" + qtable.toString();
     }
 
-    public void debugPrintQTable(String ownerHostId) {
-        System.out.printf("====== Q-TABLE MILIK NODE %s ======%n", ownerHostId);
-        for (Map.Entry<String, Map<String, Double>> stateEntry : qtable.entrySet()) {
-            String destinationId = stateEntry.getKey();
-            Map<String, Double> actions = stateEntry.getValue();
-            for (Map.Entry<String, Double> actionEntry : actions.entrySet()) {
-                String via = actionEntry.getKey();
-                double qValue = actionEntry.getValue();
-                System.out.printf("→ dst=%s via=%s | Q=%.4f%n", destinationId, via, qValue);
-            }
+    private Set<String> getAllActions() {
+        Set<String> actions = new TreeSet<>();
+        for (Map<String, Double> actionMap : qtable.values()) {
+            actions.addAll(actionMap.keySet());
         }
-        System.out.println("====================================");
+        return actions;
     }
-    public static void printQTable(Qtable qtable, String ownerId) {
-        System.out.printf("\n--- QTable Milik Node %s ---\n", ownerId);
-        for (Map.Entry<String, Map<String, Double>> entry : qtable.getAllQvalues().entrySet()) {
-            String destination = entry.getKey();
-            Map<String, Double> actions = entry.getValue();
-            for (Map.Entry<String, Double> action : actions.entrySet()) {
-                String via = action.getKey();
-                double q = action.getValue();
-                System.out.printf("[QTABLE] dst=%s | via=%s | Q=%.4f\n", destination, via, q);
+
+    public void exportToCSV(String filePath, boolean append) {
+        System.out.println("Menulis ke file: " + filePath);
+        int columnWidth = 12;
+        try (FileWriter writer = new FileWriter(filePath, append)) {
+            // Header per Node
+//            writer.append("Qtable").append(ownerId).append("\n");
+
+            // Ambil semua next hop unik untuk header kolom
+            Set<String> allNextHops = new TreeSet<>();
+            for (Map<String, Double> map : qtable.values()) {
+                allNextHops.addAll(map.keySet());
             }
+
+            // Tulis header kolom
+            writer.append(padRight("Qtab nd " + getOwnerId(), columnWidth));
+            for (String nextHop : allNextHops) {
+                writer.append(padRight("Action " + nextHop, columnWidth));
+            }
+            writer.append("\n");
+
+            // Tulis isi Q-value
+            for (String state : new TreeSet<>(qtable.keySet())) {
+                writer.append(padRight("State " + state, columnWidth));
+                for (String nextHop : allNextHops) {
+                    double qvalue = qtable.getOrDefault(state, new HashMap<>())
+                            .getOrDefault(nextHop, 0.0);
+                    writer.append(padRight(String.format("%.4f", qvalue), columnWidth));
+                }
+                writer.append("\n");
+            }
+
+            writer.append("\n"); // spasi antar node
+        } catch (IOException e) {
+            System.err.println("Error writing pivoted Q-table to CSV: " + e.getMessage());
+        }
+    }
+
+    private String padRight(String str, int width) {
+        return String.format("%-" + width + "s", str);
+    }
+
+
+    public static void printQTable(Qtable qtable, String ownerId) {
+        Map<String, Map<String, Double>> qMap = qtable.getAllQvalues();
+
+        // Kumpulkan semua action (next hops) unik dan urutkan
+        Set<String> allActions = new TreeSet<>();
+        for (Map<String, Double> actions : qMap.values()) {
+            allActions.addAll(actions.keySet());
+        }
+        List<String> actionList = new ArrayList<>(allActions);
+
+        // Header
+        System.out.println();
+        System.out.printf("%-10s", "Qtab Nd" + ownerId); // Kolom pertama
+        for (String action : actionList) {
+            System.out.printf("%10s", "Act " + action);
+        }
+        System.out.println();
+
+        // Isi Q-table
+        // Semua state disortir berdasarkan nama
+        List<String> sortedStates = new ArrayList<>(qMap.keySet());
+        Collections.sort(sortedStates);
+
+        for (String state : sortedStates) {
+            Map<String, Double> actionMap = qMap.get(state);
+            System.out.printf("%-10s", "State" + state);
+            for (String action : actionList) {
+                double q = actionMap.getOrDefault(action, 0.0);
+                System.out.printf("%10.4f", q);
+            }
+            System.out.println();
         }
     }
 }

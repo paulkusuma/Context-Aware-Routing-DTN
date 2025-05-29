@@ -17,6 +17,7 @@ import routing.contextAware.SocialCharcteristic.*;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ContextAwareRLRouter extends ActiveRouter {
 
@@ -98,9 +99,24 @@ public class ContextAwareRLRouter extends ActiveRouter {
 
     @Override
     public void init(DTNHost host, List<MessageListener> mListeners) {
+//        System.out.println("Inisialisasi router...");
         super.init(host, mListeners);
         this.qtable = new Qtable(String.valueOf(this.getHost().getAddress()));
         this.messageListTable = new MessageListTable(this.getHost());
+
+
+    }
+
+    public void postInitQtable(Set<String> allHostIds) {
+//        System.out.println("Memanggil postInitQtable...");
+        if (this.qtable != null) {
+            this.qtable.initializeAllQvalues(allHostIds);
+//            String filePath = "C:/Users/LENOVO/Documents/the-one-ql-main/the-one-ql-main/src/reinforcementLearning_ContextAware/qtable.csv";
+//            boolean append = (this.getHost().getAddress() != 0);
+//            this.qtable.exportToCSV(filePath, append);
+        } else {
+            System.err.println("QTable belum diinisialisasi pada host: " + this.getHost());
+        }
     }
 
     //Getter FLC

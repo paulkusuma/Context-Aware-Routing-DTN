@@ -230,16 +230,16 @@ public class QTableUpdateStrategy {
      * @param receiverQtable Q-table milik node penerima
      */
     public static void updateThirdStrategy(Qtable senderQtable, Qtable receiverQtable, String sender, String receiver) {
-        System.out.printf("\n[DEBUG] === Sebelum Sinkronisasi ===\n");
-        printQTable(senderQtable, sender);
-        printQTable(receiverQtable, receiver);
+//        System.out.printf("\n[DEBUG] === Sebelum Sinkronisasi ===\n");
+//        printQTable(senderQtable, sender);
+//        printQTable(receiverQtable, receiver);
 
         syncQEntries(senderQtable, receiverQtable);
         syncQEntries(receiverQtable, senderQtable);
 
-        System.out.printf("\n[DEBUG] === Setelah Sinkronisasi ===\n");
-        printQTable(senderQtable, sender);
-        printQTable(receiverQtable, receiver);
+//        System.out.printf("\n[DEBUG] === Setelah Sinkronisasi ===\n");
+//        printQTable(senderQtable, sender);
+//        printQTable(receiverQtable, receiver);
     }
 
     /**
@@ -254,28 +254,34 @@ public class QTableUpdateStrategy {
      * @param source Q-table yang menjadi sumber data
      */
     private static void syncQEntries(Qtable target, Qtable source) {
-        for (String dst : source.getAllDestinations()) {
-            Map<String, Double> sourceActionMap = source.getActionMap(dst);
-            if (sourceActionMap == null || sourceActionMap.isEmpty()) continue;
+        for (String state : source.getAllDestinations()) {
+            // Skip kalau state adalah diri sendiri
+            if (state.equals(target.getOwnerId())) continue;
 
-            for (Map.Entry<String, Double> entry : sourceActionMap.entrySet()) {
+            Map<String, Double> sourceActions = source.getActionMap(state);
+            if (sourceActions == null) continue;
+
+            for (Map.Entry<String, Double> entry : sourceActions.entrySet()) {
                 String nextHop = entry.getKey();
                 double sourceQ = entry.getValue();
 
-                if (!target.hasAction(dst, nextHop)) {
-                    // Target belum punya informasi ini, salin langsung dari source
-                    target.updateQvalue(dst, nextHop, sourceQ);
-                } else {
-                    double targetQ = target.getQvalue(dst, nextHop);
+                // Skip kalau nextHop adalah diri sendiri
+                if (nextHop.equals(target.getOwnerId())) continue;
 
-                    if (targetQ < sourceQ) {
-                        // Target update karena source punya nilai lebih tinggi
-                        target.updateQvalue(dst, nextHop, sourceQ);
-                    } else if (targetQ > sourceQ) {
-                        // Source update balik karena target punya nilai lebih tinggi
-                        source.updateQvalue(dst, nextHop, targetQ);
+                // Hanya sinkronisasi jika target sudah punya entry (state, nextHop)
+                if (target.hasAction(state, nextHop)) {
+                    double targetQ = target.getQvalue(state, nextHop);
+                    if(targetQ != 0.0 && sourceQ != 0.0){
+                        if (targetQ < sourceQ) {
+                            target.updateQvalue(state, nextHop, sourceQ);
+                            System.out.printf("[SYNC] (target updated) %s:%s from %.4f → %.4f\n", state, nextHop, targetQ, sourceQ);
+                        } else if (targetQ > sourceQ) {
+                            source.updateQvalue(state, nextHop, targetQ);
+                            System.out.printf("[SYNC] (source updated) %s:%s from %.4f → %.4f\n", state, nextHop, sourceQ, targetQ);
+                        }
                     }
                 }
+                // Jika target belum punya entri (state, nextHop) → abaikan
             }
         }
     }
