@@ -5,7 +5,6 @@ import core.SimClock;
 import routing.contextAware.ContextAwareRLRouter;
 
 import java.util.*;
-
 /**
  * Kelas EncounteredNodeSet menyimpan informasi node-node yang pernah ditemui oleh suatu node
  * dalam bentuk tabel ENS (Encountered Node Set). Informasi ini digunakan untuk pengambilan
@@ -334,6 +333,3 @@ public class EncounteredNodeSet {
         }
     }
 }
-
-
-

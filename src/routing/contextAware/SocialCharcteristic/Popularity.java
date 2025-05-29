@@ -20,11 +20,11 @@ import routing.contextAware.ENS.*;
 public class Popularity {
 
     // Menyimpan Popularity setiap node
-    private static Map<DTNHost, Double> popularityMap = new HashMap<>();
+    private Map<DTNHost, Double> popularityMap = new HashMap<>();
     // Threshold untuk menghitung encounter maksimal untuk normalisasi (digunakan sebagai pembagi)
-    private static final int NUMth = 35;
-    // Interval waktu (200 detik)
-    private static final double TIME_WINDOW = 200.0;
+    private static final int NUMth = 12;
+    // Interval waktu
+    private static final double TIME_WINDOW = 240.0;
 
     // Smoothing alpha untuk pembaruan popularitas
     private double alphaPopularity;
