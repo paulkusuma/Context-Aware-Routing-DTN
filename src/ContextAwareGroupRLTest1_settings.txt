@@ -3,7 +3,7 @@ Scenario.simulateConnections = true
 #Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
 #Scenario.endTime = 43200
-Scenario.endTime = 7000
+Scenario.endTime = 45000
 
 ## Interface
 btInterface.type = SimpleBroadcastInterface

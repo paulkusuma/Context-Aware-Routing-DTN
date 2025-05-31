@@ -19,7 +19,7 @@ import java.util.*;
 public class EncounteredNodeSet {
 
     private Map<String, EncounteredNode> ensTable = new HashMap<>();
-    private Map<String, Map<String, Integer>> pairWiseEncounter = new HashMap<>();
+    private Map<String, Map<String, List<Double>>> pairWiseEncounter = new HashMap<>();
 
     /**
      * Menambahkan atau memperbarui informasi ENS untuk node tertentu.
@@ -186,6 +186,7 @@ public class EncounteredNodeSet {
         ensTable.entrySet().removeIf(entry -> {
             boolean expired = entry.getValue().isExpired();
             if (expired) {
+                return true;
 //                System.out.println("[INFO] Menghapus encounter kadaluarsa: NodeID " + entry.getKey());
             }
             return expired;
@@ -290,13 +291,15 @@ public class EncounteredNodeSet {
             nodeAId = nodeBId;
             nodeBId = temp;
         }
-
+        double currentTime = SimClock.getTime();
         pairWiseEncounter.putIfAbsent(nodeAId, new HashMap<>());
-        Map<String, Integer> innerMap = pairWiseEncounter.get(nodeAId);
-        innerMap.put(nodeBId, innerMap.getOrDefault(nodeBId, 0) + 1);
+        Map<String, List<Double>> innerMap = pairWiseEncounter.get(nodeAId);
+        innerMap.putIfAbsent(nodeBId, new ArrayList<>());
+        innerMap.get(nodeBId).add(currentTime);
+//        innerMap.put(nodeBId, innerMap.getOrDefault(nodeBId, 0) + 1);
     }
 
-    public int getFrequencyBetween(DTNHost nodeA, DTNHost nodeB) {
+    public int getFrequencyBetween(DTNHost nodeA, DTNHost nodeB, double currentTime, double timeWindow) {
         String nodeAId = String.valueOf(nodeA.getAddress());
         String nodeBId = String.valueOf(nodeB.getAddress());
 
@@ -306,10 +309,22 @@ public class EncounteredNodeSet {
             nodeBId = temp;
         }
 
-        if(pairWiseEncounter.containsKey(nodeAId)) {
-            return pairWiseEncounter.get(nodeAId).getOrDefault(nodeBId, 0);
+        if (!pairWiseEncounter.containsKey(nodeAId)) return 0;
+
+        List<Double> encounterTimes = pairWiseEncounter.get(nodeAId).getOrDefault(nodeBId, new ArrayList<>());
+
+        // Hitung encounter dalam jendela waktu
+        int count = 0;
+        for (double t : encounterTimes) {
+            if ((currentTime - t) <= timeWindow) {
+                count++;
+            }
         }
-        return 0;
+        return count;
+//        if(pairWiseEncounter.containsKey(nodeAId)) {
+//            return pairWiseEncounter.get(nodeAId).getOrDefault(nodeBId, 0);
+//        }
+//        return 0;
     }
     /**
      * Mencetak isi ENS milik node tertentu ke konsol.

@@ -14,7 +14,7 @@ public class EncounteredNode {
     int bufferSize;  // Kapasitas buffer node dalam MB
     long connectionDuration;  // Durasi koneksi dalam detik
 
-    private static final double TTL = 3600.0;  // Waktu kadaluarsa ENS dalam detik
+    private static final double TTLENS = 3600.0;  // Waktu kadaluarsa ENS dalam detik
 
     private double popularity = 0.0;
     private int encounterCount;
@@ -101,7 +101,7 @@ public class EncounteredNode {
      */
     public boolean isExpired() {
 //        if()
-        return (SimClock.getTime() - this.encounterTime) > TTL;
+        return (SimClock.getTime() - this.encounterTime) > TTLENS;
     }
 
     // ===================== Getter ===================== //

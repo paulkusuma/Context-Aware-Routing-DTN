@@ -22,54 +22,49 @@ public class TieStrength {
     private static Map<DTNHost, Map<DTNHost, Double>> tieStrengthMap = new HashMap<>();
 
     // Bobot untuk masing-masing faktor dalam perhitungan TieStrength
-    private static final double RECENCY_FACTOR = 0.5; // Faktor untuk memberi bobot pada recency
-    private static final double FREQUENCY_WEIGHT = 0.3; // Bobot untuk encounter frequency
-    private static final double CLOSENESS_WEIGHT = 0.1; // Bobot untuk closeness
+    private static final double RECENCY_FACTOR = 0.3; // Faktor untuk memberi bobot pada recency
+    private static final double FREQUENCY_WEIGHT = 0.5; // Bobot untuk encounter frequency
+    private static final double CLOSENESS_WEIGHT = 0.2; // Bobot untuk closeness
 
     /**
-     * Menghitung jumlah encounter (pertemuan) antara node ini dan neighbor-nya.
+     * Menghitung frekuensi encounter (jumlah pertemuan dalam time window tertentu).
      *
-     * @param neighbor Node yang dihitung frekuensinya.
-     * @param encounteredNodeSet Struktur data EncounteredNodeSet untuk menyimpan riwayat encounter.
-     * @return Jumlah encounter node tersebut dengan neighbor.
+     * @param host Node utama
+     * @param neighbor Node tetangga
+     * @param encounteredNodeSet Dataset encounter node
+     * @return Jumlah encounter
      */
     public static int calculateFrequency(DTNHost host, DTNHost neighbor, EncounteredNodeSet encounteredNodeSet) {
-//        return encounteredNodeSet.getEncounterCount(neighbor);  // Mengambil jumlah encounter
-        return encounteredNodeSet.getFrequencyBetween(host, neighbor);
+        double now = SimClock.getTime();
+        double timeWindow = 600.0;
+        return encounteredNodeSet.getFrequencyBetween(host, neighbor, now, timeWindow);
     }
 
     /**
-     * Menghitung total durasi koneksi antara dua node (closeness).
-     * Ini mencerminkan berapa lama dua node saling terhubung dalam semua encounter.
-     * @param host Node pertama
-     * @param neighbor Node kedua
-     * @param connectionDurationInst Instansi dari kelas ConnectionDuration untuk menghitung durasi koneksi
-     * @return Durasi koneksi (Closeness) antara host dan neighbor
-     */
-    public static double calculateCloseness(DTNHost host, DTNHost neighbor, ConnectionDuration connectionDurationInst) {
-        return ConnectionDuration.getTotalConnectionDuration(host, neighbor);  // Mengambil total durasi koneksi
-    }
-
-    /**
-     * Menghitung Recency (Kedekatan waktu encounter terakhir) antara dua node.
-     * Semakin kecil nilai recency, semakin "baru" hubungannya.
+     * Menghitung total durasi koneksi antar dua node.
      *
-     * @param host Node pertama
-     * @param neighbor Node kedua
-     * @param connectionDurationInst Instansi dari kelas ConnectionDuration untuk mendapatkan waktu terakhir koneksi
-     * @return Waktu yang telah berlalu sejak encounter terakhir antara nodeA dan nodeB
+     * @param host Node utama
+     * @param neighbor Node tetangga
+     * @return Total waktu koneksi (dalam detik)
      */
-    public static double calculateRecency(DTNHost host, DTNHost neighbor, ConnectionDuration connectionDurationInst) {
-        if (connectionDurationInst != null) {
-            // Ambil data koneksi dua node dari ConnectionDuration
-            ConnectionDuration cd = connectionDurationInst.getConnection(host, neighbor);
-            if (cd != null) {
-                // Hitung berapa detik sejak encounter terakhir
-                double lastEncounterTime = cd.getEndTime();
-                return (SimClock.getTime() - lastEncounterTime);
-            }
+    public static double calculateCloseness(DTNHost host, DTNHost neighbor) {
+        return ConnectionDuration.getTotalConnectionDuration(host, neighbor);
+    }
+
+
+    /**
+     * Menghitung selisih waktu sejak pertemuan terakhir antar dua node.
+     *
+     * @param host Node utama
+     * @param neighbor Node tetangga
+     * @return Waktu sejak encounter terakhir, atau MAX_VALUE jika belum pernah bertemu
+     */
+    public static double calculateRecency(DTNHost host, DTNHost neighbor) {
+        ConnectionDuration cd = ConnectionDuration.getConnection(host, neighbor);
+        if (cd != null) {
+            double lastEncounterTime = cd.getEndTime();
+            return (SimClock.getTime() - lastEncounterTime);
         }
-        // Jika belum pernah encounter, anggap waktunya sangat lama
         return Double.MAX_VALUE;
     }
 
@@ -84,45 +79,33 @@ public class TieStrength {
      * @param host Node utama.
      * @param neighbor Node tetangga dari host.
      * @param encounteredNodeSet Objek EncounteredNodeSet untuk menghitung frekuensi encounter.
-     * @param connectionDurationInst Objek ConnectionDuration untuk menghitung durasi dan recency.
      */
     public void calculateTieStrength(DTNHost host, DTNHost neighbor,
-                                              EncounteredNodeSet encounteredNodeSet,
-                                              ConnectionDuration connectionDurationInst) {
+                                              EncounteredNodeSet encounteredNodeSet) {
 
-        // Hitung frekuensi encounter dan normalisasi (max ekspektasi: 5)
+        // Hitung frekuensi encounter dan normalisasi
         int frequency = calculateFrequency(host, neighbor, encounteredNodeSet);
-        double normFreq = normalize(frequency, 20);
+        double normFreq = normalize(frequency, 15);
 //        System.out.println("[TieStrength] Frequency antara " + host + " dan " + neighbor + ": " + frequency + " Nilai : " +normFreq);
 
         // Hitung total durasi koneksi dan normalisasi (max ekspektasi: 300 detik)
-        double closeness = calculateCloseness(host, neighbor, connectionDurationInst);
-        double normCloseness = normalize(closeness, 500.0);
-//        System.out.println("[TieStrength] Closeness (durasi koneksi) antara " + host + " dan " + neighbor + ": " + closeness + " Nilai : " +normCloseness);
+        double closenessRaw = calculateCloseness(host, neighbor);
+        double closeness = closenessRaw/900.0;
 
-        // 3. Menghitung recency (waktu yang telah berlalu sejak encounter terakhir)
-        double recency = calculateRecency(host, neighbor, connectionDurationInst);
-//        System.out.println("[TieStrength] Recency (selisih waktu sekarang - encounter terakhir) antara " + host + " dan " + neighbor + ": " + recency);
-        // Menambahkan faktor recency untuk meningkatkan TieStrength jika encounter baru terjadi
-        double recencyFactor = Math.exp(-recency / 1000.0);
+//        System.out.println("[TieStrength] Closeness (durasi koneksi) antara " + host + " dan " + neighbor + " : " + closeness );
+
+        // Menghitung recency (waktu yang telah berlalu sejak encounter terakhir)
+        double recencyDecay = Math.exp(-calculateRecency(host, neighbor) / 1000.0);
 //        System.out.println("[TieStrength] RecencyFactor untuk " + host + " dan " + neighbor + ": " + recencyFactor);
 
         // 4. Menghitung TieStrength berdasarkan bobot
-        double rawScore  = (CLOSENESS_WEIGHT * normCloseness) +
-                (FREQUENCY_WEIGHT * normFreq);
-        double tieStrength = rawScore * (1 + RECENCY_FACTOR * recencyFactor); // Menerapkan bobot recency
+        double rawScore  =  (FREQUENCY_WEIGHT * normFreq) + (CLOSENESS_WEIGHT * closeness);
+        double tieStrength = rawScore * (1 + RECENCY_FACTOR * recencyDecay); // Menerapkan bobot recency
 
         // Pastikan nilai akhir tetap dalam rentang [0,1]
         tieStrength = Math.min(Math.max(tieStrength, 0.0), 1.0);
-        // Normalisasi ke rentang 0-1
-        // Menggunakan statistik dari data yang telah dihitung sebelumnya (misalnya, kita hitung min dan max)
-//        double tieStrengthMin = 0.0; // Nilai minimal TieStrength yang mungkin terjadi
-//        double tieStrengthMax = 1.0; // Nilai maksimal TieStrength yang mungkin terjadi
-        // Normalisasi tieStrength ke rentang 0-1 berdasarkan teori bahwa min dan max nilai tieStrength adalah 0 dan 1
-//        tieStrength = Math.min(Math.max(tieStrength, tieStrengthMin), tieStrengthMax);
-
         tieStrengthMap.computeIfAbsent(host, k -> new HashMap<>()).put(neighbor, tieStrength);
-//        System.out.println("[TieStrength] Final TieStrength (setelah normalisasi) antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
+//        System.out.println("[TieStrength] Final TieStrength "+SimClock.getTime()+" antara " + host.getAddress() + " dan " + neighbor.getAddress() + ": " + tieStrength);
 
     }
 

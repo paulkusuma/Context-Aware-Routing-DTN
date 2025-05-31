@@ -188,8 +188,13 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Debug log sebelum update ENS
 //        System.out.println("[INFO] Sebelum update ENS:");
         // Bersihkan ENS yang sudah kadaluarsa
+
+        // !!!!
         this.encounteredNodeSet.removeOldEncounters();
         neighborENS.removeOldEncounters();
+
+//        System.out.println("[DEBUG] ENS Sebelum tukar" + getHost().getAddress() + ":");
+//        this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
 
         this.popularity.updatePopularity(host, this.encounteredNodeSet);
         neighborRouter.getPopularity().updatePopularity(neighbor, neighborENS);
@@ -227,7 +232,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
 //            this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
         }
 
-        this.tieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet, connectionDuration);
+        this.tieStrength.calculateTieStrength(host, neighbor, this.encounteredNodeSet);
         double TieStrength = tieStrength.getTieStrength(host, neighbor);
 
         double transferOpportunity = fuzzyContextAware.evaluateNeighbor(this.getHost(),neighbor, neighborBuffer, integerEnergy, neighborPop, TieStrength);
@@ -318,6 +323,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         m.setTtl(msgTtl);
         m.addProperty("copies", copies);
         this.addToMessages(m, true);
+        System.out.println("Mssg" +m.getId()+"copies"+m.getProperty("copies"));
 
 //        // Jika node ini adalah pengirim awal, buat salinan tambahan dan pesan belum punya properti "copies"
 //        if (m.getFrom().equals(this.getHost()) && copies > 1) {
@@ -516,10 +522,10 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     if (result == RCV_OK && this.hasMessage(msg.getId())) {
                         deleteMessage(msg.getId(), true);
                     }
-                } else if (messagePriority >= 0.4) {
+                } else if (messagePriority >= 0.3) {
                     // Jika prioritas cukup dan minimal salah satu (OR) lebih baik
                     if (socialBetter || qValueBetter) {
-                        int sendCopies = Math.max(1, copies / 2);
+                        int sendCopies = copies / 2;
                         int remainingCopies = copies - sendCopies;
 
                         Message copy = msg.replicate();
@@ -529,6 +535,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
                         boolean alreadyHasMessage = targetRouter.getMessageCollection().stream()
                                 .anyMatch(m -> m.getId().equals(msg.getId()));
 
+                        System.out.printf("[COPY] Replicating %s: Copies%d→NeigborId%s (%d copies)%n",
+                                msg.getId(), copies, neighborId, sendCopies);
                         if (!alreadyHasMessage) {
                             int result = startTransfer(copy, c);
                             if (result == RCV_OK) {
