@@ -19,6 +19,7 @@ import java.util.*;
 public class EncounteredNodeSet {
 
     private Map<String, EncounteredNode> ensTable = new HashMap<>();
+    private Map<String, Map<String, Integer>> pairWiseEncounter = new HashMap<>();
 
     /**
      * Menambahkan atau memperbarui informasi ENS untuk node tertentu.
@@ -43,9 +44,10 @@ public class EncounteredNodeSet {
             // Jika node sudah ada, tambah encounter count-nya
             if (ensTable.containsKey(nodeId)) {
                 EncounteredNode existingNode = ensTable.get(nodeId);
-                existingNode.incrementEncounterCount();  // Menambah encounter count setiap kali update
+//                existingNode.incrementEncounterCount();  // Menambah encounter count setiap kali update
             }
 
+//            recordEncounterBetween(host, neighbor);
             updateOrInsert(nodeId, newNode, myId);
         }
     }
@@ -192,20 +194,20 @@ public class EncounteredNodeSet {
     }
 
 
-    /**
-     * Menghapus ID diri sendiri dari ENS jika secara tidak sengaja tersisip.
-     *
-     * @param host Node pemilik ENS
-     */
-    public void cleanSelfFromENS(DTNHost host) {
-        String myID = String.valueOf(host.getAddress()); // ID dari node yang memproses
-
-        EncounteredNode removed = ensTable.remove(myID);
-        // Hapus ID sendiri dari tabel ENS jika ada
-        if (removed != null) {
-//            System.out.println("[INFO] ENS (self) dihapus untuk NodeID: " + myID);
-        }
-    }
+//    /**
+//     * Menghapus ID diri sendiri dari ENS jika secara tidak sengaja tersisip.
+//     *
+//     * @param host Node pemilik ENS
+//     */
+//    public void cleanSelfFromENS(DTNHost host) {
+//        String myID = String.valueOf(host.getAddress()); // ID dari node yang memproses
+//
+//        EncounteredNode removed = ensTable.remove(myID);
+//        // Hapus ID sendiri dari tabel ENS jika ada
+//        if (removed != null) {
+////            System.out.println("[INFO] ENS (self) dihapus untuk NodeID: " + myID);
+//        }
+//    }
 
     /**
      * Mengecek apakah ENS kosong.
@@ -217,19 +219,19 @@ public class EncounteredNodeSet {
     }
 
 
-    /**
-     * Mengambil informasi ENS berdasarkan ID node.
-     *
-     * @param nodeId ID node yang ingin dicari di ENS
-     * @return Objek EncounteredNode jika ditemukan, null jika tidak
-     */
-    public EncounteredNode getENS(String nodeId) {
-        return ensTable.get(nodeId);
-    }
-
-    public Map<String, EncounteredNode> getTable() {
-        return this.ensTable;
-    }
+//    /**
+//     * Mengambil informasi ENS berdasarkan ID node.
+//     *
+//     * @param nodeId ID node yang ingin dicari di ENS
+//     * @return Objek EncounteredNode jika ditemukan, null jika tidak
+//     */
+//    public EncounteredNode getENS(String nodeId) {
+//        return ensTable.get(nodeId);
+//    }
+//
+//    public Map<String, EncounteredNode> getTable() {
+//        return this.ensTable;
+//    }
 
 
     public int countRecentEncounters(double currentTime, double timeWindow) {
@@ -249,25 +251,25 @@ public class EncounteredNodeSet {
     }
 
 
-    /**
-     * Mengembalikan jumlah encounter dengan target node dari ENS milik thisHost.
-     *
-     * @param neighbor Node yang ingin dicek encounter-nya
-     * @return Jumlah encounter dengan nodeB, 0 jika tidak ditemukan
-     */
-    public int getEncounterCount(DTNHost neighbor) {
-        String neighborId = String.valueOf(neighbor.getAddress());
-
-        EncounteredNode data = ensTable.get(neighborId);
-
-        if (data != null) {
-//            System.out.println("[DEBUG] Encounter count untuk Node " + neighborId + " = " + data.getEncounterCount());
-            return data.getEncounterCount();
-        }
-
-//        System.out.println("[DEBUG] Node " + neighborId + " tidak ditemukan dalam ENS.");
-        return 0;
-    }
+//    /**
+//     * Mengembalikan jumlah encounter dengan target node dari ENS milik thisHost.
+//     *
+//     * @param neighbor Node yang ingin dicek encounter-nya
+//     * @return Jumlah encounter dengan nodeB, 0 jika tidak ditemukan
+//     */
+//    public int getEncounterCount(DTNHost neighbor) {
+//        String neighborId = String.valueOf(neighbor.getAddress());
+//
+//        EncounteredNode data = ensTable.get(neighborId);
+//
+//        if (data != null) {
+////            System.out.println("[DEBUG] Encounter count untuk Node " + neighborId + " = " + data.getEncounterCount());
+//            return data.getEncounterCount();
+//        }
+//
+////        System.out.println("[DEBUG] Node " + neighborId + " tidak ditemukan dalam ENS.");
+//        return 0;
+//    }
 
     /**
      * Mengambil semua NodeID dari ENS sebagai himpunan (set).
@@ -277,6 +279,38 @@ public class EncounteredNodeSet {
         return new HashSet<>(ensTable.keySet());
     }
 
+
+    public void recordEncounterBetween(DTNHost nodeA, DTNHost nodeB) {
+        String nodeAId = String.valueOf(nodeA.getAddress());
+        String nodeBId = String.valueOf(nodeB.getAddress());
+
+        // Urutkan agar pasangan simetris (A,B) == (B,A)
+        if (nodeAId.compareTo(nodeBId) > 0) {
+            String temp = nodeAId;
+            nodeAId = nodeBId;
+            nodeBId = temp;
+        }
+
+        pairWiseEncounter.putIfAbsent(nodeAId, new HashMap<>());
+        Map<String, Integer> innerMap = pairWiseEncounter.get(nodeAId);
+        innerMap.put(nodeBId, innerMap.getOrDefault(nodeBId, 0) + 1);
+    }
+
+    public int getFrequencyBetween(DTNHost nodeA, DTNHost nodeB) {
+        String nodeAId = String.valueOf(nodeA.getAddress());
+        String nodeBId = String.valueOf(nodeB.getAddress());
+
+        if (nodeAId.compareTo(nodeBId) > 0) {
+            String temp = nodeAId;
+            nodeAId = nodeBId;
+            nodeBId = temp;
+        }
+
+        if(pairWiseEncounter.containsKey(nodeAId)) {
+            return pairWiseEncounter.get(nodeAId).getOrDefault(nodeBId, 0);
+        }
+        return 0;
+    }
     /**
      * Mencetak isi ENS milik node tertentu ke konsol.
      *

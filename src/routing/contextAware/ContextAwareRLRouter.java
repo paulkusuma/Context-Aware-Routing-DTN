@@ -205,6 +205,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
         if (!myId.equals(neighborId)) {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
+
+            this.encounteredNodeSet.recordEncounterBetween(host, neighbor);
         }
         // Perhitungan density (contextual)
         this.latestDensity = NetworkDensityCalculator.calculateNodeDensity(

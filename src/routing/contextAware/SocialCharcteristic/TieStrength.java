@@ -33,8 +33,9 @@ public class TieStrength {
      * @param encounteredNodeSet Struktur data EncounteredNodeSet untuk menyimpan riwayat encounter.
      * @return Jumlah encounter node tersebut dengan neighbor.
      */
-    public static int calculateFrequency(DTNHost neighbor, EncounteredNodeSet encounteredNodeSet) {
-        return encounteredNodeSet.getEncounterCount(neighbor);  // Mengambil jumlah encounter
+    public static int calculateFrequency(DTNHost host, DTNHost neighbor, EncounteredNodeSet encounteredNodeSet) {
+//        return encounteredNodeSet.getEncounterCount(neighbor);  // Mengambil jumlah encounter
+        return encounteredNodeSet.getFrequencyBetween(host, neighbor);
     }
 
     /**
@@ -90,14 +91,14 @@ public class TieStrength {
                                               ConnectionDuration connectionDurationInst) {
 
         // Hitung frekuensi encounter dan normalisasi (max ekspektasi: 5)
-        int frequency = calculateFrequency(neighbor, encounteredNodeSet);
-        double normFreq = normalize(frequency, 5);
-        System.out.println("[TieStrength] Frequency antara " + host + " dan " + neighbor + ": " + frequency + " Nilai : " +normFreq);
+        int frequency = calculateFrequency(host, neighbor, encounteredNodeSet);
+        double normFreq = normalize(frequency, 20);
+//        System.out.println("[TieStrength] Frequency antara " + host + " dan " + neighbor + ": " + frequency + " Nilai : " +normFreq);
 
         // Hitung total durasi koneksi dan normalisasi (max ekspektasi: 300 detik)
         double closeness = calculateCloseness(host, neighbor, connectionDurationInst);
         double normCloseness = normalize(closeness, 500.0);
-        System.out.println("[TieStrength] Closeness (durasi koneksi) antara " + host + " dan " + neighbor + ": " + closeness + " Nilai : " +normCloseness);
+//        System.out.println("[TieStrength] Closeness (durasi koneksi) antara " + host + " dan " + neighbor + ": " + closeness + " Nilai : " +normCloseness);
 
         // 3. Menghitung recency (waktu yang telah berlalu sejak encounter terakhir)
         double recency = calculateRecency(host, neighbor, connectionDurationInst);

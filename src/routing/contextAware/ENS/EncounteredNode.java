@@ -87,6 +87,7 @@ public class EncounteredNode {
     public EncounteredNode clone() {
         EncounteredNode clone = new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
         clone.setPopularity(this.popularity);
+        clone.encounterCount=this.encounterCount;
         return clone;
 //
 //        return  new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
@@ -99,6 +100,7 @@ public class EncounteredNode {
      * @return true jika sudah kadaluarsa
      */
     public boolean isExpired() {
+//        if()
         return (SimClock.getTime() - this.encounterTime) > TTL;
     }
 
