@@ -19,8 +19,8 @@ btInterface.transmitRange = 20
 Scenario.nrofHostGroups = 6
 
 Group.router = SprayAndWaitRouter
-Group.bufferSize = 10M
-Group.msgTtl = 180
+Group.bufferSize = 20M
+Group.msgTtl = 360
 Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
@@ -39,8 +39,8 @@ Group.SprayAndWaitRouter.nrofCopies = 8
 ####################################
 Group1.groupID = p1
 Group1.nrofHosts = 25
-Group1.bufferSize = 10M
-Group1.msgTtl = 180
+Group1.bufferSize = 20M
+Group1.msgTtl = 360
 Group1.nrofInterfaces = 1
 Group1.interface1 = btInterface
 
@@ -57,8 +57,8 @@ Group1.movementModel = MapBasedMovement
 ####################################
 Group2.groupID = p2
 Group2.nrofHosts = 20
-Group2.bufferSize = 10M
-Group2.msgTtl = 180
+Group2.bufferSize = 20M
+Group2.msgTtl = 360
 Group2.nrofInterfaces = 1
 Group2.interface1 = btInterface
 Group2.movementModel = RandomWaypoint
@@ -68,8 +68,8 @@ Group2.movementModel = RandomWaypoint
 ####################################
 Group3.groupID = c1
 Group3.nrofHosts = 15
-Group3.bufferSize = 10M
-Group3.msgTtl = 180
+Group3.bufferSize = 20M
+Group3.msgTtl = 360
 Group3.nrofInterfaces = 1
 Group3.interface1 = btInterface
 Group3.movementModel = MapRouteMovement
@@ -82,8 +82,8 @@ Group3.speed = 8.3, 13.9
 ####################################
 Group4.groupID = c2
 Group4.nrofHosts = 25
-Group4.bufferSize = 10M
-Group4.msgTtl = 180
+Group4.bufferSize = 20M
+Group4.msgTtl = 360
 Group4.nrofInterfaces = 1
 Group4.interface1 = btInterface
 Group4.movementModel = MapRouteMovement
@@ -96,8 +96,8 @@ Group4.speed = 8.3, 13.9
 ####################################
 Group5.groupID = b1
 Group5.nrofHosts = 5
-Group5.bufferSize = 10M
-Group5.msgTtl = 180
+Group5.bufferSize = 20M
+Group5.msgTtl = 360
 Group5.nrofInterfaces = 1
 Group5.interface1 = btInterface
 Group5.movementModel = MapRouteMovement
@@ -110,8 +110,8 @@ Group5.speed = 5.5, 10
 ####################################
 Group6.groupID = b2
 Group6.nrofHosts = 10
-Group6.bufferSize = 10M
-Group6.msgTtl = 180
+Group6.bufferSize = 20M
+Group6.msgTtl = 360
 Group6.nrofInterfaces = 1
 Group6.interface1 = btInterface
 Group6.movementModel = MapRouteMovement

@@ -65,12 +65,12 @@ public class NetworkDensityCalculator {
      * @return Jumlah salinan pesan
      */
     public static int calculateCopiesBasedOnDensity(double density) {
-        if (density > 0.7) {
-            return random.nextInt(6) + 1;
+        if (density > 0.6) {
+            return random.nextInt(4) + 2;
         } else if (density > 0.3) {
-            return random.nextInt(8) + 3;
+            return random.nextInt(6) + 4;
         } else {
-            return random.nextInt(10) + 8;
+            return random.nextInt(8) + 6;
         }
     }
 }

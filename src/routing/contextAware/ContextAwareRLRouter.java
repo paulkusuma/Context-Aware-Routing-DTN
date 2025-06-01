@@ -323,7 +323,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
         m.setTtl(msgTtl);
         m.addProperty("copies", copies);
         this.addToMessages(m, true);
-        System.out.println("Mssg" +m.getId()+"copies"+m.getProperty("copies"));
+//        System.out.println("Mssg" +m.getId()+"copies"+m.getProperty("copies"));
 
 //        // Jika node ini adalah pengirim awal, buat salinan tambahan dan pesan belum punya properti "copies"
 //        if (m.getFrom().equals(this.getHost()) && copies > 1) {
@@ -522,25 +522,30 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     if (result == RCV_OK && this.hasMessage(msg.getId())) {
                         deleteMessage(msg.getId(), true);
                     }
-                } else if (messagePriority >= 0.3) {
+                } else if (messagePriority <= 0.4) {
                     // Jika prioritas cukup dan minimal salah satu (OR) lebih baik
                     if (socialBetter || qValueBetter) {
-                        int sendCopies = copies / 2;
-                        int remainingCopies = copies - sendCopies;
-
-                        Message copy = msg.replicate();
-                        copy.updateProperty("copies", sendCopies);
-
                         MessageRouter targetRouter = neighbor.getRouter();
                         boolean alreadyHasMessage = targetRouter.getMessageCollection().stream()
                                 .anyMatch(m -> m.getId().equals(msg.getId()));
 
-                        System.out.printf("[COPY] Replicating %s: Copies%d→NeigborId%s (%d copies)%n",
-                                msg.getId(), copies, neighborId, sendCopies);
+                        int sendCopies = copies / 2;
+                        int remainingCopies = copies - sendCopies;
+
+                        System.out.printf("[SPRAY] %s has %d copies → Sending %d copies to %s, Remaining: %d%n",
+                                msg.getId(), copies, sendCopies, neighborId, remainingCopies);
+                        Message copy = msg.replicate();
+                        copy.updateProperty("copies", sendCopies);
+
+
+//                        System.out.printf("[CHECK] Neighbor %s already has message %s? %b%n",
+//                                neighborId, msg.getId(), alreadyHasMessage);
                         if (!alreadyHasMessage) {
                             int result = startTransfer(copy, c);
                             if (result == RCV_OK) {
                                 msg.updateProperty("copies", remainingCopies);
+                                System.out.printf("[UPDATE] Message %s now has %d remaining copies%n",
+                                        msg.getId(), remainingCopies);
                             } else {
                                 System.out.printf("[TRANSFER FAIL] %s → %s | BUFFER %.2f | Result: %d%n",
                                         hostId, neighborId, (double) targetRouter.getFreeBufferSize(), result);
