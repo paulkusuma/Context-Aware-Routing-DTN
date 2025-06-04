@@ -18,9 +18,9 @@ VAR_OUTPUT
 END_VAR
 
 FUZZIFY bufferNeighbor
-         TERM low  := TRAPE  0     0     6000  9000  ;
-         TERM med  := TRAPE  8000  12000 22000 25000 ;
-         TERM high := TRAPE  24000 27000 30720 30720 ;
+         TERM low  := TRAPE  0     0     4000  6000  ;
+         TERM med  := TRAPE  5000  8000  14000 16000 ;
+         TERM high := TRAPE  15000 18000 20480 20480 ;
 END_FUZZIFY
 
 FUZZIFY energyNeighbor
