@@ -69,13 +69,11 @@ public class ContextAwareRLRouter extends ActiveRouter {
         initialEnergy = s.getInt(INIT_ENERGY_S); //Energi
         latestDensity = -1;
         pendingAging = new HashMap<>();
-
 //        this.deleteDelivered = true; //ACK-based deletion otomatis
     }
 
     protected ContextAwareRLRouter(ContextAwareRLRouter r) {
         super(r);
-
         this.encounteredNodeSet = r.encounteredNodeSet.clone();
         this.alphaPopularity = r.alphaPopularity;
         this.popularity = r.popularity;
@@ -93,7 +91,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         this.initialEnergy = r.initialEnergy;
         this.latestDensity = r.latestDensity;
         this.pendingAging = r.pendingAging;
-
 //        this.deleteDelivered = r.deleteDelivered;
     }
 
@@ -103,12 +100,9 @@ public class ContextAwareRLRouter extends ActiveRouter {
         super.init(host, mListeners);
         this.qtable = new Qtable(String.valueOf(this.getHost().getAddress()));
         this.messageListTable = new MessageListTable(this.getHost());
-
-
     }
 
     public void postInitQtable(Set<String> allHostIds) {
-//        System.out.println("Memanggil postInitQtable...");
         if (this.qtable != null) {
             this.qtable.initializeAllQvalues(allHostIds);
 //            String filePath = "C:/Users/LENOVO/Documents/the-one-ql-main/the-one-ql-main/src/reinforcementLearning_ContextAware/qtable.csv";
@@ -157,7 +151,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
      */
     public void changedConnection(Connection con) {
         super.changedConnection(con);
-
         DTNHost host = getHost();
         DTNHost neighbor = con.getOtherNode(getHost());
         ContextAwareRLRouter neighborRouter = (ContextAwareRLRouter) neighbor.getRouter();
@@ -184,33 +177,21 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // Mulai pencatatan durasi koneksi
         ConnectionDuration connectionDuration = ConnectionDuration.startConnection(this.getHost(), neighbor);
         long duration = (long) connectionDuration.getDuration();
-
-        // Debug log sebelum update ENS
-//        System.out.println("[INFO] Sebelum update ENS:");
-        // Bersihkan ENS yang sudah kadaluarsa
-
-        // !!!!
+        //
         this.encounteredNodeSet.removeOldEncounters();
         neighborENS.removeOldEncounters();
-
-//        System.out.println("[DEBUG] ENS Sebelum tukar" + getHost().getAddress() + ":");
-//        this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
 
         this.popularity.updatePopularity(host, this.encounteredNodeSet);
         neighborRouter.getPopularity().updatePopularity(neighbor, neighborENS);
         // Ambil nilai popularitas terbaru setelah update
         double neighborPop = popularity.getPopularity(neighbor);
         double myPop = popularity.getPopularity(host);
-//        System.out.println("[DEBUG] Popularitas host (" + host.getAddress() + "): " + myPop);
-//        System.out.println("[DEBUG] Popularitas neighbor (" + neighbor.getAddress() + "): " + neighborPop);
-
 
         // Update ENS kedua node
         // Tambahkan ke ENS jika bukan diri sendiri
         if (!myId.equals(neighborId)) {
             this.encounteredNodeSet.updateENS(host, neighbor, neighborId, currentTime, integerEnergy, neighborBuffer, duration, neighborPop);
             neighborENS.updateENS(neighbor, host, myId, currentTime, integerEnergy, neighborBuffer, duration, myPop);
-
             this.encounteredNodeSet.recordEncounterBetween(host, neighbor);
         }
         // Perhitungan density (contextual)
@@ -227,7 +208,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
             // Saling tukar ENS dengan filtering otomatis
             this.encounteredNodeSet.exchangeWith(neighborENS, this.getHost(), neighbor, currentTime);
             neighborENS.exchangeWith(this.encounteredNodeSet, neighbor, this.getHost(), currentTime);
-
 //            System.out.println("[DEBUG] ENS setelah saling tukar di " + getHost().getAddress() + ":");
 //            this.encounteredNodeSet.printEncounterLog(getHost(), String.valueOf(neighbor.getAddress()), neighborENS);
         }
@@ -268,14 +248,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                 System.out.println("[SKIP] Neighbor adalah pengirim asli pesan → " + msg.getId());
                 continue;
             }
-            // Ambil nilai Q sebelum update
-            double oldQ = qtable.getQvalue(destinationId, nextHopId);
             qtableUpdate.updateFirstStrategy(host, neighbor, destinationId, nextHopId, tfOpportunity);
-            // Ambil nilai Q setelah update
-            double newQ = qtable.getQvalue(destinationId, nextHopId);
-
-//            System.out.printf("[Q-CHANGE] dst = %s → via %s | Old Q = %.4f | New Q = %.4f%n",
-//                    destinationId, nextHopId, oldQ, newQ);
         }
     }
 
@@ -300,9 +273,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
             this.encounteredNodeSet.removeEncounter(neighborId);
             neighborENS.removeEncounter(myId);
         }
-
     }
-
 
     /**
      * Membuat dan menambahkan pesan baru ke buffer node.
@@ -324,17 +295,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         m.addProperty("copies", copies);
         this.addToMessages(m, true);
 //        System.out.println("Mssg" +m.getId()+"copies"+m.getProperty("copies"));
-
-//        // Jika node ini adalah pengirim awal, buat salinan tambahan dan pesan belum punya properti "copies"
-//        if (m.getFrom().equals(this.getHost()) && copies > 1) {
-//            // Buat copies-1 salinan tambahan
-//            for (int i = 1; i < copies; i++) {
-//                Message copy = m.replicate(); // Salin pesan
-//                copy.setTtl(msgTtl);
-//                copy.updateProperty("copies", copies);
-//                this.addToMessages(copy, true);
-//            }
-//        }
         return true;
     }
 
@@ -355,51 +315,42 @@ public class ContextAwareRLRouter extends ActiveRouter {
         int freeBuffer = this.getFreeBufferSize();
         while (freeBuffer < size){
             // Ambil pesan dengan prioritas terendah (selain yang sedang dikirim)
-            Message Highest = getHighestPriorityMessage(true);
-            if(Highest == null){
-                // Tidak ada lagi pesan yang bisa dihapus, gagal membuat ruang
+//            Message Highest = getHighestPriorityMessage(true);
+            Message toRemove= null;
+//            if(Highest == null){
+//                // Tidak ada lagi pesan yang bisa dihapus, gagal membuat ruang
+//                return false;
+//            }
+            // 1. Coba cari pesan yang sudah delivered
+            for (Message m : this.getMessageCollection()) {
+                if (isDeliveredMessage(m)) {
+                    toRemove = m;
+                    break;
+                }
+            }
+            // 2. Jika tidak ada pesan delivered, cari berdasarkan prioritas
+            if (toRemove == null) {
+                toRemove = getHighestPriorityMessage(true);
+            }
+            // 3. Kalau tidak ada yang bisa dihapus, return false
+            if (toRemove == null) {
                 return false;
             }
-            // Validasi sinkronisasi sebelum menghapus dari messageListTable
-            if (!messageListTable.containsMessage(Highest)) {
-                System.out.printf("[WARNING] Trying to remove message %s " +
-                        "but it's not in messageListTable!\n", Highest.getId());
-            }
+            Double priority = messageListTable.containsMessage(toRemove) ?
+                    messageListTable.getPriority(toRemove) : 0.0;
+
             // Hapus pesan dari buffer (mode drop = true)
-            deleteMessage(Highest.getId(),true);
+            deleteMessage(toRemove.getId(),true);
             System.out.printf("[BUFFER-DROP] Dropping message %s | priority = %.4f\n",
-                    Highest.getId(),
-                    messageListTable.getPriority(Highest));
-            messageListTable.removeMessage(Highest);
+                    toRemove.getId(), priority);
+            messageListTable.removeMessage(toRemove);
             // Tambah ruang kosong berdasarkan ukuran pesan yang dihapus
-            freeBuffer += Highest.getSize();
-
-
+            freeBuffer += toRemove.getSize();
         }
         // Berhasil menyediakan ruang yang cukup
         return true;
     }
 
-    /**
-     * Mengembalikan pesan dengan prioritas fuzzy paling rendah di buffer,
-     * dengan opsi mengecualikan pesan yang sedang dikirim.
-     *
-     * @param excludeMsgBeingSent Jika true, abaikan pesan yang sedang dikirim
-     * @return Pesan dengan prioritas terendah, atau null jika tidak ada kandidat yang valid
-     */
-//    private Message getLowestPriorityMessage(boolean excludeMsgBeingSent){
-//        Collection<Message> messages =this.getMessageCollection();
-//        Message lowest=null;
-//        for (Message m : messages){
-//            // Lewati pesan yang sedang dikirim (jika diminta)
-//            if(excludeMsgBeingSent && isSending(m.getId())) continue;
-//            // Update jika belum ada kandidat, atau jika pesan ini lebih rendah prioritasnya
-//            if(lowest==null || messageListTable.getPriority(m) < messageListTable.getPriority(lowest)){
-//                lowest = m;
-//            }
-//        }
-//        return lowest;
-//    }
     private Message getHighestPriorityMessage(boolean excludeMsgBeingSent){
         Collection<Message> messages = this.getMessageCollection();
         Message highest = null;
@@ -428,11 +379,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
             // Urutkan dari prioritas tertinggi ke terendah
             return Double.compare(p2, p1); //Desending (prioritas tinggi di awal)
         });
-//        System.out.println("[SORT] Urutan pesan berdasarkan prioritas:");
-//        for (Message m : messages) {
-//            double pr = messageListTable.getPriority(m);
-//            System.out.printf("  → %s (Priority: %.4f)\n", m.getId(), pr);
-//        }
     }
 
     private void evaluateMessagePriorities(){
@@ -464,7 +410,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
     }
 
 
-
     private void copiesControlMechanism(Message msg, Connection c){
         DTNHost host = this.getHost();
         DTNHost destination = msg.getTo();
@@ -477,7 +422,6 @@ public class ContextAwareRLRouter extends ActiveRouter {
         // 1. Cek apakah neighbor adalah pengirim asli pesan
         String sourceId = String.valueOf(msg.getFrom().getAddress());
         if (neighborId.equals(sourceId)) {
-//            System.out.printf("[SKIP] Neighbor %s adalah pengirim asli pesan %s%n", neighborId, msg.getId());
             return;
         }
 
@@ -554,7 +498,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     }
                 }
             }
-// Jika hanya memiliki 1 salinan
+            // Jika hanya memiliki 1 salinan
             else if (copies == 1) {
                 if (isDestination) {
                     int result = startTransfer(msg, c);
@@ -571,51 +515,8 @@ public class ContextAwareRLRouter extends ActiveRouter {
                     }
                 }
             }
-//            if (copies > 1 && messagePriority >= 0.4 && (socialBetter || qValueBetter)) {
-//                int sendCopies = Math.max(1, copies / 2);
-//                int remainingCopies = copies - sendCopies;
-//
-//                Message copy = msg.replicate();
-////                copy.setTtl(msg.getTtl());
-//                copy.updateProperty("copies", sendCopies);
-//
-//                MessageRouter targetRouter = neighbor.getRouter();
-//                boolean alReadyHasMessage = targetRouter.getMessageCollection().stream()
-//                        .anyMatch(m -> m.getId().equals(msg.getId()));
-//
-//                if (!alReadyHasMessage) {
-//                    int result = startTransfer(copy, c);
-//                    if (result == RCV_OK) {
-//                        msg.updateProperty("copies", remainingCopies);
-//                    } else {
-//                        System.out.printf("[TRANSFER FAIL] %s → %s | BUFFER %.2f | Result: %d%n",
-//                                hostId, neighborId, (double) targetRouter.getFreeBufferSize(), result);
-//                    }
-//                }
-//            }
-//            // --- Jika hanya tersisa 1 salinan (final hop) ---
-//            else if (copies == 1) {
-//                if(isDestination){
-//                    int result = startTransfer(msg, c);
-//                    if(result == RCV_OK){
-//                        if(this.hasMessage(msg.getId())){
-//                            deleteMessage(msg.getId(), true);
-//                        }
-//                    }
-//                }
-//                else if ((messagePriority >= 0.4 && socialBetter && qValueBetter) ||
-//                        (messagePriority < 0.4 && (socialBetter || qValueBetter))) {
-//                    int result = startTransfer(msg, c);
-//                    if(result == RCV_OK){
-//                        if(this.hasMessage(msg.getId())){
-//                            deleteMessage(msg.getId(), true);
-//                        }
-//                    }
-//                }
-//            }
         }
     }
-
 
     /**
      * Override proses transfer pesan untuk mencatat hop dan menangani pengurangan salinan (copies)
@@ -632,45 +533,22 @@ public class ContextAwareRLRouter extends ActiveRouter {
             //Tambahkan hop
             m.addNodeOnPath(con.getOtherNode(this.getHost()));
         }
-//        // Pesan ditolak karena sudah sampai tujuan
-//        else if (result == DENIED_OLD && m.getTo() == con.getOtherNode(this.getHost())) {
-//            if (this.hasMessage(m.getId())) {
-//                System.out.printf("[ACK-DELETE] Pesan %s dihapus karena sudah sampai tujuan %s%n",
-//                        m.getId(), m.getTo().getAddress());
-//                deleteMessage(m.getId(), false);
-//            }
-//        }
         return result;
     }
 
-
-
     public void update(){
         super.update();
-
         if (isTransferring() || !canStartTransfer()) {
             return; // transferring, don't try other connections yet
         }
-
         // Try first the messages that can be delivered to final recipient
         if (exchangeDeliverableMessages() != null) {
             return; // started a transfer, don't try others (yet)
         }
         QTableUpdateStrategy update = new QTableUpdateStrategy(this.qtable);
         update.processDelayedAging(this.getHost(), pendingAging);
-
         this.tryAllMessagesToAllConnections();
     }
-
-//    // Memeriksa apakah node ini adalah penerima akhir dari pesan
-//    private boolean isFinalDest(Message m, DTNHost to) {
-//        return m.getTo() == to;  // Mengecek apakah penerima pesan adalah node ini
-//    }
-//
-//    // Memeriksa apakah ini adalah pengiriman pertama untuk pesan ini
-//    private boolean isFirstDelivery(Message m) {
-//        return m.getHopCount() == 0;  // Jika hop count adalah 0, berarti ini pengiriman pertama
-//    }
 
     /**
      * Method ini dipanggil saat pesan berhasil diterima dari node lain.
@@ -689,18 +567,14 @@ public class ContextAwareRLRouter extends ActiveRouter {
     public Message messageTransferred(String id, DTNHost from) {
         // Deteksi apakah node ini belum pernah punya pesan ini
         boolean isFirstReception  = !this.hasMessage(id);
-
         // Panggil logika transfer standar dari super class
         Message msg = super.messageTransferred(id, from);
-
         // Validasi pesan dan pengirim (untuk menghindari NullPointerException)
         if (msg == null || from.getRouter() == null || !(from.getRouter() instanceof ContextAwareRLRouter)) {
             return msg;
         }
-
         // Cek apakah node ini adalah tujuan akhir
         boolean isFinalRecipient = msg.getTo() == this.getHost();
-
         // Sinkronisasi Q-table jika sesuai paper: final recipient atau first relay delivery
         if (isFinalRecipient || isFirstReception ) {
             Qtable senderQtable = ((ContextAwareRLRouter) from.getRouter()).getQtable();
@@ -719,25 +593,3 @@ public class ContextAwareRLRouter extends ActiveRouter {
         return new ContextAwareRLRouter(this);
     }
 }
-//            String senderID = String.valueOf(from.getAddress());
-//            String reciverID = String.valueOf(this.getHost().getAddress());
-//            Qtable senderQ = senderRouter.getQtable();
-//            Qtable receiverQ = receiverRouter.getQtable();
-//
-//            System.out.println("Before QTable Sync:");
-//            qtable.printQtable(senderID);
-//            qtable.printQtable(reciverID);
-//            QTableUpdateStrategy.updateQTables(senderQ, receiverQ);
-//            System.out.println("After QTable Sync:");
-//            qtable.printQtable(senderID);
-//            qtable.printQtable(reciverID);
-////            System.out.println("Before QTable Sync:");
-////            senderQ.printQtable(senderID);
-////            receiverQ.printQtable(reciverID);
-//////            this.qtable.updateFrom(senderQ);
-//
-//            Qtable.syncQTables(senderQ, receiverQ, senderID, reciverID);
-//
-//            System.out.println("After QTable Sync:");
-//            senderQ.printQtable(senderID);
-//            receiverQ.printQtable(reciverID);
