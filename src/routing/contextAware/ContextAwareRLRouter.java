@@ -476,7 +476,7 @@ public class ContextAwareRLRouter extends ActiveRouter {
                         int sendCopies = copies / 2;
                         int remainingCopies = copies - sendCopies;
 
-                        System.out.printf("[SPRAY] %s has %d copies → Sending %d copies to %s, Remaining: %d%n",
+                        System.out.printf("[] %s has %d copies → Sending %d copies to %s, Remaining: %d%n",
                                 msg.getId(), copies, sendCopies, neighborId, remainingCopies);
                         Message copy = msg.replicate();
                         copy.updateProperty("copies", sendCopies);

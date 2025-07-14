@@ -1,7 +1,7 @@
 ####################################
 # SCENARIO: Simulation Time Evaluation
 ####################################
-Scenario.name = ContextAwareRLScenarioFuzzy/EndtimeFix22
+Scenario.name = ContextAwareRLScenarioFuzzy/Fuzzy
 Scenario.simulateConnections = true
 #Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
@@ -154,7 +154,7 @@ Report.reportDir = reports/
 Report.report1 = TimedStatsMessageReport
 Report.report2 = DeliveredMessagesReport
 Report.report3 = MessageStatsReport
-Report.reportDir = reports/Endtime/
+Report.reportDir = reports/Fuzzy/
 
 
 #Report.report1 = MessageStatsReport

@@ -24,16 +24,16 @@ FUZZIFY bufferNeighbor
 END_FUZZIFY
 
 FUZZIFY energyNeighbor
-         TERM low    := TRAPE 0   0   100 200 ;
-         TERM med    := TRAPE 100 200 300 400 ;
-         TERM high   := TRAPE 300 400 500 500 ;
+         TERM low    := TRAPE 0.0 0.0  0.25 0.4 ;
+         TERM med    := TRAPE 0.3 0.45 0.55 0.7 ;
+         TERM high   := TRAPE 0.6 0.75 1.0  1.0 ;
 END_FUZZIFY
 
 DEFUZZIFY ABILITY_NODE
         TERM vbad       := TRAPE 0.0 0.0 0.2 0.3 ;
         TERM bad        := TRAPE 0.2 0.3 0.4 0.5 ;
         TERM good       := TRAPE 0.4 0.6 0.7 0.8 ;
-        TERM perfect    := TRAPE 0.7 0.8 0.9 1.0 ;
+        TERM perfect    := TRAPE 0.7 0.8 1.0 1.0 ;
         METHOD  : COG;
         DEFAULT := 0;
         RANGE := (0.0 .. 1.0);
@@ -97,7 +97,7 @@ FUZZIFY ABILITY    // ABILITY_NODE input
     TERM vbad       := TRAPE 0.0 0.0 0.2 0.3 ;
     TERM bad        := TRAPE 0.2 0.3 0.4 0.5 ;
     TERM good       := TRAPE 0.4 0.6 0.7 0.8 ;
-    TERM perfect    := TRAPE 0.7 0.8 0.9 0.9 ;
+    TERM perfect    := TRAPE 0.7 0.8 1.0 1.0 ;
 END_FUZZIFY
 
 FUZZIFY SOCIAL   // socialImportance input
@@ -107,10 +107,10 @@ FUZZIFY SOCIAL   // socialImportance input
 END_FUZZIFY
 
 DEFUZZIFY TRANSFER_OPPORTUNITY
-     TERM low       := TRAPE 0.0 0.0 0.0 0.39 ;
-     TERM med       := TRAPE 0.12 0.36 0.61 0.61 ;
-     TERM high      := TRAPE 0.39 0.64 0.83 0.83 ;
-     TERM vhigh     := TRAPE 0.61 1.0 1.0 1.0 ;
+     TERM low       := TRAPE 0.0 0.0 0.2 0.40 ;
+     TERM med       := TRAPE 0.3 0.45 0.55 0.7 ;
+     TERM high      := TRAPE 0.6 0.7 0.8 0.9 ;
+     TERM vhigh     := TRAPE 0.8 0.9 1.0 1.0 ;
      METHOD : COG;
      DEFAULT := 0;
      RANGE := (0.0 .. 1.0);
