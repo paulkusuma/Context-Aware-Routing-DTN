@@ -10,11 +10,14 @@ import input.EventQueueHandler;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import movement.MapBasedMovement;
 import movement.MovementModel;
 import movement.map.SimMap;
 import routing.MessageRouter;
+import routing.contextAware.ContextAwareRLRouter;
 
 /**
  * A simulation scenario used for getting and storing the settings of a
@@ -162,6 +165,8 @@ public class SimScenario implements Serializable {
 		this.worldSizeY = worldSize[1];
 		
 		createHosts();
+		//
+		postHostInitHook();
 		
 		this.world = new World(hosts, worldSizeX, worldSizeY, updateInterval, 
 				updateListeners, simulateConnections, 
@@ -422,6 +427,19 @@ public class SimScenario implements Serializable {
 	 */
 	public World getWorld() {
 		return this.world;
+	}
+
+	private void postHostInitHook() {
+		Set<String> allIds = this.hosts.stream()
+				.map(h -> String.valueOf(h.getAddress()))
+				.collect(Collectors.toSet());
+
+		for (DTNHost h : this.hosts) {
+			if (h.getRouter() instanceof ContextAwareRLRouter) {
+//				System.out.println("Memanggil postInitQtable untuk host: " + h.getAddress());
+				((ContextAwareRLRouter) h.getRouter()).postInitQtable(allIds);
+			}
+		}
 	}
 
 }

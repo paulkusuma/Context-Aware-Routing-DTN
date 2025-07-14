@@ -37,9 +37,13 @@ public class FuzzyContextMsg {
 
 //        System.out.println("[DEBUG] Msg TTL : " + msgTTL);
 //        System.out.println("[DEBUG] Msg HopCount: " + msgHopCount);
+        final double MAX_TTL= 120; // 500 MB
+        final double MAX_HopCount = 10;
+        double normTTL = Math.min(msgTTL / MAX_TTL, 1.0);
+        double normHopCount = Math.min(msgHopCount / MAX_HopCount, 1.0);
 
-        fb.setVariable("msgTTL", msgTTL);
-        fb.setVariable("msgHopCount", msgHopCount);
+        fb.setVariable("msgTTL", normTTL);
+        fb.setVariable("msgHopCount", normHopCount);
 
         fb.evaluate();
         double msgPriority = fb.getVariable("MESSAGE_PRIORITY").getValue();

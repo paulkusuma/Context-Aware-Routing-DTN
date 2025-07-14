@@ -14,7 +14,7 @@ public class EncounteredNode {
     int bufferSize;  // Kapasitas buffer node dalam MB
     long connectionDuration;  // Durasi koneksi dalam detik
 
-    private static final double TTL = 3600.0;  // Waktu kadaluarsa ENS dalam detik
+    private static final double TTLENS = 3600.0;  // Waktu kadaluarsa ENS dalam detik
 
     private double popularity = 0.0;
     private int encounterCount;
@@ -87,6 +87,7 @@ public class EncounteredNode {
     public EncounteredNode clone() {
         EncounteredNode clone = new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
         clone.setPopularity(this.popularity);
+        clone.encounterCount=this.encounterCount;
         return clone;
 //
 //        return  new EncounteredNode(this.nodeId, this.encounterTime, this.remainingEnergy, this.bufferSize, this.connectionDuration);
@@ -99,7 +100,8 @@ public class EncounteredNode {
      * @return true jika sudah kadaluarsa
      */
     public boolean isExpired() {
-        return (SimClock.getTime() - this.encounterTime) > TTL;
+//        if()
+        return (SimClock.getTime() - this.encounterTime) > TTLENS;
     }
 
     // ===================== Getter ===================== //

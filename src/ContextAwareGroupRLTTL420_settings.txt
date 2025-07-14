@@ -1,26 +1,28 @@
 ####################################
-# SCENARIO: SprayAndWaitRouter Simulation
+# SCENARIO: Simulation Time Evaluation
 ####################################
-Scenario.name = SprayAndWaitScenario/420
+Scenario.name = ContextAwareRLScenario/TTL420
 Scenario.simulateConnections = true
+#Scenario.updateInterval = 0.1
 Scenario.updateInterval = 0.2
-Scenario.endTime = 43000
+Scenario.endTime = 30000
+#Scenario.endTime = 5000
 
 ####################################
 # INTERFACE CONFIGURATION
 ####################################
 btInterface.type = SimpleBroadcastInterface
 btInterface.transmitSpeed = 300k
-btInterface.transmitRange = 10
+btInterface.transmitRange = 20
 
 ####################################
 # COMMON GROUP SETTINGS
 ####################################
 Scenario.nrofHostGroups = 6
 
-Group.router = SprayAndWaitRouter
-SprayAndWaitRouter.nrofCopies = 4
-SprayAndWaitRouter.binaryMode = true
+Group.router = contextAware.ContextAwareRLRouter
+Group.fcl = src/fuzzycontrollanguage/FuzzyContextAware.fcl
+Group.fclmsg = src/fuzzycontrollanguage/FuzzyMessageContext.fcl
 
 Group.bufferSize = 20M
 Group.msgTtl = 420
@@ -28,11 +30,12 @@ Group.waitTime = 0, 60
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
-#Group.initialEnergy = 500
-#Group.scanEnergy = 0.02
-#Group.transmitEnergy   = 0.1
-#Group.scanResponseEnergy = 0.1
-#Group.scanInterval = 0.1
+Group.initialEnergy = 500
+Group.scanEnergy = 0.0
+Group.transmitEnergy   = 0.2
+Group.scanResponseEnergy = 0.0
+Group.scanInterval = 0.0
+Group.alphaPopularity = 0.6
 
 ####################################
 # GROUP 1: PEDESTRIAN (MBM/SPMB)
@@ -151,7 +154,7 @@ Report.reportDir = reports/
 Report.report1 = TimedStatsMessageReport
 Report.report2 = DeliveredMessagesReport
 Report.report3 = MessageStatsReport
-Report.reportDir = reports/SPW/TTL
+Report.reportDir = reports/TTL/
 
 
 #Report.report1 = MessageStatsReport
