@@ -34,7 +34,6 @@ public class FuzzyContextAware {
     public double evaluateNeighbor(DTNHost host, DTNHost neighbor, int freeBufferNeighbor, int remainingEnergyNeighbor, double popularityNeighbor, double tieStrengthNeighbor) {
         FIS fis = getFISFromHost(host);
         FunctionBlock fb = getFunctionBlock(fis, "FuzzyContextAware");
-
         // Debug log untuk memastikan variabel telah diset dengan benar
 //        System.out.println("[DEBUG] Setting input variables for FuzzyContextAware:");
 //        System.out.println("[DEBUG] bufferNeighbor: " + freeBufferNeighbor);
@@ -43,9 +42,13 @@ public class FuzzyContextAware {
 //        System.out.println("[DEBUG] tieStrengthNeighbor: " + tieStrengthNeighbor);
         double bufferKb = freeBufferNeighbor /1024.0;
 
-        //
-        fb.setVariable("bufferNeighbor", bufferKb);
-        fb.setVariable("energyNeighbor", remainingEnergyNeighbor);
+        final double MAX_BUFFER_KB = 20 * 1024.0; // 500 MB
+        final double MAX_ENERGY = 500;
+        double normBuffer = Math.min(bufferKb / MAX_BUFFER_KB, 1.0);;
+        double normEnergy = Math.min(remainingEnergyNeighbor / MAX_ENERGY, 1.0);
+
+        fb.setVariable("bufferNeighbor", normBuffer);
+        fb.setVariable("energyNeighbor", normEnergy);
         fb.setVariable("popularityNeighbor", popularityNeighbor);
         fb.setVariable("tieStrengthNeighbor", tieStrengthNeighbor);
 

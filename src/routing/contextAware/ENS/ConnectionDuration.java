@@ -157,6 +157,10 @@ public class ConnectionDuration {
         return this.endTime;
     }
 
+    public boolean isActive() {
+        return endTime == -1;
+    }
+
     /**
      * Menghapus koneksi dari history berdasarkan fromNode dan toNode.
      * @param fromNode Node pengirim.

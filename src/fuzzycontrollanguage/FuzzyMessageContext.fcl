@@ -10,21 +10,21 @@ VAR_OUTPUT
 END_VAR
 
 FUZZIFY msgTTL
-      TERM small  := TRAPE 0 20 40 80 ;         // Pesan hampir kedaluwarsa
-      TERM medium := TRAPE 60 90 120 150 ;      // Umur sedang
-      TERM large  := TRAPE 130 150 180 180 ;    // Umur masih panjang
+      TERM small  := TRAPE 0.0   0.0   0.25  0.4 ;
+      TERM medium := TRAPE 0.3   0.45  0.55  0.7 ;
+      TERM large  := TRAPE 0.6   0.75  1.0   1.0 ;
 END_FUZZIFY
 
 FUZZIFY msgHopCount
-      TERM small   := TRAPE 0 0 1 2 ;       // Baru dikirim atau 1-hop
-      TERM medium  := TRAPE 1.5 2.5 3.5 4 ; // Hop sedang
-      TERM large   := TRAPE 3.5 4.5 6 6 ;   // Sudah jauh tersebar
+      TERM small   := TRAPE 0.0  0.0  0.25 0.4 ;       // Baru dikirim atau 1-hop
+      TERM medium  := TRAPE 0.3  0.45 0.55 0.7 ; // Hop sedang
+      TERM large   := TRAPE 0.6  0.75 1.0  1.0 ;   // Sudah jauh tersebar
 END_FUZZIFY
 
 DEFUZZIFY MESSAGE_PRIORITY
-    TERM low    := TRAPE 0.0 0.0 0.2 0.3 ;
-    TERM normal := TRAPE 0.2 0.3 0.6 0.7 ;
-    TERM high   := TRAPE 0.6 0.7 1.0 1.0 ;
+    TERM low    := TRAPE 0.0 0.0 0.2 0.35 ;
+    TERM normal := TRAPE 0.25 0.4 0.6 0.75 ;
+    TERM high   := TRAPE 0.65 0.75 0.85 0.95 ;
     TERM urgent := TRAPE 0.8 0.9 1.0 1.0 ;
     METHOD : COG;
     DEFAULT := 0;

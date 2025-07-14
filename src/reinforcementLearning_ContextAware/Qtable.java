@@ -1,163 +1,205 @@
 package reinforcementLearning_ContextAware;
 
 import routing.contextAware.ENS.EncounteredNodeSet;
+
+import java.io.FileWriter;
 import java.util.*;
+
+import java.io.IOException;
 
 public class Qtable {
 
-    // Q-table disimpan sebagai map (key: state-action, value: Q-value)
-    private Map<String, Double> qtable;
+    private String ownerId; // ID dari node pemilik Q-table ini
+    // Struktur Q-table: Map<destinationId, Map<nextHopId, Q-value>>
+    private Map<String, Map<String, Double>> qtable;
 
-    public Qtable() {
-        qtable = new HashMap<>();
-    }
-
-    // Mengambil Q-Value untuk kombinasi state action
-    public double getQvalue(String state, String action) {
-        String key = state + ":" + action;
-        //Mengembalikan nilai Q-Value jika ada, atau 0 jika tidak ada
-        return qtable.getOrDefault(key, 0.1);
-    }
-
-    // Mengupdate nilai Q untuk pasangan State Action tertentu
-    public void updateQValue(String state, String action, double qvalue) {
-        String key = state + ":" + action;
-        qvalue =Math.min(qvalue, 1.0);
-        qtable.put(key, qvalue);
+    /**
+     * Konstruktor Qtable.
+     * @param ownerId ID dari node yang memiliki Q-table ini.
+     */
+    public Qtable(String ownerId) {
+        this.ownerId = ownerId;
+        this.qtable = new HashMap<>();
     }
 
     /**
-     * Mengambil nilai Q-maksimum (MaxQ) dari node-node yang pernah ditemui (Nm) oleh host,
-     * untuk sebuah state (kombinasi hostId, destinationId).
-     * yang berarti mencari nilai Q tertinggi yang dimiliki host (node m)
-     * untuk tujuan d, melalui setiap node y yang pernah ditemui (y ∈ ENS).
-     * @param state State dalam bentuk "hostId,destinationId"
-     * @param ens EncounteredNodeSet milik host (berisi semua node yang ditemui)
-     * @return Nilai Q maksimum dari semua action (y) dalam ENS
-     * Semakin besar MaxQ → host semakin yakin bahwa jalur tidak langsung via tetangga masih efektif
-     * Kalau MaxQ rendah → host ragu, nilai Q tidak akan naik banyak
+     * Mengembalikan ID pemilik Q-table.
      */
-    public double getMaxQvalueForEncounteredNodes(String state, EncounteredNodeSet ens) {
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    /**
+     * Inisialisasi seluruh Q-value ke 0.0 untuk semua kombinasi
+     * (destinationId ≠ ownerId) dan (nextHop ≠ ownerId).
+     *
+     * @param allNodeIds Set berisi semua node ID dalam jaringan.
+     */
+    public void initializeAllQvalues(Set<String> allNodeIds) {
+        for (String destinationId : allNodeIds) {
+            if (destinationId.equals(ownerId)) continue; // Lewati diri sendiri sebagai tujuan
+            for (String nextHop : allNodeIds) {
+                if (nextHop.equals(ownerId)) continue; // Lewati diri sendiri sebagai nextHop
+                updateQvalue(destinationId, nextHop, 0.0);
+            }
+        }
+    }
+
+    /**
+     * Mengambil nilai Q untuk kombinasi (destinationId → nextHop).
+     * Jika tidak ditemukan, default-nya 0.0.
+     */
+    public double getQvalue(String destinationId, String nextHop) {
+        Map<String, Double> nextHopMap = qtable.get(destinationId);
+        if (nextHopMap == null) return 0.0;
+        return nextHopMap.getOrDefault(nextHop, 0.0);
+    }
+
+    /**
+     * Memperbarui nilai Q untuk (destinationId → nextHop).
+     * Q-value dipaksa maksimal 1.0 (normalisasi).
+     */
+    public void updateQvalue(String destinationId, String nextHop, double qvalue) {
+        qvalue = Math.min(qvalue, 1.0);
+        qtable.computeIfAbsent(destinationId, k -> new HashMap<>()).put(nextHop, qvalue);
+    }
+
+    /**
+     * Mengecek apakah Q-table memiliki entri untuk (destinationId → nextHop).
+     */
+    public boolean hasAction(String destinationId, String nextHop) {
+        return qtable.containsKey(destinationId) && qtable.get(destinationId).containsKey(nextHop);
+    }
+
+    /**
+     * Mengambil semua ID tujuan (destination) yang terdapat dalam Q-table.
+     */
+    public Set<String> getAllDestinations() {
+        return qtable.keySet();
+    }
+
+    /**
+     * Mengembalikan referensi langsung ke seluruh struktur Q-table.
+     */
+    public Map<String, Map<String, Double>> getAllQvalues() {
+        return this.qtable;
+    }
+
+    /**
+     * Mengambil semua aksi (nextHop → Q-value) untuk suatu tujuan.
+     * Sinkronisasi digunakan untuk mencegah race condition jika digunakan multithread.
+     */
+    public synchronized Map<String, Double> getActionMap(String destination) {
+//        return qtable.getOrDefault(destination, new HashMap<>());
+        return qtable.get(destination);
+    }
+
+    /**
+     * Menghitung nilai Q (Q-value) terbesar dari node ini ke tujuan tertentu (destinationId),
+     * melalui semua node dalam himpunan tetangga yang pernah ditemui (ENS - EncounteredNodeSet).
+     * Digunakan dalam konteks Q-routing untuk menentukan seberapa "bagus" jalur tercepat
+     * ke tujuan dari perspektif node tetangga.
+     * Jika tidak ada nilai Q yang tersedia (belum pernah diinisialisasi), maka akan
+     * dikembalikan nilai default 0.0.
+     *
+     * @param destinationId ID dari node tujuan yang ingin dituju.
+     * @param ensNeighbor   Kumpulan node yang pernah ditemui (dapat dijadikan nextHop).
+     * @return Nilai Q maksimum dari node ini ke destinationId melalui salah satu tetangga dalam ensNeighbor.
+     */
+    public double getMaxQvalue(String destinationId, EncounteredNodeSet ensNeighbor) {
         double maxQvalue = Double.NEGATIVE_INFINITY;
-//        System.out.println("[MAXQ DEBUG] State = " + state);
-//        System.out.println("[MAXQ DEBUG] Mengecek Q untuk semua encountered node:");
-        // Iterasi melalui semua node yang pernah ditemui
-        for (String encounteredNodeId : ens.getAllNodeIds()) {
-            // Ambil nilai Q untuk pasangan (encounteredNodeId, destinationId)
-            double qValue = getQvalue(state, encounteredNodeId);
-//            System.out.printf("  → Node: %s | Q(%s,%s) = %.4f%n", encounteredNodeId, state, encounteredNodeId, qValue);
-            // Perbarui maxQvalue dengan nilai Q tertinggi
-            maxQvalue = Math.max(maxQvalue, qValue);
+//        System.out.printf("[DEBUG] Mencari maxQ untuk dst=%s dengan ENS: %s%n",
+//                destinationId, ensNeighbor.getAllNodeIds());
+        for (String y : ensNeighbor.getAllNodeIds()) { // Iterasi setiap tetangga y dalam himpunan ENS milik M
+            // Ambil nilai Q untuk (destinationId, nextHop=y)
+            double q = getQvalue(destinationId, y);
+//            System.out.printf("[DEBUG] dst=%s via=%s | Q=%.4f%n", destinationId, y, q);
+            maxQvalue = Math.max(maxQvalue, q);
         }
-        if (maxQvalue == Double.NEGATIVE_INFINITY) {
-//            System.out.println("[MAXQ DEBUG] Tidak ada node dalam ENS → maxQ = 0.0");
-            return 0.0;
-        }
-
-//        System.out.printf("[MAXQ RESULT] maxQ = %.4f%n", maxQvalue);
-        return maxQvalue ;
+        // Jika tidak ada nilai Q valid ditemukan, kembalikan 0.0 sebagai default
+        return (maxQvalue == Double.NEGATIVE_INFINITY) ? 0.0 : maxQvalue;
+//        double finalMaxQ = (maxQvalue == Double.NEGATIVE_INFINITY) ? 0.0 : maxQvalue;
+//        System.out.printf("[DEBUG] MAX Q-VALUE untuk dst=%s adalah %.4f%n", destinationId, finalMaxQ);
+//        return finalMaxQ;
     }
 
-    // Mengecek Kombinasi State Action yang ada di QTable
-    public boolean hasAction(String state, String action) {
-        String key = state + ":" + action;
-        return qtable.containsKey(key);
+    public String toString() {
+        return "Qtable milik" + ownerId + ":\n" + qtable.toString();
     }
 
-    // Mendapatkan states yang ada di Q-Table
-    public Set<String> getAllStates(){
-        Set<String> states = new HashSet<>();
-        for (String key : qtable.keySet()) {
-            String[] parts = key.split(":");
-            if (parts.length == 2) {
-                states.add(parts[0]); // hanya bagian state ("hostId,destinationId")
+    public void exportToCSV(String filePath, boolean append) {
+        System.out.println("Menulis ke file: " + filePath);
+        int columnWidth = 12;
+        try (FileWriter writer = new FileWriter(filePath, append)) {
+            // Header per Node
+//            writer.append("Qtable").append(ownerId).append("\n");
+
+            // Ambil semua next hop unik untuk header kolom
+            Set<String> allNextHops = new TreeSet<>();
+            for (Map<String, Double> map : qtable.values()) {
+                allNextHops.addAll(map.keySet());
             }
-        }
-        return states;
-    }
 
-    public Set<String> getAllActionsForState(String state) {
-        Set<String> actions = new HashSet<>();
-        for (String key : qtable.keySet()) {
-            if (key.startsWith(state + ":")) {
-                String action = key.split(":")[1];
-                actions.add(action);
+            // Tulis header kolom
+            writer.append(padRight("Qtab nd " + getOwnerId(), columnWidth));
+            for (String nextHop : allNextHops) {
+                writer.append(padRight("Action " + nextHop, columnWidth));
             }
-        }
-        return actions;
-    }
-    public Set<Map.Entry<String, Double>> getAllEntries(){
-        return qtable.entrySet();
-    }
+            writer.append("\n");
 
-
-
-
-
-
-    // Mencetak Q-Table untuk Node tertentu berdasarkan hostId
-    public void printQtableByHost(String hostId) {
-        Map<String, List<String>> groupSetByHost = new HashMap<>();
-
-        // Iterasi melalui setiap key dalam qtable
-        for (String key : qtable.keySet()) {
-            String[] parts = key.split(":");
-            String[] stateParts = parts[0].split(",");
-            String currentHostId = stateParts[0];  // Mendapatkan hostId
-            String destinationId = stateParts[1];
-            String action = parts[1];
-            double qvalue = qtable.get(key);
-
-            // Hanya memasukkan entri yang cocok dengan hostId
-            if (currentHostId.equals(hostId)) {
-                String entry = "State = (" + currentHostId + "," + destinationId + ")"
-                        + ", Action = " + action
-                        + ", Q-Value = " + qvalue;
-
-                groupSetByHost.computeIfAbsent(currentHostId, k -> new ArrayList<>()).add(entry);
+            // Tulis isi Q-value
+            for (String state : new TreeSet<>(qtable.keySet())) {
+                writer.append(padRight("State " + state, columnWidth));
+                for (String nextHop : allNextHops) {
+                    double qvalue = qtable.getOrDefault(state, new HashMap<>())
+                            .getOrDefault(nextHop, 0.0);
+                    writer.append(padRight(String.format("%.4f", qvalue), columnWidth));
+                }
+                writer.append("\n");
             }
-        }
 
-        // Menampilkan Q-Table untuk hostId yang diberikan
-        if (groupSetByHost.containsKey(hostId)) {
-            System.out.println("===== Q-Table Node " + hostId + " =====");
-            for (String line : groupSetByHost.get(hostId)) {
-                System.out.println(line);
-            }
-        } else {
-//            System.out.println("Tidak ada data Q-Table untuk Node " + hostId);
+            writer.append("\n"); // spasi antar node
+        } catch (IOException e) {
+            System.err.println("Error writing pivoted Q-table to CSV: " + e.getMessage());
         }
     }
 
-    // Mencetak Q-Table untuk setiap Node
-    public void printQtable(){
-        Map<String, List<String>> groupSetByHost = new HashMap<>();
+    private String padRight(String str, int width) {
+        return String.format("%-" + width + "s", str);
+    }
 
-        for (String key : qtable.keySet()) {
-            String [] parts = key.split(":");
-            String [] stateParts = parts[0].split(",");
-            String hostId = stateParts[0];
-            String destinationId = stateParts[1];
-            String action = parts[1];
-            double qvalue = qtable.get(key);
 
-            String entry = "State = (" + hostId + "," + destinationId + ")"
-                    + ", Action = " + action
-                    + ", Q-Value = " + qvalue;
+    public static void printQTable(Qtable qtable, String ownerId) {
+        Map<String, Map<String, Double>> qMap = qtable.getAllQvalues();
 
-            groupSetByHost.computeIfAbsent(hostId, k -> new ArrayList<>()).add(entry);
+        // Kumpulkan semua action (next hops) unik dan urutkan
+        Set<String> allActions = new TreeSet<>();
+        for (Map<String, Double> actions : qMap.values()) {
+            allActions.addAll(actions.keySet());
         }
+        List<String> actionList = new ArrayList<>(allActions);
 
-        for (Map.Entry<String, List<String>> entry : groupSetByHost.entrySet()) {
-            String hostId = entry.getKey();
-            List<String> entries = entry.getValue();
-            System.out.println("===== Q-Table Node " +hostId+ " =====");
-            for (String line : entries) {
-                System.out.println(line);
+        // Header
+        System.out.println();
+        System.out.printf("%-10s", "Qtab Nd" + ownerId); // Kolom pertama
+        for (String action : actionList) {
+            System.out.printf("%10s", "Act " + action);
+        }
+        System.out.println();
+
+        // Isi Q-table
+        // Semua state disortir berdasarkan nama
+        List<String> sortedStates = new ArrayList<>(qMap.keySet());
+        Collections.sort(sortedStates);
+
+        for (String state : sortedStates) {
+            Map<String, Double> actionMap = qMap.get(state);
+            System.out.printf("%-10s", "State" + state);
+            for (String action : actionList) {
+                double q = actionMap.getOrDefault(action, 0.0);
+                System.out.printf("%10.4f", q);
             }
             System.out.println();
         }
-
     }
-
 }
